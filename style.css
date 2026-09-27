@@ -156,3 +156,123 @@ body{
     font-size:clamp(40px,12vw,56px);
   }
 }
+
+/* SUG VISUAL SHOWCASE */
+.visualShowcase{
+  margin-top:42px;
+  width:100%;
+}
+
+.visualShowcase img{
+  display:block;
+  width:100%;
+  height:auto;
+  border:1px solid rgba(201,164,76,.65);
+}
+
+.memberVisuals{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:22px;
+  margin-top:24px;
+}
+
+.memberVisuals img,
+.characterVisual img{
+  display:block;
+  width:100%;
+  height:auto;
+  border:1px solid rgba(201,164,76,.45);
+}
+
+.characterVisual{
+  max-width:760px;
+  margin:24px auto 0;
+}
+
+@media(max-width:760px){
+  .memberVisuals{
+    grid-template-columns:1fr;
+  }
+
+  .visualShowcase,
+  .characterVisual{
+    margin-top:20px;
+  }
+}
+
+/* ===== S.u.G FINAL VISUAL TUNING ===== */
+
+/* BODY / QUEST の巨大化を抑える */
+.visualShowcase{
+  max-width:1100px;
+  margin:38px auto 0;
+}
+
+.memberVisuals{
+  max-width:1100px;
+  margin:24px auto 0;
+  gap:20px;
+}
+
+.characterVisual{
+  max-width:620px;
+  margin:26px auto 0;
+}
+
+/* QUEST ONLY : COMING SOON */
+#quest{
+  position:relative;
+}
+
+#quest .visualShowcase{
+  position:relative;
+}
+
+#quest .visualShowcase::after{
+  content:"COMING SOON";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.46);
+  color:#d6b15f;
+  border:1px solid rgba(214,177,95,.8);
+  font-size:clamp(32px,6vw,76px);
+  font-weight:800;
+  letter-spacing:.14em;
+  text-shadow:0 3px 18px #000;
+}
+
+#quest .characterVisual{
+  position:relative;
+  max-width:560px;
+}
+
+#quest .characterVisual::after{
+  content:"COMING SOON";
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  padding:14px 24px;
+  background:rgba(0,0,0,.78);
+  border:1px solid #d6b15f;
+  color:#d6b15f;
+  font-weight:800;
+  letter-spacing:.12em;
+  white-space:nowrap;
+}
+
+@media(max-width:760px){
+  .visualShowcase,
+  .memberVisuals,
+  .characterVisual{
+    width:100%;
+  }
+
+  #quest .visualShowcase::after{
+    font-size:30px;
+  }
+}

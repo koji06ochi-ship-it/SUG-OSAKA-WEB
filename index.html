@@ -376,16 +376,12 @@
     </p>
   </div>
 
-  <div id="instagram-feed" class="instagramFeed">
-    <div class="feedPlaceholder">
-      <span>INSTAGRAM</span>
-      <strong>最新投稿を表示</strong>
-      <p>Instagram連携エリア</p>
-    </div>
+  <div id="instagram-feed" class="instagramFeed beholdFeed">
+    <behold-widget feed-id="EOU475Uzd3dkeWdPn3RH"></behold-widget>
   </div>
 
   <p class="socialSync">
-    INSTAGRAM × GOOGLE × S.u.G OSAKA WEB
+    INSTAGRAM × S.u.G OSAKA WEB
   </p>
 </section>
 <section id="access" class="section alt accessSection">
@@ -456,6 +452,14 @@
   <span>TRAIN SMART, MOVE BETTER.</span>
   <small>© S.u.G OSAKA</small>
 </footer>
+
+<script>
+  (() => {
+    if(window.__bhldScript)return;window.__bhldScript=true;
+    const d=document,s=d.createElement("script");s.type="module";
+    s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
+  })();
+</script>
 
 <script src="script.js"></script>
 </body>

@@ -2667,3 +2667,198 @@ nav{
     width:100%;
   }
 }
+
+
+/* ===== ACCESS CONTACT FINAL BLACK / WHITE / GOLD ===== */
+#access{
+  max-width:none !important;
+  padding:90px max(7vw,calc((100vw - 1180px)/2)) !important;
+  background:#ffffff !important;
+  color:#111111 !important;
+  border-top:1px solid #e8e0cc !important;
+}
+
+#access .accessHead{
+  margin-bottom:42px !important;
+}
+
+#access .accessHead h2{
+  margin:0 0 12px !important;
+  color:#111111 !important;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif !important;
+  font-size:clamp(42px,5vw,70px) !important;
+  font-weight:500 !important;
+  line-height:1.15 !important;
+}
+
+#access .accessHead p{
+  color:#36322d !important;
+}
+
+#access .accessHead .eyebrow,
+#access .accessHead .goldText,
+#access .sectionNo{
+  color:#a77b28 !important;
+  font-weight:800 !important;
+}
+
+#access .contactGrid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:22px !important;
+  align-items:stretch !important;
+  width:100% !important;
+  max-width:1180px !important;
+  margin:0 auto !important;
+}
+
+#access .accessPanel,
+#access .linePanel{
+  min-width:0 !important;
+  padding:34px !important;
+  background:#0b0b0b !important;
+  color:#ffffff !important;
+  border:1px solid #b78a32 !important;
+  box-sizing:border-box !important;
+}
+
+#access .accessPanel{
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+#access .linePanel{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 170px !important;
+  gap:28px !important;
+  align-items:center !important;
+}
+
+#access .miniLabel{
+  margin:0 0 12px !important;
+  color:#b78a32 !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  letter-spacing:.14em !important;
+}
+
+#access h3{
+  margin:0 0 20px !important;
+  color:#d7be79 !important;
+  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif !important;
+  font-size:clamp(27px,2.7vw,40px) !important;
+  font-weight:800 !important;
+  line-height:1.3 !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+}
+
+#access .accessPanel p,
+#access .linePanel p,
+#access .accessCopy,
+#access .lineText p{
+  color:#ffffff !important;
+  font-size:16px !important;
+  line-height:1.9 !important;
+}
+
+#access .contactNote{
+  margin-top:16px !important;
+  color:#d8d8d8 !important;
+  font-size:13px !important;
+}
+
+#access .contactButton{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:max-content !important;
+  min-height:54px !important;
+  margin:24px 0 0 !important;
+  padding:0 24px !important;
+  background:#b78a32 !important;
+  border:1px solid #b78a32 !important;
+  color:#0b0b0b !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  letter-spacing:.06em !important;
+  text-decoration:none !important;
+}
+
+#access .contactButton:hover{
+  background:#d7be79 !important;
+  border-color:#d7be79 !important;
+}
+
+#access .lineQr{
+  display:block !important;
+  width:170px !important;
+  max-width:170px !important;
+  height:auto !important;
+  padding:10px !important;
+  background:#ffffff !important;
+  box-sizing:border-box !important;
+}
+
+#access .accessFooter{
+  display:flex !important;
+  justify-content:space-between !important;
+  gap:24px !important;
+  align-items:center !important;
+  margin-top:28px !important;
+  padding-top:20px !important;
+  border-top:1px solid #d9c89a !important;
+}
+
+#access .accessFooter strong{
+  color:#111111 !important;
+  font-weight:800 !important;
+}
+
+#access .accessFooter span{
+  color:#8f6720 !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  letter-spacing:.12em !important;
+}
+
+@media(max-width:820px){
+  #access{
+    padding:70px 24px !important;
+  }
+
+  #access .contactGrid{
+    grid-template-columns:1fr !important;
+  }
+
+  #access .linePanel{
+    grid-template-columns:minmax(0,1fr) 145px !important;
+  }
+
+  #access .lineQr{
+    width:145px !important;
+    max-width:145px !important;
+  }
+}
+
+@media(max-width:560px){
+  #access .accessPanel,
+  #access .linePanel{
+    padding:26px 20px !important;
+  }
+
+  #access .linePanel{
+    grid-template-columns:1fr !important;
+  }
+
+  #access .lineQr{
+    width:150px !important;
+    max-width:150px !important;
+    margin-top:6px !important;
+  }
+
+  #access .accessFooter{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+}

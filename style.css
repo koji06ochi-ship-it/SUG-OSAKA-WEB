@@ -905,246 +905,1435 @@ body{
   font-size:11px;
   letter-spacing:.15em;
 }
+/* ===== S.u.G OSAKA V2 / WHITE GOLD ===== */
 
-
-/* ===== INSTAGRAM LIVE FEED ===== */
-.instagramFeed{
-  min-height:0;
-  border:0;
-  display:block;
+:root{
+  --ivory:#fbfaf6;
+  --white:#fff;
+  --ink:#171613;
+  --muted:#746f65;
+  --gold:#b78a32;
+  --gold-light:#d8bb73;
+  --line:rgba(183,138,50,.28);
 }
 
-.instagramGrid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:16px;
-}
+html{scroll-behavior:smooth}
 
-.instagramCard{
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  background:#0d0d0d;
-  border:1px solid #303030;
-  transition:border-color .2s ease,transform .2s ease;
-}
-
-.instagramCard:hover{
-  border-color:var(--gold);
-  transform:translateY(-2px);
-}
-
-.instagramMedia{
-  position:relative;
-  aspect-ratio:1/1;
-  overflow:hidden;
-  background:#151515;
-}
-
-.instagramMedia img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-
-.instagramType{
-  position:absolute;
-  top:10px;
-  right:10px;
-  padding:5px 8px;
-  background:rgba(8,8,8,.82);
-  border:1px solid rgba(201,164,76,.7);
-  color:var(--gold);
-  font-size:10px;
-  letter-spacing:.08em;
-}
-
-.instagramCardBody{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:18px;
-  flex:1;
-}
-
-.instagramDate{
-  color:#888;
-  font-size:11px;
-  letter-spacing:.08em;
-}
-
-.instagramCaption{
+body{
   margin:0;
-  color:var(--white);
-  line-height:1.7;
-  font-size:14px;
+  background:var(--ivory);
+  color:var(--ink);
+  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+  line-height:1.9;
 }
 
-.instagramMore{
-  margin-top:auto;
-  color:var(--gold);
-  font-size:11px;
-  letter-spacing:.08em;
+h1,h2,h3,
+.heroTitle,
+.sectionTitle{
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
+  letter-spacing:.045em;
 }
 
-.instagramProfileLink{
-  display:inline-block;
-  margin-top:22px;
-  padding-bottom:3px;
-  border-bottom:1px solid var(--gold);
-  color:var(--gold);
-  font-size:13px;
-  font-weight:700;
+header{
+  background:rgba(255,255,255,.94)!important;
+  color:var(--ink)!important;
+  border-bottom:1px solid var(--line)!important;
+  backdrop-filter:blur(16px);
 }
 
-.instagramFallback{
-  border:1px solid #333;
-  padding:36px 28px;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  gap:10px;
+header a,
+header button{
+  color:var(--ink)!important;
 }
 
-.instagramFallback span{
-  color:var(--gold);
-  font-size:11px;
+.section{
+  background:transparent!important;
+  color:var(--ink)!important;
+  max-width:1180px;
+  margin:auto;
+  padding:110px 7vw;
+}
+
+.sectionNo,
+.goldText{
+  color:var(--gold)!important;
   letter-spacing:.18em;
 }
 
-.instagramFallback strong{
-  font-size:clamp(20px,3vw,30px);
+.hero{
+  min-height:92vh;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.70),rgba(251,250,246,.96)),
+    url("assets/gym-space.jpg") center/cover no-repeat!important;
+  color:var(--ink)!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
-.instagramFallback a{
-  color:var(--gold);
-  border-bottom:1px solid var(--gold);
-  margin-top:5px;
+.hero img{
+  max-width:460px;
+  width:72%;
+  margin-inline:auto;
+  mix-blend-mode:multiply;
 }
 
-@media(max-width:900px){
-  .instagramGrid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
+.hero h1{
+  font-size:clamp(3.3rem,8vw,7.8rem)!important;
+  line-height:.94!important;
+  color:var(--ink)!important;
+}
+
+.hero p{
+  color:#5f594f!important;
+}
+
+img{
+  max-width:100%;
+  height:auto;
+}
+
+.visualShowcase,
+.characterVisual,
+.memberVisuals{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+
+.visualShowcase img,
+.characterVisual img,
+.memberVisuals img{
+  display:block;
+  width:100%;
+  object-fit:cover;
+  border-radius:0!important;
+}
+
+/* 写真を「貼った箱」から誌面レイアウトへ */
+#training .visualShowcase img,
+#equipment img{
+  min-height:62vh;
+  object-fit:cover;
+}
+
+#training,
+#body,
+#profile,
+#access{
+  position:relative;
+}
+
+#training::before,
+#profile::before{
+  content:"";
+  position:absolute;
+  left:7vw;
+  top:70px;
+  width:72px;
+  height:1px;
+  background:var(--gold);
+}
+
+/* BEST OF MISS */
+#collaboration,
+.collaborationSection{
+  max-width:none!important;
+  background:#fff!important;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+#collaboration img,
+.collaborationSection img{
+  mix-blend-mode:multiply;
+  box-shadow:none!important;
+}
+
+/* TRAINING / EQUIPMENTだけ暗転 */
+#training{
+  max-width:none;
+  padding-left:max(7vw,calc((100vw - 1180px)/2));
+  padding-right:max(7vw,calc((100vw - 1180px)/2));
+}
+
+#equipment,
+.equipmentSection{
+  background:#12110f!important;
+  color:#f7f3ea!important;
+  max-width:none!important;
+}
+
+#equipment h2,
+#equipment h3,
+.equipmentSection h2,
+.equipmentSection h3{
+  color:#fff!important;
+}
+
+/* PRICE */
+.priceTable{
+  border-top:1px solid var(--gold)!important;
+}
+
+.priceRow{
+  border-bottom:1px solid rgba(23,22,19,.12)!important;
+  background:transparent!important;
+  padding:24px 0!important;
+}
+
+.featuredRow{
+  background:rgba(183,138,50,.07)!important;
+}
+
+/* CARD */
+.card{
+  background:#fff!important;
+  color:var(--ink)!important;
+  border:1px solid rgba(183,138,50,.22)!important;
+  box-shadow:0 20px 60px rgba(48,39,20,.06)!important;
+}
+
+/* BUTTON */
+a.button,
+.btn,
+button{
+  border-radius:0!important;
+}
+
+.cta,
+.button,
+.btn{
+  background:var(--ink)!important;
+  color:#fff!important;
+  border:1px solid var(--ink)!important;
+  letter-spacing:.12em;
+}
+
+/* BODY */
+#body{
+  background:
+    radial-gradient(circle at 80% 20%,rgba(216,187,115,.16),transparent 35%),
+    var(--ivory)!important;
+}
+
+/* QUESTだけ別世界 */
+#quest{
+  max-width:none!important;
+  background:#0e0e0d!important;
+  color:#fff!important;
+}
+
+#quest h2,
+#quest h3,
+#quest p{
+  color:#fff;
+}
+
+#quest .goldText{
+  color:var(--gold-light)!important;
+}
+
+/* PROFILE */
+.instructorBlock{
+  border-left:1px solid var(--gold)!important;
+  background:transparent!important;
+}
+
+/* ACCESS / CONTACT */
+#access{
+  background:#fff!important;
+  border-top:1px solid var(--line);
+}
+
+.contactButton,
+.contactBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:54px;
+  padding:0 28px;
+  margin:6px;
+  border:1px solid var(--gold)!important;
+  color:var(--ink)!important;
+  background:#fff!important;
+  text-decoration:none;
+}
+
+/* MOBILE */
+@media(max-width:700px){
+  .section{
+    padding:78px 28px;
+  }
+
+  .hero{
+    min-height:86svh;
+    padding:90px 28px 60px;
+  }
+
+  .hero img{
+    width:82%;
+  }
+
+  .hero h1{
+    font-size:clamp(3rem,15vw,5.3rem)!important;
+  }
+
+  h2,.sectionTitle{
+    font-size:clamp(2.2rem,10vw,3.7rem)!important;
+    line-height:1.12;
+  }
+
+  p{
+    font-size:16px;
+    line-height:2;
+  }
+
+  #training .visualShowcase img,
+  #equipment img{
+    min-height:420px;
+  }
+
+  .priceRow{
+    padding:20px 0!important;
   }
 }
 
-@media(max-width:560px){
-  .instagramGrid{
+/* ===== V2 CORE STORY ===== */
+
+.v2-conditioning,
+.v2-body-concept,
+.v2-membership{
+  padding:110px max(7vw,calc((100vw - 1180px)/2));
+}
+
+.v2-kicker{
+  color:#a77b28;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.24em;
+  margin-bottom:20px;
+}
+
+.v2-conditioning{
+  background:#fbfaf6;
+  color:#181713;
+}
+
+.v2-conditioning h2,
+.v2-body-concept h2,
+.v2-membership h2{
+  margin:0 0 26px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
+  font-size:clamp(38px,5vw,70px);
+  line-height:1.25;
+  letter-spacing:.02em;
+}
+
+.v2-lead{
+  max-width:720px;
+  color:#625d53;
+  font-size:17px;
+  line-height:2;
+}
+
+.v2-flow{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  margin-top:70px;
+  border-top:1px solid rgba(167,123,40,.28);
+  border-bottom:1px solid rgba(167,123,40,.28);
+}
+
+.v2-flow article{
+  padding:36px 28px 42px;
+  border-right:1px solid rgba(167,123,40,.20);
+}
+
+.v2-flow article:last-child{
+  border-right:0;
+}
+
+.v2-flow article > span{
+  color:#a77b28;
+  font-family:Georgia,serif;
+  font-size:13px;
+}
+
+.v2-flow h3{
+  margin:16px 0 18px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:24px;
+  font-weight:400;
+  letter-spacing:.06em;
+}
+
+.v2-flow strong{
+  display:block;
+  margin-bottom:12px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:18px;
+  font-weight:500;
+}
+
+.v2-flow p{
+  margin:0;
+  color:#777064;
+  font-size:14px;
+  line-height:1.9;
+}
+
+.v2-body-concept{
+  background:#11110f;
+  color:#f8f5ed;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:80px;
+  align-items:center;
+}
+
+.v2-body-concept p{
+  max-width:600px;
+  color:#c9c3b7;
+  line-height:2;
+}
+
+.v2-cycle{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;
+  align-items:center;
+  gap:14px;
+}
+
+.v2-cycle span{
+  padding:22px 10px;
+  border-top:1px solid #b58b3a;
+  border-bottom:1px solid #b58b3a;
+  text-align:center;
+  color:#d5b56d;
+  font-family:Georgia,serif;
+  letter-spacing:.08em;
+}
+
+.v2-cycle b{
+  color:#706858;
+  font-weight:400;
+}
+
+.v2-membership{
+  background:#f5f0e7;
+  color:#181713;
+}
+
+.v2-membership > p{
+  max-width:760px;
+  color:#625d53;
+  line-height:2;
+}
+
+.v2-period{
+  display:flex;
+  align-items:center;
+  max-width:900px;
+  margin:60px 0;
+}
+
+.v2-period span{
+  white-space:nowrap;
+  font-family:Georgia,serif;
+  letter-spacing:.08em;
+}
+
+.v2-period i{
+  display:block;
+  flex:1;
+  height:1px;
+  margin:0 20px;
+  background:#b58b3a;
+}
+
+.v2-limit{
+  max-width:760px;
+  padding:30px 34px;
+  border-left:2px solid #b58b3a;
+  background:rgba(255,255,255,.55);
+}
+
+.v2-limit strong{
+  display:block;
+  margin-bottom:10px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:22px;
+}
+
+.v2-limit p{
+  margin:0;
+  color:#625d53;
+  line-height:1.9;
+}
+
+@media(max-width:800px){
+  .v2-conditioning,
+  .v2-body-concept,
+  .v2-membership{
+    padding:78px 28px;
+  }
+
+  .v2-flow{
     grid-template-columns:1fr;
   }
 
-  .instagramCardBody{
-    padding:16px;
+  .v2-flow article{
+    border-right:0;
+    border-bottom:1px solid rgba(167,123,40,.20);
+  }
+
+  .v2-body-concept{
+    grid-template-columns:1fr;
+    gap:45px;
+  }
+
+  .v2-cycle{
+    grid-template-columns:1fr;
+  }
+
+  .v2-cycle b{
+    text-align:center;
+    transform:rotate(90deg);
+  }
+
+  .v2-period{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .v2-period i{
+    width:1px;
+    height:24px;
+    margin:0 0 0 20px;
   }
 }
 
-
-/* ===== BEHOLD INSTAGRAM ===== */
-.beholdFeed{
-  width:100%;
-  min-height:0;
-  border:0;
-  display:block;
-}
-.beholdFeed behold-widget{
-  display:block;
-  width:100%;
-}
-
-
-/* ===== FINAL TOP HERO ===== */
-.heroFinal{
+/* ===== HERO LOGO POSITION FIX ===== */
+.hero{
   position:relative;
-  min-height:92vh;
-  width:100%;
-  max-width:none;
-  padding:0;
+}
+
+.hero img[src*="logo.png"]{
+  position:absolute !important;
+  top:52px !important;
+  left:6vw !important;
+  width:clamp(130px,16vw,220px) !important;
+  max-width:220px !important;
+  height:auto !important;
+  margin:0 !important;
+  z-index:2;
+}
+
+@media(max-width:700px){
+  .hero img[src*="logo.png"]{
+    top:32px !important;
+    left:24px !important;
+    width:125px !important;
+  }
+}
+
+/* ===== HERO CERTIFIED INSTRUCTOR VISUAL ===== */
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  position:absolute !important;
+  top:auto !important;
+  bottom:7% !important;
+  left:auto !important;
+  right:4vw !important;
+  width:clamp(300px,34vw,520px) !important;
+  max-width:520px !important;
+  height:auto !important;
+  margin:0 !important;
+  object-fit:contain !important;
+  z-index:2 !important;
+  mix-blend-mode:normal !important;
+}
+
+@media(max-width:700px){
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    top:auto !important;
+    bottom:5% !important;
+    left:50% !important;
+    right:auto !important;
+    transform:translateX(-50%) !important;
+    width:88% !important;
+    max-width:390px !important;
+  }
+}
+
+/* ===== HERO LEFT-RIGHT FIX ===== */
+
+.hero h1{
+  position:relative !important;
+  z-index:3 !important;
+  width:54% !important;
+  max-width:720px !important;
+  margin-left:auto !important;
+  margin-right:4vw !important;
+  text-align:left !important;
+  font-size:clamp(54px,6.2vw,94px) !important;
+  line-height:.92 !important;
+}
+
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  position:absolute !important;
+  width:clamp(280px,31vw,450px) !important;
+  max-width:450px !important;
+
+  left:3.5vw !important;
+  right:auto !important;
+
+  top:56% !important;
+  bottom:auto !important;
+
+  transform:translateY(-50%) !important;
+  z-index:2 !important;
+}
+
+/* HERO内の説明文・ボタンも右側へ */
+.hero .heroText,
+.hero .heroContent{
+  position:relative;
+  z-index:3;
+}
+
+@media(max-width:700px){
+
+  .hero h1{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    font-size:clamp(43px,12vw,62px) !important;
+  }
+
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    position:relative !important;
+    width:90% !important;
+    max-width:380px !important;
+
+    left:auto !important;
+    right:auto !important;
+    top:auto !important;
+    bottom:auto !important;
+
+    transform:none !important;
+    margin:32px auto 0 !important;
+  }
+}
+
+/* ===== HERO LOCKED LAYOUT ===== */
+
+.hero{
+  position:relative !important;
+}
+
+/* 認定講師ビジュアル＝中央の主役 */
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  position:absolute !important;
+  width:min(58vw,720px) !important;
+  max-width:720px !important;
+  height:auto !important;
+
+  left:50% !important;
+  right:auto !important;
+  top:50% !important;
+  bottom:auto !important;
+
+  transform:translate(-50%,-50%) !important;
+  margin:0 !important;
+  z-index:2 !important;
+}
+
+/* TRAIN SMART＝小さく右下 */
+.hero h1{
+  position:absolute !important;
+  right:4vw !important;
+  bottom:5% !important;
+  left:auto !important;
+  top:auto !important;
+
+  width:auto !important;
+  max-width:360px !important;
+  margin:0 !important;
+
+  font-size:clamp(26px,2.7vw,42px) !important;
+  line-height:.95 !important;
+  text-align:right !important;
+  letter-spacing:.01em !important;
+  z-index:3 !important;
+}
+
+/* スマホ */
+@media(max-width:700px){
+
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    position:absolute !important;
+    width:92% !important;
+    max-width:520px !important;
+    left:50% !important;
+    top:45% !important;
+    transform:translate(-50%,-50%) !important;
+    margin:0 !important;
+  }
+
+  .hero h1{
+    position:absolute !important;
+    right:24px !important;
+    bottom:5% !important;
+    width:70% !important;
+    max-width:280px !important;
+    font-size:27px !important;
+    text-align:right !important;
+  }
+}
+
+/* ===== HERO CLEANUP / FINAL STRUCTURE ===== */
+
+/* 旧Heroの文字・説明・CTAを非表示 */
+.hero .eyebrow,
+.hero .heroSub,
+.hero .heroLead,
+.hero .heroText,
+.hero .heroActions,
+.hero .actions,
+.hero .buttons,
+.hero p,
+.hero a{
+  display:none !important;
+}
+
+/* 認定講師ビジュアル */
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  position:absolute !important;
+  left:50% !important;
+  top:49% !important;
+  right:auto !important;
+  bottom:auto !important;
+
+  width:min(55vw,650px) !important;
+  max-width:650px !important;
+  height:auto !important;
+
+  transform:translate(-50%,-50%) !important;
+  margin:0 !important;
+  z-index:2 !important;
+}
+
+/* TRAIN SMART は右下の署名扱い */
+.hero h1{
+  display:block !important;
+  position:absolute !important;
+
+  right:3vw !important;
+  bottom:4% !important;
+  left:auto !important;
+  top:auto !important;
+
+  width:260px !important;
+  max-width:260px !important;
+  margin:0 !important;
+
+  font-size:25px !important;
+  line-height:1.02 !important;
+  letter-spacing:.02em !important;
+  text-align:right !important;
+
+  z-index:3 !important;
+}
+
+@media(max-width:700px){
+
+  .hero{
+    min-height:78svh !important;
+  }
+
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    width:94% !important;
+    max-width:520px !important;
+    top:43% !important;
+  }
+
+  .hero h1{
+    right:22px !important;
+    bottom:5% !important;
+    width:190px !important;
+    max-width:190px !important;
+    font-size:21px !important;
+  }
+}
+
+/* ===== HERO TAGLINE SAFE POSITION ===== */
+.hero h1{
+  right:5.5vw !important;
+  bottom:8% !important;
+  width:230px !important;
+  max-width:230px !important;
+  font-size:22px !important;
+  line-height:1.05 !important;
+  text-align:right !important;
+}
+
+@media(max-width:700px){
+  .hero h1{
+    right:22px !important;
+    bottom:5% !important;
+    width:180px !important;
+    max-width:180px !important;
+    font-size:19px !important;
+  }
+}
+
+/* ===== HERO LOGO UP + CTA SPACE ===== */
+
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  top:41% !important;
+  width:min(58vw,690px) !important;
+  max-width:690px !important;
+}
+
+.hero h1{
+  right:5.5vw !important;
+  bottom:7% !important;
+}
+
+.hero::after{
+  content:"体験・お問い合わせ";
+  position:absolute;
+  left:50%;
+  bottom:7%;
+  transform:translateX(-50%);
+  z-index:4;
+
+  min-width:230px;
+  padding:15px 28px;
+
+  background:#171613;
+  border:1px solid #b58b3a;
+  color:#fff;
+
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.14em;
+  text-align:center;
+}
+
+@media(max-width:700px){
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    top:38% !important;
+    width:94% !important;
+  }
+
+  .hero::after{
+    bottom:12% !important;
+    min-width:190px;
+    padding:14px 20px;
+  }
+
+  .hero h1{
+    bottom:4% !important;
+  }
+}
+
+/* ===== HERO VISUAL SIZE FINAL ===== */
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  top:40% !important;
+  width:min(66vw,790px) !important;
+  max-width:790px !important;
+}
+
+@media(max-width:700px){
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    top:37% !important;
+    width:96% !important;
+  }
+}
+
+/* ===== HERO VISUAL SIZE FINAL ===== */
+.hero img[src*="bestofmiss-sug-instructor.png"]{
+  top:40% !important;
+  width:min(66vw,790px) !important;
+  max-width:790px !important;
+}
+
+@media(max-width:700px){
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    top:37% !important;
+    width:96% !important;
+  }
+}
+
+/* ===== S.u.G BODY VISUAL FIX ===== */
+
+.v2-body-concept{
+  grid-template-columns:minmax(420px,.9fr) minmax(520px,1.1fr) !important;
+  gap:70px !important;
+  padding-top:120px !important;
+  padding-bottom:120px !important;
   overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#120d09;
 }
-.heroBg{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  filter:saturate(.9) contrast(1.03);
+
+.v2-body-concept h2{
+  font-size:clamp(42px,4.7vw,68px) !important;
+  line-height:1.22 !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+  max-width:620px !important;
 }
-.heroOverlay{
+
+.v2-body-concept p{
+  max-width:590px !important;
+}
+
+/* BODY画像を背景として右側へ自然に統合 */
+.v2-body-concept::after{
+  content:"";
   position:absolute;
-  inset:0;
+  right:4vw;
+  top:50%;
+  transform:translateY(-50%);
+  width:42%;
+  height:72%;
   background:
-    linear-gradient(180deg,rgba(18,13,9,.22) 0%,rgba(18,13,9,.08) 45%,rgba(18,13,9,.45) 100%),
-    radial-gradient(circle at center,rgba(255,255,255,.03),rgba(0,0,0,.26) 72%);
+    linear-gradient(90deg,#11110f 0%,rgba(17,17,15,.18) 28%,rgba(17,17,15,.04) 100%),
+    url("assets/body-system.jpg") center/contain no-repeat;
+  opacity:.92;
+  z-index:0;
+  pointer-events:none;
 }
-.heroCollabCard{
+
+.v2-body-concept > *{
   position:relative;
   z-index:2;
-  width:min(54vw,680px);
-  max-height:68vh;
-  background:#f8f5ee;
-  border:1px solid rgba(214,177,95,.95);
-  box-shadow:0 18px 60px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.22) inset;
 }
-.heroCollabCard img{
+
+/* FLOWは画像上に浮かせすぎない */
+.v2-cycle{
+  align-self:end;
+  margin-top:230px;
+  padding:22px;
+  background:rgba(17,17,15,.76);
+  backdrop-filter:blur(8px);
+}
+
+@media(max-width:800px){
+
+  .v2-body-concept{
+    grid-template-columns:1fr !important;
+    gap:35px !important;
+  }
+
+  .v2-body-concept h2{
+    font-size:clamp(38px,11vw,56px) !important;
+    max-width:none !important;
+  }
+
+  .v2-body-concept::after{
+    position:relative;
+    display:block;
+    right:auto;
+    top:auto;
+    transform:none;
+    width:100%;
+    height:420px;
+    margin-top:20px;
+  }
+
+  .v2-cycle{
+    margin-top:0;
+  }
+}
+
+/* ===== REMOVE BODY IMAGE FROM HERO ===== */
+.hero::before{
+  display:none !important;
+  background-image:none !important;
+}
+
+.hero{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.58),rgba(251,250,246,.88)),
+    url("assets/gym-space.jpg") center/cover no-repeat !important;
+}
+
+
+/* ===== REMOVE BODY IMAGE FROM HERO ===== */
+.hero::before{
+  display:none !important;
+  background-image:none !important;
+}
+
+.hero{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.58),rgba(251,250,246,.88)),
+    url("assets/gym-space.jpg") center/cover no-repeat !important;
+}
+
+
+/* REMOVE ACCIDENTAL BODY VISUAL */
+.v2-body-concept::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+}
+
+
+/* ===== V2 OLD DUPLICATES CLEANUP ===== */
+.v2-hide-old{
+  display:none !important;
+}
+
+/* CONDITIONING / BODY / MEMBERSHIP を本体として固定 */
+#conditioning,
+#body-concept,
+#membership{
+  display:block !important;
+}
+
+/* 次工程用：下層セクションの余白統一 */
+#training,
+#stretch,
+#price,
+#quest,
+#profile,
+#latest,
+#access{
+  scroll-margin-top:90px;
+}
+
+
+/* ===== V2 TRAINING / CONDITIONING ===== */
+
+.v2-service-intro{
+  max-width:1180px;
+  margin:0 auto 70px;
+}
+
+.v2-service-intro h2{
+  margin:0 0 26px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
+  font-size:clamp(42px,5vw,72px);
+  line-height:1.18;
+  letter-spacing:.02em;
+}
+
+.v2-service-intro p{
+  max-width:720px;
+  font-size:16px;
+  line-height:2;
+}
+
+.v2-service-words{
+  display:flex;
+  gap:32px;
+  flex-wrap:wrap;
+  margin-top:38px;
+  padding-top:20px;
+  border-top:1px solid rgba(181,139,58,.35);
+}
+
+.v2-service-words span{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:12px;
+  letter-spacing:.18em;
+  color:#b58b3a;
+}
+
+/* TRAINING = 黒 */
+#training{
+  background:#11110f !important;
+  color:#f8f5ed !important;
+}
+
+#training .v2-service-intro p{
+  color:#c8c1b4;
+}
+
+#training .v2-kicker{
+  color:#d0ad63 !important;
+}
+
+/* STRETCH / CONDITIONING = 白金 */
+#stretch{
+  background:#f7f3eb !important;
+  color:#191713 !important;
+}
+
+#stretch .v2-service-intro p{
+  color:#655f55;
+}
+
+/* 既存画像を“貼り絵”に見せない */
+#training img,
+#stretch img{
+  width:100%;
+  object-fit:cover;
+  box-shadow:none !important;
+  border-radius:0 !important;
+}
+
+#training .visualShowcase,
+#stretch .visualShowcase{
+  overflow:hidden;
+}
+
+@media(max-width:700px){
+  .v2-service-intro{
+    margin-bottom:48px;
+  }
+
+  .v2-service-intro h2{
+    font-size:clamp(36px,10vw,52px);
+  }
+
+  .v2-service-words{
+    gap:18px 24px;
+  }
+}
+
+/* ===== RESULT ===== */
+
+.v2-result{
+  max-width:none !important;
+  padding:110px max(7vw,calc((100vw - 1180px)/2)) !important;
+  background:#fbfaf6 !important;
+  color:#181713 !important;
+}
+
+.v2-result h2{
+  max-width:850px;
+  margin:0 0 25px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-size:clamp(42px,5vw,70px);
+  font-weight:400;
+  line-height:1.2;
+}
+
+.v2-result-lead{
+  max-width:700px;
+  color:#655f55;
+  line-height:2;
+}
+
+.v2-result-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+  margin-top:65px;
+  align-items:start;
+}
+
+.v2-result-grid figure{
+  margin:0;
+  overflow:hidden;
+  background:#eee9df;
+}
+
+.v2-result-grid img{
   display:block;
   width:100%;
   height:auto;
+  object-fit:cover;
 }
-.heroContact{
-  position:absolute;
-  left:50%;
-  bottom:8%;
-  transform:translateX(-50%);
-  z-index:3;
-  min-width:280px;
-  text-align:center;
-  padding:16px 30px;
-  border:1px solid #d6b15f;
-  background:rgba(255,255,255,.94);
-  color:#9e7620;
-  font-weight:800;
-  letter-spacing:.12em;
-  box-shadow:0 8px 26px rgba(0,0,0,.28);
+
+/* ===== PRICE ===== */
+
+#price{
+  max-width:none !important;
+  padding:110px max(7vw,calc((100vw - 1180px)/2)) !important;
+  background:#fff !important;
 }
-.heroContact:hover{
-  background:#d6b15f;
-  color:#fff;
+
+#price::before{
+  content:"PRICE / MEMBERSHIP";
+  display:block;
+  margin-bottom:18px;
+  color:#a77b28;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.22em;
 }
-.heroTagline{
-  position:absolute;
-  right:4%;
-  bottom:3%;
-  z-index:3;
-  color:#fff;
-  font-size:clamp(12px,1.4vw,20px);
-  font-weight:800;
-  letter-spacing:.14em;
-  text-shadow:0 2px 12px #000;
+
+#price h2{
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
 }
-@media(max-width:760px){
-  .heroFinal{
-    min-height:78vh;
-    align-items:flex-start;
-    padding-top:80px;
+
+#price .priceRow{
+  padding:28px 12px !important;
+  border-bottom:1px solid rgba(181,139,58,.25) !important;
+}
+
+#price .priceRow strong{
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-weight:500;
+}
+
+@media(max-width:700px){
+  .v2-result{
+    padding:78px 28px !important;
   }
-  .heroCollabCard{
-    width:86vw;
-    max-height:none;
+
+  .v2-result-grid{
+    grid-template-columns:1fr;
+    gap:20px;
   }
-  .heroContact{
-    bottom:9%;
-    min-width:240px;
-  }
-  .heroTagline{
-    right:5%;
-    bottom:2.5%;
-    font-size:11px;
-    letter-spacing:.08em;
+
+  #price{
+    padding:78px 28px !important;
   }
 }
+
+/* ===== RESERVATION POLICY ===== */
+
+.v2-booking-policy{
+  padding:110px max(7vw,calc((100vw - 1180px)/2));
+  background:#f5f0e7;
+  color:#181713;
+  border-top:1px solid rgba(181,139,58,.25);
+  border-bottom:1px solid rgba(181,139,58,.25);
+}
+
+.v2-booking-grid{
+  display:grid;
+  grid-template-columns:.85fr 1.15fr;
+  gap:90px;
+  align-items:start;
+}
+
+.v2-booking-policy h2{
+  margin:0 0 28px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
+  font-size:clamp(42px,5vw,68px);
+  line-height:1.15;
+}
+
+.v2-booking-lead{
+  max-width:500px;
+  font-size:18px;
+  line-height:2;
+}
+
+.v2-booking-key{
+  margin-top:42px;
+  padding:26px 0 26px 28px;
+  border-left:2px solid #b58b3a;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:18px;
+  line-height:1.9;
+}
+
+.v2-booking-key strong{
+  color:#987022;
+  font-weight:600;
+}
+
+.v2-booking-text{
+  border-top:1px solid rgba(181,139,58,.35);
+}
+
+.v2-booking-text p{
+  margin:0;
+  padding:23px 0;
+  border-bottom:1px solid rgba(181,139,58,.18);
+  color:#5f594f;
+  line-height:2;
+}
+
+@media(max-width:800px){
+  .v2-booking-policy{
+    padding:78px 28px;
+  }
+
+  .v2-booking-grid{
+    grid-template-columns:1fr;
+    gap:42px;
+  }
+}
+
+/* ===== RESERVATION POLICY FINAL ===== */
+
+.v2-booking-policy{
+  padding:90px max(7vw,calc((100vw - 980px)/2));
+  background:#f5f0e7;
+  color:#181713;
+  border-top:1px solid rgba(181,139,58,.28);
+}
+
+.v2-booking-inner{
+  max-width:900px;
+}
+
+.v2-booking-en{
+  margin:0 0 16px;
+  color:#a77b28;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:11px;
+  letter-spacing:.20em;
+}
+
+.v2-booking-policy h2{
+  margin:0 0 28px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
+  font-size:clamp(38px,4.5vw,62px);
+}
+
+.v2-booking-policy p{
+  max-width:820px;
+  margin:0;
+  padding:16px 0;
+  color:#5f594f;
+  line-height:2;
+}
+
+.v2-booking-lead{
+  color:#181713 !important;
+  font-size:18px;
+}
+
+.v2-booking-key{
+  margin:28px 0;
+  padding:24px 28px;
+  border-left:2px solid #b58b3a;
+  background:rgba(255,255,255,.58);
+}
+
+.v2-booking-key strong,
+.v2-booking-key span{
+  display:block;
+}
+
+.v2-booking-key strong{
+  margin-bottom:6px;
+  color:#8d671f;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:19px;
+  font-weight:600;
+}
+
+.v2-booking-key span{
+  color:#655f55;
+  font-size:14px;
+}
+
+@media(max-width:700px){
+  .v2-booking-policy{
+    padding:68px 28px;
+  }
+
+  .v2-booking-key{
+    padding:20px;
+  }
+}
+
+/* ===== ACCESS / CONTACT FINAL FIX ===== */
+
+#access{
+  max-width:none !important;
+  padding:90px max(7vw,calc((100vw - 1180px)/2)) !important;
+  background:#fff !important;
+}
+
+/* ACCESS内の2カラムを十分な幅にする */
+#access > div{
+  width:100% !important;
+  max-width:1180px !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+
+/* 見出しの縦割れ防止 */
+#access h2,
+#access h3,
+#access strong{
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+}
+
+/* 「ご予約・お問い合わせ」を横書きで固定 */
+#access h3{
+  width:auto !important;
+  max-width:none !important;
+  font-size:clamp(30px,3vw,46px) !important;
+  line-height:1.35 !important;
+  white-space:normal !important;
+}
+
+/* QRを大きくしすぎない */
+#access img[src*="line-qr"]{
+  width:180px !important;
+  max-width:40% !important;
+  height:auto !important;
+  object-fit:contain !important;
+}
+
+/* 予約ルールは一番下 */
+.v2-booking-policy{
+  padding:80px max(7vw,calc((100vw - 1180px)/2));
+  background:#f5f0e7;
+  color:#181713;
+  border-top:1px solid rgba(181,139,58,.28);
+}
+
+.v2-booking-policy h2{
+  margin:0 0 32px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-size:clamp(38px,4.5vw,62px);
+  font-weight:400;
+  line-height:1.2;
+}
+
+.v2-booking-policy p{
+  max-width:900px;
+  margin:0;
+  padding:18px 0;
+  border-bottom:1px solid rgba(181,139,58,.16);
+  color:#5f594f;
+  line-height:2;
+}
+
+.v2-booking-policy strong{
+  color:#8e6821;
+}
+
+.v2-booking-policy .booking-main{
+  font-size:17px;
+  color:#28241e;
+}
+
+.v2-booking-policy .booking-note{
+  font-size:14px;
+  border-bottom:0;
+}
+
+/* MOBILE */
+@media(max-width:700px){
+  #access{
+    padding:70px 24px !important;
+  }
+
+  #access h3{
+    font-size:32px !important;
+  }
+
+  #access img[src*="line-qr"]{
+    width:150px !important;
+    max-width:150px !important;
+  }
+
+  .v2-booking-policy{
+    padding:65px 24px;
+  }
+}
+

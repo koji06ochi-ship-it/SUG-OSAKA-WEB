@@ -905,3 +905,136 @@ body{
   font-size:11px;
   letter-spacing:.15em;
 }
+
+
+/* ===== INSTAGRAM LIVE FEED ===== */
+.instagramFeed{
+  min-height:0;
+  border:0;
+  display:block;
+}
+
+.instagramGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+
+.instagramCard{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  background:#0d0d0d;
+  border:1px solid #303030;
+  transition:border-color .2s ease,transform .2s ease;
+}
+
+.instagramCard:hover{
+  border-color:var(--gold);
+  transform:translateY(-2px);
+}
+
+.instagramMedia{
+  position:relative;
+  aspect-ratio:1/1;
+  overflow:hidden;
+  background:#151515;
+}
+
+.instagramMedia img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.instagramType{
+  position:absolute;
+  top:10px;
+  right:10px;
+  padding:5px 8px;
+  background:rgba(8,8,8,.82);
+  border:1px solid rgba(201,164,76,.7);
+  color:var(--gold);
+  font-size:10px;
+  letter-spacing:.08em;
+}
+
+.instagramCardBody{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:18px;
+  flex:1;
+}
+
+.instagramDate{
+  color:#888;
+  font-size:11px;
+  letter-spacing:.08em;
+}
+
+.instagramCaption{
+  margin:0;
+  color:var(--white);
+  line-height:1.7;
+  font-size:14px;
+}
+
+.instagramMore{
+  margin-top:auto;
+  color:var(--gold);
+  font-size:11px;
+  letter-spacing:.08em;
+}
+
+.instagramProfileLink{
+  display:inline-block;
+  margin-top:22px;
+  padding-bottom:3px;
+  border-bottom:1px solid var(--gold);
+  color:var(--gold);
+  font-size:13px;
+  font-weight:700;
+}
+
+.instagramFallback{
+  border:1px solid #333;
+  padding:36px 28px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+}
+
+.instagramFallback span{
+  color:var(--gold);
+  font-size:11px;
+  letter-spacing:.18em;
+}
+
+.instagramFallback strong{
+  font-size:clamp(20px,3vw,30px);
+}
+
+.instagramFallback a{
+  color:var(--gold);
+  border-bottom:1px solid var(--gold);
+  margin-top:5px;
+}
+
+@media(max-width:900px){
+  .instagramGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:560px){
+  .instagramGrid{
+    grid-template-columns:1fr;
+  }
+
+  .instagramCardBody{
+    padding:16px;
+  }
+}

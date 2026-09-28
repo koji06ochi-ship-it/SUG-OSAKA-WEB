@@ -2928,3 +2928,54 @@ nav{
     transform:rotate(90deg) !important;
   }
 }
+
+
+/* ===== ACCESS LINE TEXT WRAP FIX ===== */
+#access .contactGrid{
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) !important;
+}
+
+#access .linePanel{
+  grid-template-columns:minmax(0,1fr) 150px !important;
+  gap:22px !important;
+}
+
+#access .lineText{
+  min-width:0 !important;
+}
+
+#access .lineText h3{
+  white-space:nowrap !important;
+  font-size:clamp(25px,2.35vw,36px) !important;
+}
+
+#access .lineText p{
+  word-break:normal !important;
+  overflow-wrap:break-word !important;
+  line-break:strict !important;
+  text-wrap:pretty;
+}
+
+#access .lineText p:not(.miniLabel):not(.contactNote){
+  max-width:33em !important;
+}
+
+@media(max-width:900px){
+  #access .contactGrid{
+    grid-template-columns:1fr !important;
+  }
+
+  #access .linePanel{
+    grid-template-columns:minmax(0,1fr) 150px !important;
+  }
+
+  #access .lineText h3{
+    white-space:normal !important;
+  }
+}
+
+@media(max-width:560px){
+  #access .linePanel{
+    grid-template-columns:1fr !important;
+  }
+}

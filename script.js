@@ -42,3 +42,84 @@ nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classLi
 
   targets.forEach(el => observer.observe(el));
 })();
+
+
+// ===== EKO MINI GUIDE =====
+(() => {
+  const guide = document.getElementById("eko-guide");
+  const rider = document.getElementById("eko-rider");
+  const talk = document.getElementById("eko-talk");
+  const close = document.getElementById("eko-close");
+  const message = document.getElementById("eko-message");
+  if (!guide || !rider || !talk || !message) return;
+
+  const chime = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      [0, 0.11].forEach((delay, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = i === 0 ? 880 : 1320;
+        gain.gain.setValueAtTime(0.0001, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.07, now + delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.10);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.11);
+      });
+      setTimeout(() => ctx.close(), 500);
+    } catch (_) {}
+  };
+
+  const openGuide = () => {
+    guide.classList.add("is-open");
+    talk.setAttribute("aria-hidden", "false");
+  };
+
+  const closeGuide = () => {
+    guide.classList.remove("is-open");
+    talk.setAttribute("aria-hidden", "true");
+  };
+
+  rider.addEventListener("click", () => {
+    chime();
+    if (guide.classList.contains("is-open")) {
+      closeGuide();
+    } else {
+      message.textContent = "どこ行く？ 三輪車で案内するよ。";
+      openGuide();
+    }
+  });
+
+  close?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeGuide();
+  });
+
+  document.querySelectorAll("[data-eko-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = document.querySelector(button.dataset.ekoTarget);
+      if (!target) return;
+
+      chime();
+      message.textContent = button.dataset.ekoMessage || "到着！";
+      openGuide();
+
+      document.querySelectorAll(".eko-arrival").forEach(el => el.classList.remove("eko-arrival"));
+      target.classList.add("eko-arrival");
+
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+      window.setTimeout(() => {
+        target.classList.remove("eko-arrival");
+      }, 2600);
+    });
+  });
+})();

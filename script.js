@@ -7,7 +7,7 @@ nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classLi
 const feed=document.getElementById("instagram-feed");
 const latestSection=document.getElementById("latest");
 const INSTAGRAM_PROFILE_URL="https://www.instagram.com/ko_ji.sug/";
-const INSTAGRAM_API_URL=window.SUG_INSTAGRAM_API_URL || "/api/instagram";
+const INSTAGRAM_JSON_URL="data/instagram.json";
 
 function formatInstagramDate(value){
   if(!value) return "";
@@ -103,10 +103,7 @@ async function loadInstagramFeed(){
   if(!feed || !latestSection) return;
 
   try{
-    const response=await fetch(INSTAGRAM_API_URL,{
-      headers:{Accept:"application/json"}
-    });
-
+    const response=await fetch(INSTAGRAM_JSON_URL,{cache:"no-store"});
     if(!response.ok) throw new Error("Instagram feed unavailable");
 
     const payload=await response.json();

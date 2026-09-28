@@ -2337,3 +2337,82 @@ button{
   }
 }
 
+
+
+/* ===== S.u.G BODY TOOLS ===== */
+.v2-body-tools{
+  padding:100px max(7vw,calc((100vw - 1180px)/2));
+  background:#fff;
+  color:#181713;
+  border-top:1px solid rgba(183,138,50,.18);
+  border-bottom:1px solid rgba(183,138,50,.18);
+}
+.v2-body-tools h2{
+  margin:0 0 22px;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-weight:400;
+  font-size:clamp(36px,4.8vw,64px);
+  line-height:1.25;
+}
+.v2-tools-lead{
+  max-width:760px;
+  margin:0;
+  color:#625d53;
+  line-height:2;
+}
+.v2-tools-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+  margin-top:48px;
+}
+.v2-tool-card{
+  display:flex;
+  flex-direction:column;
+  min-height:240px;
+  padding:30px;
+  border:1px solid rgba(183,138,50,.34);
+  background:#fbfaf6;
+  color:#181713;
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.v2-tool-card:hover{
+  transform:translateY(-3px);
+  border-color:#b78a32;
+  background:#fff;
+}
+.v2-tool-card > span{
+  color:#b78a32;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:12px;
+  letter-spacing:.16em;
+}
+.v2-tool-card strong{
+  display:block;
+  margin:18px 0 12px;
+  font-size:clamp(20px,2.2vw,30px);
+  letter-spacing:.04em;
+}
+.v2-tool-card p{
+  margin:0;
+  color:#6f685e;
+  line-height:1.8;
+}
+.v2-tool-card b{
+  margin-top:auto;
+  padding-top:28px;
+  color:#a77b28;
+  font-size:13px;
+  letter-spacing:.12em;
+}
+@media(max-width:760px){
+  .v2-body-tools{
+    padding:75px 7vw;
+  }
+  .v2-tools-grid{
+    grid-template-columns:1fr;
+  }
+  .v2-tool-card{
+    min-height:0;
+  }
+}

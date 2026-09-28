@@ -1038,3 +1038,16 @@ body{
     padding:16px;
   }
 }
+
+
+/* ===== BEHOLD INSTAGRAM ===== */
+.beholdFeed{
+  width:100%;
+  min-height:0;
+  border:0;
+  display:block;
+}
+.beholdFeed behold-widget{
+  display:block;
+  width:100%;
+}

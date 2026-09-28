@@ -2512,3 +2512,158 @@ nav{
     font-size:21px;
   }
 }
+
+
+/* ===== CONTACT FORM 2026-09-29 ===== */
+.v2-contact-form{
+  padding:96px max(7vw,calc((100vw - 1180px)/2));
+  background:#0b0b0b;
+  color:#fff;
+  border-top:1px solid #27231b;
+}
+
+.v2-contact-form-inner{
+  max-width:980px;
+  margin:0 auto;
+}
+
+.v2-contact-form .v2-kicker{
+  color:#b78a32 !important;
+  font-weight:800;
+  letter-spacing:.14em;
+}
+
+.v2-contact-form h2{
+  margin:10px 0 18px;
+  color:#d7be79;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif;
+  font-size:clamp(42px,5vw,68px);
+  font-weight:500;
+  line-height:1.2;
+}
+
+.v2-contact-form-lead{
+  max-width:760px;
+  margin:0 0 40px;
+  color:#f0f0f0 !important;
+  font-size:16px;
+  line-height:1.9;
+}
+
+.sug-contact-form{
+  padding:34px;
+  background:#111;
+  border:1px solid rgba(183,138,50,.55);
+}
+
+.sug-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:22px;
+}
+
+.sug-contact-form label{
+  display:block;
+}
+
+.sug-contact-form label > span{
+  display:block;
+  margin:0 0 9px;
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+
+.sug-contact-form label > span b{
+  margin-left:7px;
+  color:#d7be79;
+  font-size:11px;
+}
+
+.sug-contact-form input,
+.sug-contact-form select,
+.sug-contact-form textarea{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid #4a4438;
+  border-radius:0;
+  background:#fff;
+  color:#111;
+  font:inherit;
+  font-size:16px;
+  padding:14px 15px;
+  outline:none;
+}
+
+.sug-contact-form textarea{
+  resize:vertical;
+  min-height:170px;
+}
+
+.sug-contact-form input:focus,
+.sug-contact-form select:focus,
+.sug-contact-form textarea:focus{
+  border-color:#b78a32;
+  box-shadow:0 0 0 1px #b78a32;
+}
+
+.sug-form-message{
+  margin-top:22px;
+}
+
+.sug-form-note{
+  margin:18px 0 0 !important;
+  color:#cfcfcf !important;
+  font-size:12px !important;
+  line-height:1.7 !important;
+}
+
+.sug-form-submit{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:210px;
+  min-height:56px;
+  margin-top:24px;
+  padding:0 28px;
+  border:1px solid #b78a32;
+  background:#b78a32;
+  color:#0b0b0b;
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.08em;
+  cursor:pointer;
+}
+
+.sug-form-submit:hover{
+  background:#d7be79;
+}
+
+.sug-form-honey{
+  position:absolute !important;
+  left:-9999px !important;
+  width:1px !important;
+  height:1px !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+@media(max-width:760px){
+  .v2-contact-form{
+    padding:70px 24px;
+  }
+
+  .sug-contact-form{
+    padding:24px 18px;
+  }
+
+  .sug-form-grid{
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+
+  .sug-form-submit{
+    width:100%;
+  }
+}

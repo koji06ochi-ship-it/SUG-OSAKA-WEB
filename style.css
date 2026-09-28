@@ -2416,3 +2416,99 @@ button{
     min-height:0;
   }
 }
+
+
+/* ===== READABILITY FIX 2026-09-29 ===== */
+body{
+  color:#24211c;
+}
+
+body,
+button,
+input,
+textarea,
+select{
+  font-weight:500;
+}
+
+nav{
+  font-weight:700;
+}
+
+.section p,
+.v2-conditioning p,
+.v2-body-concept p,
+.v2-membership p,
+.v2-body-tools p,
+.accessCopy,
+.lineText p,
+.v2-result-lead{
+  color:#4f493f !important;
+  font-size:16px;
+  line-height:1.9;
+}
+
+#training p,
+#equipment p{
+  color:#e7e0d4 !important;
+}
+
+.v2-kicker,
+.sectionNo,
+.goldText,
+.miniLabel{
+  color:#8f6720 !important;
+  font-weight:800;
+}
+
+.v2-body-tools h2,
+.v2-membership h2,
+.v2-conditioning h2,
+.v2-body-concept h2{
+  color:#1f1c18;
+}
+
+.v2-tool-card{
+  color:#211e19;
+}
+
+.v2-tool-card strong{
+  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+  font-size:24px;
+  font-weight:800;
+  line-height:1.35;
+}
+
+.v2-tool-card p{
+  font-size:16px !important;
+  color:#4b453d !important;
+}
+
+.v2-tool-card b{
+  font-size:14px;
+  font-weight:800;
+  color:#8f6720;
+}
+
+.contactGrid h3,
+.linePanel h3,
+.accessPanel h3{
+  font-weight:700;
+}
+
+@media(max-width:760px){
+  .section p,
+  .v2-conditioning p,
+  .v2-body-concept p,
+  .v2-membership p,
+  .v2-body-tools p,
+  .accessCopy,
+  .lineText p,
+  .v2-result-lead{
+    font-size:15px;
+  }
+
+  .v2-tool-card strong{
+    font-size:21px;
+  }
+}

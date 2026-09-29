@@ -123,3 +123,49 @@ nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classLi
     });
   });
 })();
+
+
+// ===== EKO BUBBLE HARD FIX =====
+(() => {
+  const guide = document.getElementById("eko-guide");
+  const rider = document.getElementById("eko-rider");
+  const talk = document.getElementById("eko-talk");
+  const message = document.getElementById("eko-message");
+  const close = document.getElementById("eko-close");
+  if (!guide || !rider || !talk || !message) return;
+
+  const forceOpen = (text) => {
+    if (text) message.textContent = text;
+    guide.classList.add("is-open");
+    talk.setAttribute("aria-hidden","false");
+    talk.style.display = "block";
+  };
+
+  const forceClose = () => {
+    guide.classList.remove("is-open");
+    talk.setAttribute("aria-hidden","true");
+    talk.style.display = "none";
+  };
+
+  rider.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (guide.classList.contains("is-open")) {
+      forceClose();
+    } else {
+      forceOpen("どこ行く？ BODY・QUEST・予約を案内するよ。");
+    }
+  }, true);
+
+  close?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    forceClose();
+  }, true);
+
+  document.querySelectorAll("[data-eko-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      forceOpen(button.dataset.ekoMessage || "到着！");
+    }, true);
+  });
+})();

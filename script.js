@@ -244,3 +244,20 @@ window.addEventListener("resize", () => {
     if (!mq.matches) document.body.classList.remove("mobile-form-zone");
   });
 })();
+
+
+// ===== FALLING CAKE EASTER EGG =====
+(() => {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (sessionStorage.getItem("sugCakeShown") === "1") return;
+
+  const cake = document.createElement("span");
+  cake.className = "sug-falling-cake";
+  cake.setAttribute("aria-hidden", "true");
+  cake.textContent = "🎂";
+  cake.style.setProperty("--cake-left", `${Math.floor(18 + Math.random() * 64)}vw`);
+
+  document.body.appendChild(cake);
+  sessionStorage.setItem("sugCakeShown", "1");
+  cake.addEventListener("animationend", () => cake.remove(), { once: true });
+})();

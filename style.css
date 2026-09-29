@@ -3416,3 +3416,40 @@ nav{
     animation:none !important;
   }
 }
+
+
+/* ===== EKO BUBBLE HARD FIX ===== */
+#eko-guide{
+  overflow:visible !important;
+}
+
+#eko-guide .eko-talk{
+  position:fixed !important;
+  right:18px !important;
+  bottom:165px !important;
+  left:auto !important;
+  top:auto !important;
+  display:none !important;
+  width:min(310px,calc(100vw - 36px)) !important;
+  z-index:2147483647 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  transform:none !important;
+  pointer-events:auto !important;
+}
+
+#eko-guide.is-open .eko-talk{
+  display:block !important;
+}
+
+#eko-guide .eko-talk::after{
+  right:34px !important;
+}
+
+@media(max-width:700px){
+  #eko-guide .eko-talk{
+    right:10px !important;
+    bottom:122px !important;
+    width:min(290px,calc(100vw - 20px)) !important;
+  }
+}

@@ -3889,17 +3889,18 @@ nav{
   user-select:none;
   filter:drop-shadow(0 8px 10px rgba(0,0,0,.24));
   transform-origin:center bottom;
-  animation:sug-cake-drop 3.2s cubic-bezier(.24,.72,.36,1) forwards;
+  animation:sug-cake-drop 6s cubic-bezier(.24,.72,.36,1) forwards;
 }
 
 @keyframes sug-cake-drop{
   0%{transform:translate3d(0,-12vh,0) rotate(-12deg);opacity:0}
-  7%{opacity:1}
-  48%{transform:translate3d(0,calc(100vh - 96px),0) rotate(10deg)}
-  61%{transform:translate3d(0,calc(100vh - 170px),0) rotate(-7deg)}
-  72%{transform:translate3d(0,calc(100vh - 96px),0) rotate(5deg)}
-  80%{transform:translate3d(0,calc(100vh - 128px),0) rotate(-3deg)}
-  88%{transform:translate3d(0,calc(100vh - 96px),0) rotate(1deg);opacity:1}
+  5%{opacity:1}
+  40%{transform:translate3d(0,calc(100vh - 96px),0) rotate(10deg)}
+  54%{transform:translate3d(0,calc(100vh - 180px),0) rotate(-7deg)}
+  66%{transform:translate3d(0,calc(100vh - 96px),0) rotate(5deg)}
+  73%{transform:translate3d(0,calc(100vh - 132px),0) rotate(-3deg)}
+  80%{transform:translate3d(0,calc(100vh - 96px),0) rotate(0);opacity:1}
+  93%{transform:translate3d(0,calc(100vh - 96px),0) rotate(0);opacity:1}
   100%{transform:translate3d(0,calc(100vh - 96px),0) rotate(0);opacity:0}
 }
 

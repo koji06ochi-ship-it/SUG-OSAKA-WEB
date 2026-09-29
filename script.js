@@ -1,8 +1,28 @@
 ﻿const btn=document.getElementById("menuBtn");
 const nav=document.getElementById("nav");
 
-btn?.addEventListener("click",()=>nav?.classList.toggle("open"));
-nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classList.remove("open")));
+const syncMenuState = (open) => {
+  nav?.classList.toggle("open", open);
+  document.body.classList.toggle("mobile-menu-open", open);
+  if (btn) {
+    btn.textContent = open ? "CLOSE" : "MENU";
+    btn.setAttribute("aria-expanded", String(open));
+  }
+};
+
+btn?.setAttribute("aria-expanded","false");
+
+btn?.addEventListener("click", () => {
+  syncMenuState(!(nav?.classList.contains("open")));
+});
+
+nav?.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+  syncMenuState(false);
+}));
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 760) syncMenuState(false);
+});
 
 
 // ===== SUG MOTION 2026-09-29 =====

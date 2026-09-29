@@ -169,3 +169,39 @@ nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classLi
     }, true);
   });
 })();
+
+
+// ===== SAMURAI WALKER =====
+(() => {
+  const walker = document.getElementById("samurai-walker");
+  const image = document.getElementById("samurai-walker-img");
+  if (!walker || !image) return;
+
+  fetch("assets/samurai-walker.b64")
+    .then(r => r.text())
+    .then(data => {
+      image.src = "data:image/webp;base64," + data.trim();
+    })
+    .catch(() => {});
+
+  walker.addEventListener("click", () => {
+    walker.classList.remove("is-reacting");
+    void walker.offsetWidth;
+    walker.classList.add("is-reacting");
+    setTimeout(() => walker.classList.remove("is-reacting"), 650);
+  });
+
+  const quest = document.getElementById("quest");
+  if (!quest || !("IntersectionObserver" in window)) return;
+
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        walker.classList.toggle("is-questing", entry.isIntersecting);
+      });
+    },
+    { threshold: 0.18 }
+  );
+
+  observer.observe(quest);
+})();

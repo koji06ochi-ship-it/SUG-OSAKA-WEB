@@ -3733,3 +3733,29 @@ nav{
     display:none !important;
   }
 }
+
+
+/* ===== IPHONE JAPANESE HEADING FIX ===== */
+@media(max-width:700px){
+  #stretch .v2-service-intro h2{
+    font-size:28px !important;
+    line-height:1.38 !important;
+    letter-spacing:0 !important;
+    word-break:keep-all !important;
+    overflow-wrap:normal !important;
+  }
+
+  #stretch .v2-service-intro h2 br{
+    display:block !important;
+  }
+
+  #conditioning h2,
+  #membership h2,
+  #body-tools h2,
+  #body-concept h2{
+    font-size:clamp(30px,8vw,36px) !important;
+    line-height:1.35 !important;
+    word-break:normal !important;
+    overflow-wrap:break-word !important;
+  }
+}

@@ -198,3 +198,29 @@ nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classLi
 
   observer.observe(quest);
 })();
+
+
+// ===== IPHONE FORM MASCOT HIDE =====
+(() => {
+  const formSection = document.getElementById("contact-form");
+  if (!formSection || !("IntersectionObserver" in window)) return;
+
+  const mq = window.matchMedia("(max-width: 700px)");
+  const sync = (inside) => {
+    if (!mq.matches) {
+      document.body.classList.remove("mobile-form-zone");
+      return;
+    }
+    document.body.classList.toggle("mobile-form-zone", inside);
+  };
+
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(entry => sync(entry.isIntersecting)),
+    { threshold: 0.12 }
+  );
+
+  observer.observe(formSection);
+  mq.addEventListener?.("change", () => {
+    if (!mq.matches) document.body.classList.remove("mobile-form-zone");
+  });
+})();

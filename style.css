@@ -3874,3 +3874,41 @@ nav{
     overflow:hidden !important;
   }
 }
+
+
+/* ===== FALLING CAKE EASTER EGG ===== */
+.sug-falling-cake{
+  position:fixed;
+  top:-72px;
+  left:var(--cake-left,72vw);
+  z-index:9999;
+  display:block;
+  font-size:clamp(26px,4vw,42px);
+  line-height:1;
+  pointer-events:none;
+  user-select:none;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.24));
+  transform-origin:center bottom;
+  animation:sug-cake-drop 3.2s cubic-bezier(.24,.72,.36,1) forwards;
+}
+
+@keyframes sug-cake-drop{
+  0%{transform:translate3d(0,-12vh,0) rotate(-12deg);opacity:0}
+  7%{opacity:1}
+  48%{transform:translate3d(0,calc(100vh - 96px),0) rotate(10deg)}
+  61%{transform:translate3d(0,calc(100vh - 170px),0) rotate(-7deg)}
+  72%{transform:translate3d(0,calc(100vh - 96px),0) rotate(5deg)}
+  80%{transform:translate3d(0,calc(100vh - 128px),0) rotate(-3deg)}
+  88%{transform:translate3d(0,calc(100vh - 96px),0) rotate(1deg);opacity:1}
+  100%{transform:translate3d(0,calc(100vh - 96px),0) rotate(0);opacity:0}
+}
+
+@media(max-width:700px){
+  .sug-falling-cake{
+    font-size:30px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .sug-falling-cake{display:none}
+}

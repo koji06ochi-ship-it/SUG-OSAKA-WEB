@@ -3644,3 +3644,92 @@ nav{
   width:100% !important;
   max-width:760px !important;
 }
+
+
+/* ===== IPHONE FINAL TUNING 2026-09-29 ===== */
+@media(max-width:700px){
+
+  /* iPhoneで見出しが大きすぎて不自然に割れるのを抑える */
+  #conditioning h2,
+  #membership h2,
+  #body-tools h2,
+  #body-concept h2,
+  #result h2,
+  #contact-form h2,
+  .v2-service-intro h2{
+    font-size:clamp(32px,8.7vw,40px) !important;
+    line-height:1.32 !important;
+    letter-spacing:.01em !important;
+    word-break:normal !important;
+    overflow-wrap:break-word !important;
+  }
+
+  #conditioning,
+  #membership,
+  #body-tools,
+  #body-concept{
+    padding-left:24px !important;
+    padding-right:24px !important;
+  }
+
+  #conditioning p,
+  #membership p,
+  #body-tools p,
+  #body-concept p{
+    font-size:15px !important;
+    line-height:1.85 !important;
+  }
+
+  /* 横スワイプカードは少しだけ細くして余白を確保 */
+  #conditioning .v2-flow article,
+  #body-tools .v2-tool-card,
+  #result .v2-result-grid figure{
+    flex-basis:min(78vw,330px) !important;
+  }
+
+  /* iPhoneではキャラを巡回させず左右下に固定。本文を隠さない */
+  #eko-guide{
+    left:auto !important;
+    right:8px !important;
+    bottom:calc(92px + env(safe-area-inset-bottom)) !important;
+    width:78px !important;
+    height:68px !important;
+    animation:none !important;
+    transform:none !important;
+  }
+
+  #eko-rider{
+    left:auto !important;
+    right:0 !important;
+    bottom:0 !important;
+    width:148px !important;
+    height:118px !important;
+    transform:scale(.52) !important;
+    transform-origin:right bottom !important;
+  }
+
+  #samurai-walker{
+    left:8px !important;
+    right:auto !important;
+    bottom:calc(92px + env(safe-area-inset-bottom)) !important;
+    width:52px !important;
+    height:76px !important;
+    animation:none !important;
+    transform:none !important;
+  }
+
+  #samurai-walker img{
+    animation:samuraiStep .46s ease-in-out infinite alternate !important;
+  }
+
+  /* フォーム入力中・フォーム閲覧中はキャラを隠す */
+  body.mobile-form-zone #eko-guide,
+  body.mobile-form-zone #samurai-walker{
+    opacity:0 !important;
+    pointer-events:none !important;
+  }
+
+  .eko-talk{
+    display:none !important;
+  }
+}

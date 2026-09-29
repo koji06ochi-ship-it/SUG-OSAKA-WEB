@@ -3759,3 +3759,43 @@ nav{
     overflow-wrap:break-word !important;
   }
 }
+
+
+/* ===== IPHONE SEMANTIC LINE BREAKS FINAL ===== */
+.mobile-line-heading span{
+  display:inline;
+}
+
+@media(max-width:700px){
+  .mobile-line-heading{
+    font-size:clamp(26px,7.2vw,31px) !important;
+    line-height:1.42 !important;
+    letter-spacing:0 !important;
+  }
+
+  .mobile-line-heading span{
+    display:block !important;
+    white-space:nowrap !important;
+  }
+
+  .mobile-line-heading br{
+    display:none !important;
+  }
+
+  .mobile-split-heading span + span{
+    margin-top:.05em;
+  }
+
+  #membership .mobile-line-heading{
+    font-size:clamp(27px,7.4vw,32px) !important;
+  }
+
+  #body-tools .mobile-line-heading{
+    font-size:clamp(27px,7.2vw,31px) !important;
+  }
+
+  #stretch .v2-service-intro .mobile-line-heading,
+  #conditioning .mobile-line-heading{
+    max-width:none !important;
+  }
+}

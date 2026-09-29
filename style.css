@@ -3618,3 +3618,17 @@ nav{
     min-height:360px !important;
   }
 }
+
+
+/* ===== ACCESS MAP REMOVED ONLY ===== */
+#access .contactGrid{
+  grid-template-columns:1fr !important;
+}
+
+#access .accessPanel{
+  max-width:760px !important;
+}
+
+#access .mapPanel{
+  display:none !important;
+}

@@ -3000,6 +3000,12 @@ nav{
   transform:translateX(34px);
 }
 
+@media(max-width:760px){
+  .sug-reveal.sug-from-right{
+    transform:translateX(24px);
+  }
+}
+
 .sug-reveal.is-visible{
   opacity:1;
   transform:none;

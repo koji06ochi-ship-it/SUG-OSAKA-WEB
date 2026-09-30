@@ -293,6 +293,8 @@ window.addEventListener("resize", () => {
 
 // ===== RANDOM S.U.G CHARACTER DROP =====
 (() => {
+  const randomCharactersEnabled = false;
+  if (!randomCharactersEnabled) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (sessionStorage.getItem("sugPopCharacterShown") === "1") return;
 

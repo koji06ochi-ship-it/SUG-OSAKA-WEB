@@ -3870,6 +3870,10 @@ nav{
     color:#0b0b0b !important;
   }
 
+  body.mobile-menu-open .header{
+    backdrop-filter:none;
+  }
+
   body.mobile-menu-open{
     overflow:hidden !important;
   }
@@ -3938,4 +3942,88 @@ nav{
 
 @media(prefers-reduced-motion:reduce){
   .sug-pop-character{display:none}
+}
+
+/* ===== GUIDE SAFE AREAS ===== */
+#eko-guide,
+#samurai-walker{
+  animation:none !important;
+  transform:none !important;
+  bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+}
+#eko-guide,
+#eko-guide.is-open{
+  left:16px !important;
+  right:auto !important;
+}
+#samurai-walker,
+#samurai-walker.is-questing{
+  left:180px !important;
+  right:auto !important;
+}
+@media(max-width:700px){
+  #eko-guide,
+  #eko-guide.is-open{
+    left:auto !important;
+    right:8px !important;
+  }
+  #samurai-walker,
+  #samurai-walker.is-questing{
+    left:8px !important;
+  }
+}
+#eko-guide.guide-obscured,
+#eko-guide.guide-obscured *,
+#samurai-walker.guide-obscured,
+#samurai-walker.guide-obscured *{
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* ===== MOBILE INQUIRY CTA ===== */
+.mobile-inquiry-cta{
+  display:none;
+}
+.mobile-inquiry-cta[hidden]{
+  display:none !important;
+}
+@media(max-width:760px){
+  body{
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  }
+  .mobile-inquiry-cta{
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    z-index:10060;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:52px;
+    padding:12px 16px;
+    border:1px solid #b58b3a;
+    background:#171613;
+    color:#fff;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-align:center;
+  }
+  .mobile-inquiry-cta:focus-visible{
+    outline:2px solid #b58b3a;
+    outline-offset:3px;
+  }
+  body.mobile-menu-open .mobile-inquiry-cta{
+    display:none;
+  }
+  body.mobile-inquiry-visible #eko-guide,
+  body.mobile-inquiry-visible #samurai-walker{
+    bottom:calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+  body.mobile-inquiry-visible .sug-pop-character,
+  body.mobile-inquiry-form .sug-pop-character{
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
 }

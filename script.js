@@ -220,29 +220,75 @@ window.addEventListener("resize", () => {
 })();
 
 
-// ===== IPHONE FORM MASCOT HIDE =====
+// ===== GUIDE SAFE AREAS =====
 (() => {
-  const formSection = document.getElementById("contact-form");
-  if (!formSection || !("IntersectionObserver" in window)) return;
+  const guide = document.getElementById("eko-guide");
+  const walker = document.getElementById("samurai-walker");
+  const form = document.getElementById("contact-form");
+  const talk = document.getElementById("eko-talk");
+  const inquiry = document.querySelector(".mobile-inquiry-cta");
+  if (!guide || !walker || !form || !talk || !inquiry) return;
 
-  const mq = window.matchMedia("(max-width: 700px)");
-  const sync = (inside) => {
-    if (!mq.matches) {
-      document.body.classList.remove("mobile-form-zone");
-      return;
+  const protectedElements = [...document.querySelectorAll(
+    "header, .mobile-inquiry-cta, main h1, main h2, main h3, main p, main a, main button, main label, main input, main textarea, main select, main strong, main span"
+  )];
+  const intersects = (a, b, gap = 12) =>
+    a.left < b.right + gap && a.right > b.left - gap &&
+    a.top < b.bottom + gap && a.bottom > b.top - gap;
+  let pending = false;
+  const update = () => {
+    pending = false;
+    const viewport = window.visualViewport;
+    const bounds = {
+      left: viewport?.offsetLeft || 0,
+      top: viewport?.offsetTop || 0,
+      right: (viewport?.offsetLeft || 0) + (viewport?.width || document.documentElement.clientWidth),
+      bottom: (viewport?.offsetTop || 0) + (viewport?.height || window.innerHeight)
+    };
+    const formRect = form.getBoundingClientRect();
+    const editing = document.activeElement?.matches("input, textarea, select, [contenteditable='true']");
+    const formVisible = intersects(formRect, bounds, 0);
+    const blocked = editing || formVisible || document.body.classList.contains("mobile-menu-open");
+    const mobile = window.matchMedia("(max-width: 760px)").matches;
+    inquiry.hidden = !mobile || !!blocked;
+    document.body.classList.toggle("mobile-inquiry-visible", !inquiry.hidden);
+    document.body.classList.toggle("mobile-inquiry-form", mobile && !!(formVisible || editing));
+    const obstacles = protectedElements.filter(el => el.getClientRects().length &&
+      getComputedStyle(el).visibility !== "hidden").map(el => el.getBoundingClientRect());
+    const unsafe = rect => rect.left < bounds.left || rect.right > bounds.right ||
+      rect.top < bounds.top || rect.bottom > bounds.bottom ||
+      obstacles.some(other => intersects(rect, other));
+
+    if (guide.classList.contains("is-open") && (blocked || unsafe(talk.getBoundingClientRect()))) {
+      guide.classList.remove("is-open");
+      talk.setAttribute("aria-hidden", "true");
+      talk.style.display = "none";
     }
-    document.body.classList.toggle("mobile-form-zone", inside);
+    for (const actor of [guide, walker]) {
+      const rect = actor.getBoundingClientRect();
+      // Include the samurai hop and image shadow above its button.
+      const area = {left: rect.left, right: rect.right, top: rect.top - 32, bottom: rect.bottom};
+      const hidden = !!blocked || unsafe(area);
+      actor.classList.toggle("guide-obscured", hidden);
+      actor.inert = hidden;
+    }
   };
-
-  const observer = new IntersectionObserver(
-    entries => entries.forEach(entry => sync(entry.isIntersecting)),
-    { threshold: 0.12 }
-  );
-
-  observer.observe(formSection);
-  mq.addEventListener?.("change", () => {
-    if (!mq.matches) document.body.classList.remove("mobile-form-zone");
-  });
+  const schedule = () => {
+    if (!pending) {
+      pending = true;
+      requestAnimationFrame(update);
+    }
+  };
+  document.addEventListener("scroll", schedule, {passive: true, capture: true});
+  window.addEventListener("resize", schedule);
+  document.addEventListener("focusin", update);
+  document.addEventListener("focusout", schedule);
+  window.visualViewport?.addEventListener("resize", schedule);
+  window.visualViewport?.addEventListener("scroll", schedule);
+  new ResizeObserver(schedule).observe(document.body);
+  new MutationObserver(schedule).observe(guide, {attributes: true, attributeFilter: ["class"]});
+  new MutationObserver(schedule).observe(document.body, {attributes: true, attributeFilter: ["class"]});
+  update();
 })();
 
 // ===== RANDOM S.U.G CHARACTER DROP =====

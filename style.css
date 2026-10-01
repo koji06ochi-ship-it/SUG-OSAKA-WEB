@@ -5506,3 +5506,81 @@ nav{
   }
 }
 /* ===== END SUG GRAFFITI WALL LAYOUT ===== */
+/* ===== SUG GRAFFITI JOKES 20261002 ===== */
+/* TRAINING：行き当たりばったりへのツッコミ */
+.training-design h3::after{
+  content:"「今日どこやります？」\A それ、毎回？";
+  white-space:pre;
+  display:block;
+  width:max-content;
+  max-width:90%;
+  margin:22px 0 0 auto;
+  color:#35aaff;
+  font-size:14px;
+  line-height:1.25;
+  font-weight:900;
+  letter-spacing:.02em;
+  transform:rotate(-5deg);
+  opacity:.78;
+}
+/* BODY：PFC */
+.body-management .sug-design-tags::after{
+  content:"PFC？\A え、そうなんや。";
+  white-space:pre;
+  display:inline-block;
+  margin:8px 0 0 12px;
+  color:#ff5c9d;
+  font-size:14px;
+  line-height:1.1;
+  font-weight:900;
+  transform:rotate(6deg);
+}
+/* BODY：睡眠 */
+.body-management p::after{
+  content:"  「寝不足でも追い込む？」";
+  color:#f0c435;
+  font-weight:900;
+  font-size:13px;
+}
+/* PROGRESS：毎回変更へのツッコミ */
+.progress-design h3::after{
+  content:"CHANGE EVERYTHING?  ×";
+  display:block;
+  margin-top:20px;
+  color:#f0c435;
+  font-family:Impact,"Arial Black",sans-serif;
+  font-size:19px;
+  letter-spacing:.06em;
+  transform:rotate(-3deg);
+}
+/* TRAININGカード下部の落書き */
+.training-design p::after{
+  content:"  NO RANDOM TRAINING.";
+  color:#35aaff;
+  font-family:Impact,"Arial Black",sans-serif;
+  font-size:12px;
+  letter-spacing:.08em;
+}
+/* BODYカード下部 */
+.body-management p::before{
+  content:"ジムの外、見てる？  ";
+  color:#ff5c9d;
+  font-weight:900;
+}
+/* 詳細ボックスにも小さく */
+.sug-design-details summary::before{
+  content:"え、そうなんや？  ";
+  color:#f0c435;
+  font-weight:900;
+}
+/* スマホでは少し控えめ */
+@media(max-width:760px){
+  .training-design h3::after,
+  .body-management .sug-design-tags::after{
+    font-size:12px;
+  }
+  .progress-design h3::after{
+    font-size:15px;
+  }
+}
+/* ===== END SUG GRAFFITI JOKES ===== */

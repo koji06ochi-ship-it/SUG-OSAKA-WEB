@@ -6015,3 +6015,79 @@ strong,
   }
 }
 /* ===== END SUG FINAL LAYOUT ===== */
+/* ===== MOBILE HERO FINAL 20261002 ===== */
+@media(max-width:760px){
+  /*
+    SEO用の「大阪・扇町／天満のパーソナルジム」は
+    DOMには残すが画面では非表示。
+  */
+  .hero-seo-title{
+    position:absolute!important;
+    width:1px!important;
+    height:1px!important;
+    padding:0!important;
+    margin:-1px!important;
+    overflow:hidden!important;
+    clip:rect(0,0,0,0)!important;
+    white-space:nowrap!important;
+    border:0!important;
+  }
+  /* TRAIN SMARTは右下で綺麗に固定 */
+  .hero h1{
+    right:22px!important;
+    bottom:4%!important;
+    width:245px!important;
+    max-width:245px!important;
+    font-size:28px!important;
+    line-height:1.02!important;
+    text-align:right!important;
+  }
+  .hero-main-copy{
+    display:block!important;
+  }
+  /* HERO内CTAを少し上へ */
+  .hero .hero-contact-cta{
+    bottom:11%!important;
+    min-width:220px!important;
+  }
+}
+/* ===== END MOBILE HERO FINAL ===== *//* ===== MOBILE SINGLE CTA FINAL 20261002 ===== */
+@media(max-width:760px){
+  /* 下に出ていた2個目のCTAは完全停止 */
+  .mobile-inquiry-cta{
+    display:none !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
+  body{
+    padding-bottom:0 !important;
+  }
+  /* SEO用文字はHTMLに残し、見た目だけ隠す */
+  .hero-seo-title{
+    position:absolute !important;
+    width:1px !important;
+    height:1px !important;
+    padding:0 !important;
+    margin:-1px !important;
+    overflow:hidden !important;
+    clip:rect(0 0 0 0) !important;
+    clip-path:inset(50%) !important;
+    white-space:nowrap !important;
+    border:0 !important;
+  }
+  /* HEROのCTAはこれ1個 */
+  .hero .hero-contact-cta{
+    bottom:12% !important;
+    min-width:220px !important;
+  }
+  /* TRAIN SMARTをCTAから離す */
+  .hero h1{
+    right:22px !important;
+    bottom:3.5% !important;
+    width:250px !important;
+    max-width:250px !important;
+    font-size:27px !important;
+    line-height:1.02 !important;
+  }
+}
+/* ===== END MOBILE SINGLE CTA FINAL ===== */

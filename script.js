@@ -227,6 +227,7 @@ window.addEventListener("resize", () => {
   const form = document.getElementById("contact-form");
   const talk = document.getElementById("eko-talk");
   const inquiry = document.querySelector(".mobile-inquiry-cta");
+  const hero = document.querySelector(".hero");
   if (!guide || !walker || !form || !talk || !inquiry) return;
 
   const protectedElements = [...document.querySelectorAll(
@@ -250,8 +251,8 @@ window.addEventListener("resize", () => {
     const formVisible = intersects(formRect, bounds, 0);
     const blocked = editing || formVisible || document.body.classList.contains("mobile-menu-open");
     const mobile = window.matchMedia("(max-width: 760px)").matches;
-    inquiry.hidden = !mobile || !!blocked;
-    document.body.classList.toggle("mobile-inquiry-visible", !inquiry.hidden);
+    inquiry.hidden = true;
+    document.body.classList.remove("mobile-inquiry-visible");
     document.body.classList.toggle("mobile-inquiry-form", mobile && !!(formVisible || editing));
     const obstacles = protectedElements.filter(el => el.getClientRects().length &&
       getComputedStyle(el).visibility !== "hidden").map(el => el.getBoundingClientRect());

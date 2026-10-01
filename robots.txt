@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
 Sitemap: https://koji06ochi-ship-it.github.io/SUG-OSAKA-WEB/sitemap.xml

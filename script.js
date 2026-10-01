@@ -1,4 +1,4 @@
-﻿const btn=document.getElementById("menuBtn");
+const btn=document.getElementById("menuBtn");
 const nav=document.getElementById("nav");
 
 const syncMenuState = (open) => {
@@ -344,4 +344,200 @@ window.addEventListener("resize", () => {
   };
 
   window.setTimeout(showCharacter, 700);
+})();
+
+
+/* ===== REAL ROPE DRAG SLIDER 20261001 ===== */
+(()=>{
+  const init=()=>{
+    const root=document.getElementById("why-drag-slider");
+    if(!root)return;
+    const stage=root.querySelector(".why-drag-stage");
+    const slides=[...root.querySelectorAll(".why-drag-slide")];
+    const dots=root.querySelector(".why-drag-dots");
+    const prev=root.querySelector(".why-drag-prev");
+    const next=root.querySelector(".why-drag-next");
+    let current=0;
+    let dragging=false;
+    let busy=false;
+    let startX=0;
+    let dx=0;
+    slides.forEach((_,i)=>{
+      const b=document.createElement("button");
+      b.type="button";
+      b.addEventListener("click",()=>{
+        if(i===current)return;
+        if(i>current){
+          pullNext(i);
+        }else{
+          pullPrev(i);
+        }
+      });
+      dots.appendChild(b);
+    });
+    const updateDots=()=>{
+      [...dots.children].forEach((d,i)=>{
+        d.classList.toggle("active",i===current);
+      });
+    };
+    const place=()=>{
+      slides.forEach((s,i)=>{
+        s.style.transition="none";
+        if(i===current){
+          s.style.transform="translate3d(0,0,0)";
+          s.style.zIndex="3";
+        }else{
+          s.style.transform="translate3d(-100%,0,0)";
+          s.style.zIndex="2";
+        }
+      });
+    };
+    /*
+      ★右へスワイプ＝次へ
+      現在スライドを右へ引っ張る
+      次スライドは左からついてくる
+    */
+    const pullNext=(target=(current+1)%slides.length)=>{
+      if(busy)return;
+      busy=true;
+      const now=slides[current];
+      const incoming=slides[target];
+      root.classList.add("is-committing");
+      incoming.style.transition="none";
+      incoming.style.transform="translate3d(-100%,0,0)";
+      incoming.style.zIndex="4";
+      now.style.zIndex="5";
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          now.style.transition=
+            "transform .52s cubic-bezier(.2,.8,.2,1)";
+          incoming.style.transition=
+            "transform .52s cubic-bezier(.2,.8,.2,1)";
+          now.style.transform=
+            "translate3d(100%,0,0)";
+          incoming.style.transform=
+            "translate3d(0,0,0)";
+        });
+      });
+      setTimeout(()=>{
+        current=target;
+        root.classList.remove("is-committing");
+        place();
+        updateDots();
+        busy=false;
+      },560);
+    };
+    const pullPrev=(target=(current-1+slides.length)%slides.length)=>{
+      if(busy)return;
+      busy=true;
+      const now=slides[current];
+      const incoming=slides[target];
+      incoming.style.transition="none";
+      incoming.style.transform="translate3d(100%,0,0)";
+      incoming.style.zIndex="4";
+      now.style.zIndex="5";
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          now.style.transition=
+            "transform .45s ease";
+          incoming.style.transition=
+            "transform .45s ease";
+          now.style.transform=
+            "translate3d(-100%,0,0)";
+          incoming.style.transform=
+            "translate3d(0,0,0)";
+        });
+      });
+      setTimeout(()=>{
+        current=target;
+        place();
+        updateDots();
+        busy=false;
+      },500);
+    };
+    stage.addEventListener("pointerdown",(e)=>{
+      if(busy)return;
+      dragging=true;
+      startX=e.clientX;
+      dx=0;
+      root.classList.add("is-dragging");
+      stage.setPointerCapture?.(e.pointerId);
+      const now=slides[current];
+      const incoming=slides[(current+1)%slides.length];
+      now.style.transition="none";
+      incoming.style.transition="none";
+      now.style.zIndex="5";
+      incoming.style.zIndex="4";
+      incoming.style.transform=
+        "translate3d(-100%,0,0)";
+    });
+    stage.addEventListener("pointermove",(e)=>{
+      if(!dragging)return;
+      /*
+        左へは動かさない。
+        右へ引っ張った距離だけ追従。
+      */
+      dx=Math.max(0,e.clientX-startX);
+      const w=stage.clientWidth;
+      const now=slides[current];
+      const incoming=slides[(current+1)%slides.length];
+      now.style.transform=
+        `translate3d(${dx}px,0,0)`;
+      incoming.style.transform=
+        `translate3d(${-w+dx}px,0,0)`;
+    });
+    const release=(e)=>{
+      if(!dragging)return;
+      dragging=false;
+      root.classList.remove("is-dragging");
+      const w=stage.clientWidth;
+      const now=slides[current];
+      const incoming=slides[(current+1)%slides.length];
+      const commit=
+        dx>Math.max(100,w*.16);
+      if(commit){
+        busy=true;
+        root.classList.add("is-committing");
+        now.style.transition=
+          "transform .36s cubic-bezier(.2,.8,.2,1)";
+        incoming.style.transition=
+          "transform .36s cubic-bezier(.2,.8,.2,1)";
+        now.style.transform=
+          `translate3d(${w}px,0,0)`;
+        incoming.style.transform=
+          "translate3d(0,0,0)";
+        setTimeout(()=>{
+          current=(current+1)%slides.length;
+          root.classList.remove("is-committing");
+          place();
+          updateDots();
+          busy=false;
+        },400);
+      }else{
+        now.style.transition=
+          "transform .28s ease";
+        incoming.style.transition=
+          "transform .28s ease";
+        now.style.transform=
+          "translate3d(0,0,0)";
+        incoming.style.transform=
+          "translate3d(-100%,0,0)";
+      }
+    };
+    stage.addEventListener("pointerup",release);
+    stage.addEventListener("pointercancel",release);
+    next.addEventListener("click",()=>{
+      pullNext();
+    });
+    prev.addEventListener("click",()=>{
+      pullPrev();
+    });
+    place();
+    updateDots();
+  };
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",init);
+  }else{
+    init();
+  }
 })();

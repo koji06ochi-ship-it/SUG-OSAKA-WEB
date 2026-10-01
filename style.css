@@ -5584,3 +5584,434 @@ nav{
   }
 }
 /* ===== END SUG GRAFFITI JOKES ===== */
+/* ===== JAPANESE TYPOGRAPHY FINAL 20261002 ===== */
+/*
+  日本語の「最後の1〜2文字だけ次行」を抑える。
+  見出し＝BALANCE
+  本文＝PRETTY
+*/
+h1,
+h2,
+h3,
+.mobile-line-heading,
+.body-comp-head h2,
+.v2-service-intro h2,
+.v2-result h2,
+.v2-booking-policy h2,
+.sug-design-head h2{
+  min-width:0!important;
+  max-width:100%;
+  line-break:strict;
+  word-break:normal;
+  overflow-wrap:break-word;
+  text-wrap:balance;
+}
+p,
+strong,
+.certifiedProfile strong,
+.v2-flow strong,
+.v2-flow p,
+.stretchCard p,
+.body-comp-card strong,
+.body-comp-card p{
+  min-width:0!important;
+  line-break:strict;
+  word-break:normal;
+  overflow-wrap:break-word;
+  text-wrap:pretty;
+}
+/* Chromium系では日本語をフレーズ単位で改行 */
+@supports (word-break:auto-phrase){
+  h1,
+  h2,
+  h3,
+  p,
+  strong,
+  .mobile-line-heading,
+  .certifiedProfile strong{
+    word-break:auto-phrase!important;
+  }
+}
+/* =========================
+   CONDITIONING 4列
+   ========================= */
+.v2-flow{
+  grid-template-columns:
+    repeat(4,minmax(0,1fr))!important;
+}
+.v2-flow article{
+  min-width:0!important;
+  padding:34px 22px 40px!important;
+}
+.v2-flow h3{
+  font-size:clamp(19px,1.8vw,24px)!important;
+  white-space:nowrap;
+}
+.v2-flow strong{
+  font-size:clamp(16px,1.45vw,18px)!important;
+  line-height:1.65!important;
+}
+.v2-flow p{
+  font-size:14px!important;
+  line-height:1.9!important;
+}
+/* =========================
+   RESULT
+   「い。」だけ落ちるのを修正
+   ========================= */
+.v2-result h2{
+  width:100%!important;
+  max-width:1000px!important;
+  font-size:clamp(40px,4.45vw,64px)!important;
+  line-height:1.22!important;
+  letter-spacing:.015em!important;
+  text-wrap:balance!important;
+}
+/* =========================
+   PROFILE / BEST OF MISS
+   ========================= */
+.profileGrid{
+  grid-template-columns:
+    minmax(0,1.08fr)
+    minmax(320px,.92fr)!important;
+}
+.profileText{
+  min-width:0!important;
+}
+.certifiedProfile{
+  max-width:100%!important;
+}
+.certifiedProfile strong{
+  max-width:100%!important;
+  font-size:clamp(16px,1.55vw,19px)!important;
+  line-height:1.6!important;
+  letter-spacing:.01em!important;
+  text-wrap:pretty!important;
+}
+/* =========================
+   STRETCH
+   短い部位名は途中で割らない
+   ========================= */
+.stretchGrid{
+  grid-template-columns:
+    repeat(2,minmax(0,1fr))!important;
+}
+.stretchCard{
+  min-width:0!important;
+}
+.stretchCard h3{
+  white-space:nowrap!important;
+}
+/* =========================
+   BODY COMPOSITION
+   ========================= */
+.body-comp-grid{
+  grid-template-columns:
+    repeat(3,minmax(0,1fr))!important;
+}
+.body-comp-card{
+  min-width:0!important;
+}
+.body-comp-card h3,
+.body-comp-card strong,
+.body-comp-card p{
+  max-width:100%!important;
+}
+/* =========================
+   BODY TOOLS
+   ========================= */
+.v2-tools-grid{
+  grid-template-columns:
+    repeat(2,minmax(0,1fr))!important;
+}
+.v2-tool-card{
+  min-width:0!important;
+}
+.v2-tool-card strong{
+  text-wrap:balance!important;
+}
+/* =========================
+   スマホ
+   ========================= */
+@media(max-width:800px){
+  .v2-flow,
+  .body-comp-grid,
+  .v2-tools-grid,
+  .profileGrid,
+  .stretchGrid{
+    grid-template-columns:1fr!important;
+  }
+  .v2-flow h3{
+    white-space:normal!important;
+  }
+  .v2-result h2{
+    font-size:clamp(34px,9.5vw,48px)!important;
+  }
+  .certifiedProfile strong{
+    font-size:17px!important;
+  }
+}
+/* ===== END JAPANESE TYPOGRAPHY FINAL ===== */
+/* ===== SUG FINAL LAYOUT 20261002 ===== */
+/* -------------------------------------------------
+   日本語組版：1文字だけ次行へ落ちる事故を抑える
+------------------------------------------------- */
+h1,h2,h3,
+.v2-conditioning h2,
+.v2-body-concept h2,
+.v2-body-tools h2,
+.v2-membership h2,
+.v2-result h2,
+.body-comp-head h2,
+.v2-service-intro h2,
+.profileText h2,
+.profileText h3,
+#access h2,
+#access h3{
+  min-width:0!important;
+  max-width:100%!important;
+  line-break:strict!important;
+  word-break:normal!important;
+  overflow-wrap:break-word!important;
+  text-wrap:balance!important;
+}
+p,
+strong,
+.certifiedProfile strong,
+.v2-flow strong,
+.v2-flow p,
+.body-comp-card strong,
+.body-comp-card p,
+.stretchCard p,
+#access p{
+  min-width:0!important;
+  line-break:strict!important;
+  word-break:normal!important;
+  overflow-wrap:break-word!important;
+  text-wrap:pretty!important;
+}
+@supports (word-break:auto-phrase){
+  h1,h2,h3,p,strong{
+    word-break:auto-phrase!important;
+  }
+}
+/* -------------------------------------------------
+   CONDITIONING
+   MOVEMENT / TRAINING / RECOVERY / PROGRESS
+------------------------------------------------- */
+.v2-flow{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:0!important;
+}
+.v2-flow article{
+  min-width:0!important;
+  padding:34px 22px 40px!important;
+}
+.v2-flow h3{
+  white-space:nowrap!important;
+  font-size:clamp(18px,1.7vw,23px)!important;
+}
+.v2-flow strong{
+  font-size:clamp(16px,1.35vw,18px)!important;
+  line-height:1.6!important;
+}
+.v2-flow p{
+  font-size:14px!important;
+  line-height:1.9!important;
+}
+/* -------------------------------------------------
+   BODY COMPOSITION
+   CUTTING / RECOMP / WALKING をPCで3列固定
+------------------------------------------------- */
+.body-comp{
+  width:100%!important;
+}
+.body-comp-head{
+  max-width:1000px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important;
+}
+.body-comp-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:18px!important;
+  align-items:stretch!important;
+  margin-top:42px!important;
+}
+.body-comp-card{
+  min-width:0!important;
+  height:100%!important;
+  padding:28px!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.body-comp-card h3{
+  margin:12px 0 16px!important;
+}
+.body-comp-card strong{
+  display:block!important;
+  margin-bottom:14px!important;
+}
+.body-comp-card p{
+  margin:0!important;
+  line-height:1.9!important;
+}
+.body-comp-flow{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:8px 12px!important;
+  margin-top:28px!important;
+}
+/* -------------------------------------------------
+   RESULT
+   最後の「い。」だけ落ちるのを防ぐ
+------------------------------------------------- */
+.v2-result h2{
+  width:100%!important;
+  max-width:1050px!important;
+  font-size:clamp(40px,4.35vw,62px)!important;
+  line-height:1.2!important;
+  letter-spacing:.01em!important;
+  text-wrap:balance!important;
+}
+.v2-result-lead{
+  max-width:820px!important;
+}
+/* -------------------------------------------------
+   PROFILE / BEST OF MISS
+------------------------------------------------- */
+.profileGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.12fr) minmax(330px,.88fr)!important;
+  gap:56px!important;
+  align-items:center!important;
+}
+.profileText{
+  min-width:0!important;
+}
+.certifiedProfile{
+  width:100%!important;
+  max-width:720px!important;
+}
+.certifiedProfile strong{
+  max-width:100%!important;
+  font-size:clamp(16px,1.45vw,19px)!important;
+  line-height:1.55!important;
+  letter-spacing:0!important;
+  text-wrap:pretty!important;
+}
+/* -------------------------------------------------
+   STRETCH
+------------------------------------------------- */
+.stretchGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:16px!important;
+}
+.stretchCard{
+  min-width:0!important;
+  height:100%!important;
+}
+.stretchCard h3{
+  white-space:nowrap!important;
+}
+/* -------------------------------------------------
+   BODY TOOLS
+------------------------------------------------- */
+.v2-tools-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.v2-tool-card{
+  min-width:0!important;
+}
+.v2-tool-card strong{
+  text-wrap:balance!important;
+}
+/* -------------------------------------------------
+   ACCESS / CONTACT
+------------------------------------------------- */
+#access .contactGrid{
+  grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr)!important;
+}
+#access .accessPanel,
+#access .linePanel,
+#access .lineText{
+  min-width:0!important;
+}
+#access h3{
+  max-width:100%!important;
+  line-height:1.35!important;
+}
+#access .lineText p{
+  max-width:100%!important;
+  text-wrap:pretty!important;
+}
+/* -------------------------------------------------
+   PRICE
+------------------------------------------------- */
+.priceRow{
+  min-width:0!important;
+}
+.priceRow strong,
+.priceRow small{
+  max-width:100%!important;
+}
+/* -------------------------------------------------
+   PC幅が狭い時
+------------------------------------------------- */
+@media(max-width:1050px){
+  .v2-flow{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .body-comp-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .body-comp-card.walking{
+    grid-column:1 / -1!important;
+  }
+  .profileGrid{
+    grid-template-columns:1fr!important;
+  }
+}
+/* -------------------------------------------------
+   MOBILE
+------------------------------------------------- */
+@media(max-width:760px){
+  .body-comp-grid,
+  .stretchGrid,
+  .v2-tools-grid,
+  .profileGrid{
+    grid-template-columns:1fr!important;
+  }
+  .body-comp-card.walking{
+    grid-column:auto!important;
+  }
+  .v2-flow{
+    grid-template-columns:1fr!important;
+  }
+  .v2-flow h3{
+    white-space:normal!important;
+  }
+  .v2-result h2{
+    font-size:clamp(34px,9.5vw,48px)!important;
+    line-height:1.25!important;
+  }
+  .body-comp-head h2{
+    font-size:clamp(34px,9.5vw,48px)!important;
+  }
+  .certifiedProfile strong{
+    font-size:17px!important;
+  }
+  .stretchCard h3{
+    white-space:normal!important;
+  }
+  #access .contactGrid,
+  #access .linePanel{
+    grid-template-columns:1fr!important;
+  }
+}
+/* ===== END SUG FINAL LAYOUT ===== */

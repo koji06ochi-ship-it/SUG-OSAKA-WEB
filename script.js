@@ -542,3 +542,17 @@ window.addEventListener("resize", () => {
     init();
   }
 })();
+
+// ===== MOBILE MENU KEYBOARD / HASH SAFETY 20261003 =====
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("mobile-menu-open")) {
+    syncMenuState(false);
+    btn?.focus();
+  }
+});
+
+window.addEventListener("hashchange", () => {
+  if (document.body.classList.contains("mobile-menu-open")) {
+    syncMenuState(false);
+  }
+});

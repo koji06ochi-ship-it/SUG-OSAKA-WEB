@@ -82,7 +82,7 @@
 }
 </script>
 
-  <link rel="stylesheet" href="style.css?v=20261003-menu-audit">
+  <link rel="stylesheet" href="style.css?v=20261003-ga4-ready">
 
 <!-- ===== CRITICAL MOBILE UX INLINE 20261003 ===== -->
 <style>
@@ -268,6 +268,31 @@
 }
 </style>
 <!-- ===== END MOBILE MENU POLISH 20261003 ===== -->
+
+
+<!-- ===== GA4 PLACEHOLDER 20261003 ===== -->
+<meta name="ga4-measurement-id" content="">
+<script>
+(() => {
+  const id = document.querySelector('meta[name="ga4-measurement-id"]')?.content?.trim();
+  if (!id || !/^G-[A-Z0-9]+$/i.test(id)) return;
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function(){ dataLayer.push(arguments); };
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
+  document.head.appendChild(script);
+
+  gtag('js', new Date());
+  gtag('config', id, {
+    send_page_view: true,
+    anonymize_ip: true
+  });
+})();
+</script>
+<!-- ===== END GA4 PLACEHOLDER 20261003 ===== -->
 
 </head>
 <body>
@@ -990,7 +1015,7 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
     s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
   })();
 </script>
-<script src="script.js?v=20261003-menu-audit" defer></script>
+<script src="script.js?v=20261003-ga4-ready" defer></script>
 
 <!-- ===== EKO MINI GUIDE ===== -->
 <div id="eko-guide" class="eko-guide" aria-live="polite">
@@ -1104,6 +1129,48 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
 })();
 </script>
 <!-- ===== END MOBILE MENU RESET 20261003 ===== -->
+
+
+<!-- ===== GA4 EVENTS 20261003 ===== -->
+<script>
+(() => {
+  const send = (name, params={}) => {
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', name, params);
+  };
+
+  document.querySelectorAll('a[href="#contact-anchor"]').forEach((link) => {
+    link.addEventListener('click', () => {
+      send('contact_click', {
+        link_text: (link.textContent || '').trim(),
+        page_location: location.href
+      });
+    });
+  });
+
+  const form = document.querySelector('.sug-contact-form');
+  if (form) {
+    form.addEventListener('submit', () => {
+      send('generate_lead', {
+        form_name: 'sug_contact_form',
+        page_location: location.href
+      });
+    });
+  }
+
+  document.querySelectorAll('a[href*="instagram.com"], a[href*="line.me"], a[href*="google.com/maps"]').forEach((link) => {
+    link.addEventListener('click', () => {
+      let kind = 'outbound_click';
+      const href = link.href || '';
+      if (href.includes('instagram.com')) kind = 'instagram_click';
+      else if (href.includes('line.me')) kind = 'line_click';
+      else if (href.includes('google.com/maps')) kind = 'map_click';
+      send(kind, {link_url: href, link_text: (link.textContent || '').trim()});
+    });
+  });
+})();
+</script>
+<!-- ===== END GA4 EVENTS 20261003 ===== -->
 
 </body>
 </html>

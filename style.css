@@ -6091,3 +6091,251 @@ strong,
   }
 }
 /* ===== END MOBILE SINGLE CTA FINAL ===== */
+
+/* ===== MOBILE UX REBUILD 20261003 ===== */
+@media(max-width:760px){
+  html{
+    scroll-padding-top:88px !important;
+  }
+
+  body{
+    overflow-x:hidden !important;
+    padding-bottom:0 !important;
+  }
+
+  /* Header */
+  .header{
+    min-height:76px !important;
+    padding:12px 18px !important;
+    position:sticky !important;
+    top:0 !important;
+    z-index:20000 !important;
+    background:rgba(255,255,255,.98) !important;
+    border-bottom:1px solid rgba(183,138,50,.24) !important;
+  }
+
+  .header .brand{
+    position:relative !important;
+    z-index:20003 !important;
+    font-size:16px !important;
+    letter-spacing:.18em !important;
+    color:#171613 !important;
+  }
+
+  #menuBtn{
+    position:relative !important;
+    z-index:20004 !important;
+    min-width:92px !important;
+    min-height:52px !important;
+    padding:0 16px !important;
+    margin:0 !important;
+    background:#fff !important;
+    border:1px solid #b78a32 !important;
+    color:#171613 !important;
+    font-size:14px !important;
+    font-weight:800 !important;
+    letter-spacing:.10em !important;
+  }
+
+  /* Full-screen menu: always opens from a fixed, predictable position */
+  #nav{
+    display:none !important;
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100dvh !important;
+    padding:104px 24px calc(32px + env(safe-area-inset-bottom)) !important;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.995),rgba(251,250,246,.995)) !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    justify-content:flex-start !important;
+    gap:0 !important;
+    box-sizing:border-box !important;
+    z-index:20002 !important;
+  }
+
+  #nav.open{
+    display:flex !important;
+  }
+
+  #nav::before{
+    content:"S.u.G OSAKA  /  MENU";
+    display:block;
+    padding:0 0 14px;
+    border-bottom:1px solid rgba(183,138,50,.35);
+    color:#9b7429;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:12px;
+    letter-spacing:.20em;
+  }
+
+  #nav a{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    width:100% !important;
+    min-height:54px !important;
+    padding:0 2px !important;
+    margin:0 !important;
+    border:0 !important;
+    border-bottom:1px solid rgba(23,22,19,.12) !important;
+    background:transparent !important;
+    color:#171613 !important;
+    font-size:15px !important;
+    font-weight:700 !important;
+    letter-spacing:.11em !important;
+    text-decoration:none !important;
+  }
+
+  #nav a::after{
+    content:"→";
+    color:#b78a32;
+    font-weight:400;
+  }
+
+  #nav a:first-child{
+    border-top:0 !important;
+  }
+
+  #nav a:last-child{
+    justify-content:center !important;
+    margin-top:20px !important;
+    min-height:58px !important;
+    border:1px solid #b78a32 !important;
+    background:#171613 !important;
+    color:#fff !important;
+  }
+
+  #nav a:last-child::after{
+    color:#d8bb73 !important;
+    margin-left:12px;
+  }
+
+  body.mobile-menu-open{
+    overflow:hidden !important;
+    touch-action:none;
+  }
+
+  /* Mobile hero: stop using overlapping absolute layers */
+  .hero{
+    min-height:auto !important;
+    height:auto !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    padding:24px 18px 44px !important;
+    gap:0 !important;
+    overflow:hidden !important;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.58),rgba(251,250,246,.92)),
+      url("assets/gym-space.jpg") center/cover no-repeat !important;
+  }
+
+  .heroInner{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    width:100% !important;
+    max-width:560px !important;
+    margin:0 auto !important;
+    padding:0 !important;
+  }
+
+  .hero img[src*="bestofmiss-sug-instructor.png"]{
+    position:static !important;
+    inset:auto !important;
+    width:min(96vw,520px) !important;
+    max-width:100% !important;
+    height:auto !important;
+    transform:none !important;
+    margin:0 auto 20px !important;
+  }
+
+  .hero h1{
+    position:static !important;
+    inset:auto !important;
+    width:100% !important;
+    max-width:440px !important;
+    margin:0 auto 26px !important;
+    transform:none !important;
+    font-size:clamp(34px,9.6vw,46px) !important;
+    line-height:1.02 !important;
+    letter-spacing:.01em !important;
+    text-align:center !important;
+    color:#171613 !important;
+  }
+
+  .hero-main-copy{
+    display:block !important;
+  }
+
+  .hero .hero-contact-cta{
+    display:flex !important;
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+    width:min(88vw,360px) !important;
+    min-width:0 !important;
+    min-height:58px !important;
+    margin:0 auto !important;
+    padding:0 22px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:#171613 !important;
+    border:1px solid #b78a32 !important;
+    color:#fff !important;
+    font-size:14px !important;
+    font-weight:700 !important;
+    letter-spacing:.12em !important;
+    text-align:center !important;
+    z-index:2 !important;
+  }
+
+  /* Old pseudo CTA must never come back */
+  .hero::after,
+  .mobile-inquiry-cta{
+    content:none !important;
+    display:none !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
+
+  /* Every mobile-menu destination lands below the sticky header */
+  #top,
+  #conditioning,
+  #stretch,
+  #price,
+  #body-concept,
+  #body-tools,
+  #quest,
+  #profile,
+  #access,
+  #contact-form,
+  #training,
+  #latest,
+  #membership,
+  #result{
+    scroll-margin-top:92px !important;
+  }
+
+  /* General mobile overflow guard */
+  main,
+  section,
+  .section,
+  .v2-conditioning,
+  .v2-body-concept,
+  .v2-body-tools,
+  .v2-result,
+  .v2-booking-policy{
+    max-width:100% !important;
+  }
+
+  h1,h2,h3,p,a,span,strong{
+    overflow-wrap:anywhere;
+  }
+}
+/* ===== END MOBILE UX REBUILD 20261003 ===== */

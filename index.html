@@ -82,7 +82,7 @@
 }
 </script>
 
-  <link rel="stylesheet" href="style.css?v=20261003-mobile-ux-critical2">
+  <link rel="stylesheet" href="style.css?v=20261003-contact-first">
 
 <!-- ===== CRITICAL MOBILE UX INLINE 20261003 ===== -->
 <style>
@@ -179,6 +179,14 @@
     position:relative!important;
     scroll-margin-top:88px!important;
   }
+
+  .contact-anchor{
+    display:block!important;
+    position:relative!important;
+    height:0!important;
+    scroll-margin-top:88px!important;
+  }
+
 }
 </style>
 <!-- ===== END CRITICAL MOBILE UX INLINE 20261003 ===== -->
@@ -199,7 +207,7 @@
     <a href="#quest">QUEST</a>
     <a href="#profile">PROFILE</a>
     <a href="#access">ACCESS</a>
-    <a href="#contact-form">CONTACT</a>
+    <a href="#contact-anchor">CONTACT</a>
   </nav>
 </header>
 
@@ -219,7 +227,7 @@
       <a class="btn" href="#access">ACCESS</a>
     </div>
   </div>
-  <a class="hero-contact-cta" href="#contact-form">体験・お問い合わせ</a>
+  <a class="hero-contact-cta" href="#contact-anchor">体験・お問い合わせ</a>
 </section>
 
 <section id="why-drag-slider" class="why-drag-slider">
@@ -748,55 +756,11 @@
     INSTAGRAM × S.u.G OSAKA WEB
   </p>
 </section>
-<section id="access" class="section alt accessSection">
-  <p class="sectionNo">08</p>
-
-  <div class="accessHead">
-    <p class="eyebrow">ACCESS / CONTACT</p>
-    <h2>ACCESS / CONTACT</h2>
-    <p class="goldText">S.u.G OSAKA</p>
-    <p>大阪市北区・天神橋エリア</p>
-  </div>
-
-  <div class="contactGrid">
-
-    <div class="accessPanel">
-      <p class="miniLabel">ACCESS</p>
-      <h3>S.u.G OSAKA｜5F・501</h3>
-
-      <p class="accessCopy">
-        〒530-0041<br>
-        大阪府大阪市北区天神橋4-7-11<br>
-        グリフォンビル5F・501号室<br>
-        扇町駅から徒歩1分<br>
-JR天満駅から徒歩圏<br><br>
-<strong>天神橋筋商店街すぐ。</strong><br>
-JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケードを通ってアクセスでき、雨の日も通いやすい立地です。<br>
-天六・南森町・中崎町からもアクセスしやすく、梅田からも徒歩圏。<br><br>
-トレーニング用品などを店舗に置いて、仕事帰りや外出時にも手ぶらで通いやすい環境です。
-      </p>
-
-      <a
-        class="contactButton"
-        href="https://www.google.com/maps/search/?api=1&query=S.u.G+Conditioning+Studio+大阪天満&query_place_id=ChIJb9zSMaXnAGARN4jLrYR42cc"
-        target="_blank"
-        rel="noopener"
-      >
-        GOOGLE MAPSで見る
-      </a>
-    </div>
-  </div>
-
-  <div class="accessFooter">
-    <strong>S.u.G OSAKA</strong>
-    <span>TRAIN SMART, MOVE BETTER.</span>
-  </div>
-</section>
-
-<section id="contact-form" class="v2-contact-form">
+<section id="contact-form" class="v2-contact-form" aria-labelledby="contact-form-title">
+  <span id="contact-anchor" class="contact-anchor" aria-hidden="true"></span>
   <div class="v2-contact-form-inner">
     <div class="v2-kicker">CONTACT FORM</div>
-    <h2>お問い合わせ</h2>
+    <h2 id="contact-form-title">お問い合わせ</h2>
     <p class="v2-contact-form-lead">
       体験、パーソナルトレーニング、ストレッチ、料金についてはこちらからお問い合わせください。
     </p>
@@ -850,6 +814,52 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
   </div>
 </section>
 
+
+<section id="access" class="section alt accessSection">
+  <p class="sectionNo">08</p>
+
+  <div class="accessHead">
+    <p class="eyebrow">ACCESS / CONTACT</p>
+    <h2>ACCESS / CONTACT</h2>
+    <p class="goldText">S.u.G OSAKA</p>
+    <p>大阪市北区・天神橋エリア</p>
+  </div>
+
+  <div class="contactGrid">
+
+    <div class="accessPanel">
+      <p class="miniLabel">ACCESS</p>
+      <h3>S.u.G OSAKA｜5F・501</h3>
+
+      <p class="accessCopy">
+        〒530-0041<br>
+        大阪府大阪市北区天神橋4-7-11<br>
+        グリフォンビル5F・501号室<br>
+        扇町駅から徒歩1分<br>
+JR天満駅から徒歩圏<br><br>
+<strong>天神橋筋商店街すぐ。</strong><br>
+JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケードを通ってアクセスでき、雨の日も通いやすい立地です。<br>
+天六・南森町・中崎町からもアクセスしやすく、梅田からも徒歩圏。<br><br>
+トレーニング用品などを店舗に置いて、仕事帰りや外出時にも手ぶらで通いやすい環境です。
+      </p>
+
+      <a
+        class="contactButton"
+        href="https://www.google.com/maps/search/?api=1&query=S.u.G+Conditioning+Studio+大阪天満&query_place_id=ChIJb9zSMaXnAGARN4jLrYR42cc"
+        target="_blank"
+        rel="noopener"
+      >
+        GOOGLE MAPSで見る
+      </a>
+    </div>
+  </div>
+
+  <div class="accessFooter">
+    <strong>S.u.G OSAKA</strong>
+    <span>TRAIN SMART, MOVE BETTER.</span>
+  </div>
+</section>
+
 <section id="booking-policy" class="v2-booking-policy">
   <div class="v2-kicker">RESERVATION POLICY</div>
 
@@ -886,7 +896,7 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
 
 </main>
 
-<a class="mobile-inquiry-cta" href="#contact-form" hidden hidden aria-hidden="true" style="display:none!important;visibility:hidden!important;pointer-events:none!important;">体験・お問い合わせ</a>
+<a class="mobile-inquiry-cta" href="#contact-anchor" hidden hidden aria-hidden="true" style="display:none!important;visibility:hidden!important;pointer-events:none!important;">体験・お問い合わせ</a>
 
 
 <footer>
@@ -902,7 +912,7 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
     s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
   })();
 </script>
-<script src="script.js?v=20261003-mobile-ux-critical2" defer></script>
+<script src="script.js?v=20261003-contact-first" defer></script>
 
 <!-- ===== EKO MINI GUIDE ===== -->
 <div id="eko-guide" class="eko-guide" aria-live="polite">
@@ -913,7 +923,7 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
     <div class="eko-actions">
       <button type="button" data-eko-target="#body-concept" data-eko-message="BODYに到着！ 日々の管理を見てみよう。">BODY</button>
       <button type="button" data-eko-target="#quest" data-eko-message="QUESTに到着！ 街で遊ぶプロジェクトはこちら。">QUEST</button>
-      <button type="button" data-eko-target="#contact-form" data-eko-message="予約・お問い合わせに到着！ ここから送れるよ。">予約</button>
+      <button type="button" data-eko-target="#contact-anchor" data-eko-message="予約・お問い合わせに到着！ ここから送れるよ。">予約</button>
     </div>
   </div>
 
@@ -979,10 +989,10 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
     }
   };
 
-  document.querySelectorAll('a[href="#contact-form"]').forEach(link => {
+  document.querySelectorAll('a[href="#contact-anchor"]').forEach(link => {
     link.addEventListener('click', (event) => {
       event.preventDefault();
-      goTo('#contact-form');
+      goTo('#contact-anchor');
     }, {capture:true});
   });
 

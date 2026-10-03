@@ -82,7 +82,7 @@
 }
 </script>
 
-  <link rel="stylesheet" href="style.css?v=20261003-contact-first">
+  <link rel="stylesheet" href="style.css?v=20261003-menu-audit">
 
 <!-- ===== CRITICAL MOBILE UX INLINE 20261003 ===== -->
 <style>
@@ -191,23 +191,101 @@
 </style>
 <!-- ===== END CRITICAL MOBILE UX INLINE 20261003 ===== -->
 
+
+<!-- ===== MOBILE MENU POLISH 20261003 ===== -->
+<style>
+@media(max-width:760px){
+  #nav{
+    padding-top:96px!important;
+    padding-left:22px!important;
+    padding-right:22px!important;
+  }
+  #nav::before{
+    content:"S.u.G OSAKA"!important;
+    padding:0 0 16px!important;
+    margin-bottom:2px!important;
+    font-size:13px!important;
+    letter-spacing:.22em!important;
+  }
+  #nav a{
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:"main arrow" "sub arrow"!important;
+    align-items:center!important;
+    column-gap:14px!important;
+    min-height:62px!important;
+    padding:10px 2px!important;
+  }
+  #nav .nav-main{
+    grid-area:main!important;
+    font-family:Arial,"Noto Sans JP",sans-serif!important;
+    font-size:16px!important;
+    font-weight:800!important;
+    line-height:1.1!important;
+    letter-spacing:.13em!important;
+    color:#171613!important;
+  }
+  #nav .nav-sub{
+    grid-area:sub!important;
+    display:block!important;
+    margin-top:5px!important;
+    font-size:11px!important;
+    font-weight:600!important;
+    line-height:1.25!important;
+    letter-spacing:.05em!important;
+    color:#7b746a!important;
+  }
+  #nav a::after{
+    grid-area:arrow!important;
+    align-self:center!important;
+    content:"→"!important;
+    color:#b78a32!important;
+    font-size:18px!important;
+  }
+  #nav a:last-child{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    margin-top:18px!important;
+    padding:10px 18px!important;
+    background:#171613!important;
+    border:1px solid #b78a32!important;
+  }
+  #nav a:last-child .nav-main,
+  #nav a:last-child .nav-sub{
+    color:#fff!important;
+    text-align:center!important;
+  }
+  #nav a:last-child .nav-sub{
+    color:#d8bb73!important;
+  }
+  #nav a:last-child::after{
+    display:none!important;
+  }
+}
+</style>
+<!-- ===== END MOBILE MENU POLISH 20261003 ===== -->
+
 </head>
 <body>
 
 <header class="header">
   <a class="brand" href="#top">S.u.G OSAKA</a>
   <button class="menuBtn" id="menuBtn" aria-label="メニュー">MENU</button>
-  <nav id="nav">
-    <a href="#top">TOP</a>
-    <a href="#conditioning">TRAINING</a>
-    <a href="#stretch">STRETCH</a>
-    <a href="#price">PRICE</a>
-    <a href="#body-concept">BODY</a>
-    <a href="#body-tools">TOOLS</a>
-    <a href="#quest">QUEST</a>
-    <a href="#profile">PROFILE</a>
-    <a href="#access">ACCESS</a>
-    <a href="#contact-anchor">CONTACT</a>
+  <nav id="nav" aria-label="メインメニュー">
+    <a href="#top"><span class="nav-main">TOP</span><span class="nav-sub">トップ</span></a>
+    <a href="#conditioning"><span class="nav-main">TRAINING</span><span class="nav-sub">トレーニング・管理</span></a>
+    <a href="#stretch"><span class="nav-main">STRETCH</span><span class="nav-sub">ストレッチ・コンディショニング</span></a>
+    <a href="#price"><span class="nav-main">PRICE</span><span class="nav-sub">料金・プラン</span></a>
+    <a href="#body-concept"><span class="nav-main">BODY</span><span class="nav-sub">S.u.G BODY</span></a>
+    <a href="#body-tools"><span class="nav-main">TOOLS</span><span class="nav-sub">無料BODYツール</span></a>
+    <a href="#quest"><span class="nav-main">QUEST</span><span class="nav-sub">S.u.G QUEST</span></a>
+    <a href="#profile"><span class="nav-main">PROFILE</span><span class="nav-sub">プロフィール</span></a>
+    <a href="#access"><span class="nav-main">ACCESS</span><span class="nav-sub">アクセス</span></a>
+    <a href="#contact-anchor"><span class="nav-main">CONTACT</span><span class="nav-sub">体験・お問い合わせ</span></a>
   </nav>
 </header>
 
@@ -819,8 +897,8 @@
   <p class="sectionNo">08</p>
 
   <div class="accessHead">
-    <p class="eyebrow">ACCESS / CONTACT</p>
-    <h2>ACCESS / CONTACT</h2>
+    <p class="eyebrow">ACCESS</p>
+    <h2>ACCESS</h2>
     <p class="goldText">S.u.G OSAKA</p>
     <p>大阪市北区・天神橋エリア</p>
   </div>
@@ -912,7 +990,7 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
     s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
   })();
 </script>
-<script src="script.js?v=20261003-contact-first" defer></script>
+<script src="script.js?v=20261003-menu-audit" defer></script>
 
 <!-- ===== EKO MINI GUIDE ===== -->
 <div id="eko-guide" class="eko-guide" aria-live="polite">
@@ -1009,6 +1087,23 @@ JR天満駅・Osaka Metro扇町駅から天神橋筋商店街のアーケード�
 })();
 </script>
 <!-- ===== END CONTACT TARGET FIX INLINE 20261003 ===== -->
+
+
+<!-- ===== MOBILE MENU RESET 20261003 ===== -->
+<script>
+(() => {
+  const menuBtn = document.getElementById('menuBtn');
+  const nav = document.getElementById('nav');
+  if (!menuBtn || !nav) return;
+
+  menuBtn.addEventListener('click', () => {
+    requestAnimationFrame(() => {
+      if (nav.classList.contains('open')) nav.scrollTop = 0;
+    });
+  }, {capture:false});
+})();
+</script>
+<!-- ===== END MOBILE MENU RESET 20261003 ===== -->
 
 </body>
 </html>

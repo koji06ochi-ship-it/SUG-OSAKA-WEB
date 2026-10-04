@@ -231,7 +231,7 @@ window.addEventListener("resize", () => {
   if (!guide || !walker || !form || !talk || !inquiry) return;
 
   const protectedElements = [...document.querySelectorAll(
-    "header, .mobile-inquiry-cta, main h1, main h2, main h3, main p, main a, main button, main label, main input, main textarea, main select, main strong, main span"
+    "header, .mobile-inquiry-cta, main h1, main h2, main h3, main p, main a, main button, main label, main input, main textarea, main select, main strong, main span, #result figure, #result img, #result .v2-result-grid"
   )];
   const intersects = (a, b, gap = 12) =>
     a.left < b.right + gap && a.right > b.left - gap &&

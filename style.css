@@ -6339,3 +6339,60 @@ strong,
   }
 }
 /* ===== END MOBILE UX REBUILD 20261003 ===== */
+
+
+/* ===== PC HEADER COMPACT + RESULT CHARACTER SAFE 20261004 ===== */
+@media (min-width:761px){
+  .header{
+    gap:18px;
+    padding-left:2.5%;
+    padding-right:2.5%;
+  }
+
+  .header .brand{
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+
+  #nav{
+    flex:1 1 auto;
+    min-width:0;
+    justify-content:flex-end;
+    align-items:center;
+    gap:clamp(8px,1vw,16px);
+    flex-wrap:nowrap;
+  }
+
+  #nav a{
+    display:inline-flex;
+    align-items:center;
+    white-space:nowrap;
+    line-height:1.2;
+  }
+
+  #nav .nav-sub{
+    display:none;
+  }
+
+  #nav .nav-main{
+    font-size:clamp(10px,.82vw,12px);
+    letter-spacing:.06em;
+  }
+}
+
+@media (min-width:761px) and (max-width:1020px){
+  .header{
+    gap:10px;
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  #nav{
+    gap:6px;
+  }
+
+  #nav .nav-main{
+    font-size:10px;
+    letter-spacing:.02em;
+  }
+}

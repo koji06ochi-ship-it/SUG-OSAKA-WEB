@@ -1,0 +1,13 @@
+✔ 24h boundary, invalid/future dates, duplicate and ordering (2.645051ms)
+✔ empty and stale fail closed; expiry is derived, not trusted (0.362716ms)
+✔ reject unsafe hosts, credentials and access tokens; missing video fallback (0.461216ms)
+✔ collector validates account, uses bearer header and safe paging, whitelists output (1.199307ms)
+✔ wrong account, revoked token, missing config and invalid data reject (1.22757ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 161.555875

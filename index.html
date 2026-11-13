@@ -285,6 +285,7 @@
 @media(max-width:700px){.hp-apps,.hp-service{padding:40px 20px}.hp-app-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:20px;padding-bottom:16px}.hp-app-grid article{flex:0 0 85%;scroll-snap-align:start}.hp-app-copy{min-height:110px}.hp-app-grid img{height:360px}.hp-service-grid{grid-template-columns:1fr;gap:8px}.hp-apps:before{content:'BODY · eVo · WALK';font-size:12px;letter-spacing:.1em}.hp-apps .hp-intro:after{content:'画面は横にスワイプして見られます →';display:block;margin-top:16px;font-size:13px;color:#d0b475}}
 .hp-more{margin-top:28px;padding:18px 0;border-top:1px solid #b7a57e}.hp-more summary{cursor:pointer;font-weight:700}.hp-more p{line-height:1.8}.hp-service-grid article{padding:0;border:0;box-shadow:none}.hp-app-purpose{display:none}
 </style>  <link rel="stylesheet" href="typography-refine.css?v=20261113">
+  <link rel="stylesheet" href="stories.css?v=20261113">
 </head>
 <body>
 
@@ -587,6 +588,14 @@
     
   </div>
 
+  <div id="sug-stories" hidden data-feed="https://raw.githubusercontent.com/koji06ochi-ship-it/SUG-OSAKA-WEB/stories-data/stories.json">
+    <button type="button" class="sug-story-entry" aria-haspopup="dialog" aria-controls="sug-story-viewer" aria-label="Instagramストーリーを見る">
+      <span class="sug-story-ring"><img src="assets/logo.png" alt=""></span>
+      <span class="sug-story-label">INSTAGRAM<br>STORIES</span>
+    </button>
+  </div>
+  <a class="sug-instagram-direct" href="https://www.instagram.com/ko_ji.sug/" target="_blank" rel="noopener noreferrer">Instagramを見る ↗</a>
+
   <div id="instagram-behold" class="instagramFeed" style="min-height:0;border:0;display:block;">
     <behold-widget feed-id="EOU475Uzd3dkeWdPn3RH"></behold-widget>
   </div>
@@ -770,6 +779,14 @@
 </script>
 <!-- ===== END GA4 EVENTS 20261003 ===== -->
 
+<dialog id="sug-story-viewer" aria-label="Instagramストーリー">
+  <div class="sug-story-shell">
+    <div class="sug-story-head"><span>@ko_ji.sug</span><span data-count aria-live="polite"></span><button type="button" data-close aria-label="ストーリーを閉じる">✕</button></div>
+    <div class="sug-story-stage"></div>
+    <div class="sug-story-controls"><button type="button" data-prev>前へ</button><a data-instagram href="https://www.instagram.com/ko_ji.sug/" target="_blank" rel="noopener noreferrer">Instagramで見る ↗</a><button type="button" data-next>次へ</button></div>
+  </div>
+</dialog>
+<script type="module" src="stories.js?v=20261113"></script>
 </body>
 </html>
 

@@ -1,13 +1,15 @@
-✔ 24h boundary, invalid/future dates, duplicate and ordering (2.645051ms)
-✔ empty and stale fail closed; expiry is derived, not trusted (0.362716ms)
-✔ reject unsafe hosts, credentials and access tokens; missing video fallback (0.461216ms)
-✔ collector validates account, uses bearer header and safe paging, whitelists output (1.199307ms)
-✔ wrong account, revoked token, missing config and invalid data reject (1.22757ms)
-ℹ tests 5
+✔ 24h boundary, invalid/future dates, duplicate and ordering (2.365954ms)
+✔ empty and stale fail closed; expiry is derived, not trusted (0.345912ms)
+✔ reject unsafe hosts, credentials and access tokens; missing video fallback (0.540777ms)
+✔ collector validates account, uses bearer header and safe paging, whitelists output (1.21846ms)
+✔ wrong account, revoked token, missing config and invalid data reject (1.179412ms)
+✔ refresh saves rotated token without exposing it in result (0.749151ms)
+✔ expired token requires reauthorization; young token is not refreshed (0.514907ms)
+ℹ tests 7
 ℹ suites 0
-ℹ pass 5
+ℹ pass 7
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 161.555875
+ℹ duration_ms 167.019356

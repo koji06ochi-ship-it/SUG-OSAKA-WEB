@@ -34,19 +34,35 @@ Account: ko_ji.sug. Completion status: NOT COMPLETE; real authorization and medi
 6. https://docs.github.com/en/billing/concepts/product-billing/github-actions
    Standard public-repository GitHub runners are free. Implementation uses no cache/artifact uploads, larger runners or paid service.
 
-Several Meta story/media/token/rate-limit documentation requests returned 429 or inaccessible. Therefore exact per-mode story permissions, returned media field availability, token lifetime/refresh procedure, music/reshare exclusions and numeric rate limits are NOT fully verified. The collector is an unactivated candidate, not a claim of current API compatibility. No auto-token-refresh was implemented from unverified assumptions.
+Official documentation follow-up: retrieved the current Stories, IG Media, Business Login, Overview and rate-limit pages directly from Meta (Markdown/HTML responses) after search-tool 429s. Verified: timestamp is publish time, thumbnail_url is video-only, Stories are available for 24h, Live Video and reshares are excluded. expires_at remains locally derived. The 2026-07-30 changelog confirms media_url is omitted for copyrighted/licensed audio including Instagram's music library, even for owned videos; missing URL is not an API failure. Image/video display cannot be promised for every story.
+
+Instagram Login: professional account, no linked Facebook Page, instagram_business_basic. Long-lived token is 60 days; GET graph.instagram.com/refresh_access_token with grant_type=ig_refresh_token can renew an unexpired token at least 24h old. Expired tokens require reauthorization. `scripts/refresh-instagram-token.mjs` implements a server-only refresh helper, with injected approved durable secret-store adapters; no scheduler or secret storage is activated. It never returns tokens to a public caller or logs them. GitHub secret rotation permissions and storage still require approval and implementation before long-term operation.
+
+Facebook Login: linked Page required. Stories reference requires instagram_basic + pages_read_engagement; Page roles granted through Business Manager have additional ads_read/ads_management conditions. pages_show_list is needed for Page discovery. Do not use Instagram token refresh for Facebook tokens; actual token lifetime/data-access expiry/scopes must be inspected after authorization.
+
+Rate limits vary by token/use case. Official reference includes Platform 200 x users per rolling hour and Instagram BUC 4800 x impressions per 24h; neither is a universal per-account quota. Actual headers/app dashboard must be checked after authentication. Polling is bounded, but no live quota/permission verification has occurred. Current Overview also mentions Unified Login for new integrations; retain the actual existing app's chosen product after login rather than silently replacing it.
+
+Additional primary sources:
+- https://developers.facebook.com/documentation/instagram-platform/instagram-graph-api/reference/ig-user/stories
+- https://developers.facebook.com/documentation/instagram-platform/reference/instagram-media
+- https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login
+- https://developers.facebook.com/documentation/instagram-platform/overview
+- https://developers.facebook.com/documentation/instagram-platform/changelog
+- https://developers.facebook.com/docs/graph-api/overview/rate-limiting/
+
+Existing Vercel sug-private-engine project was found read-only, but its free allowance/commercial-plan suitability and suitability for this endpoint remain unverified. No environment or secret was read or changed. The existing inactive GitHub collector remains the proposed integration; no second viewer or alternative hosting deployment was added.
 
 ## Activation prerequisites (do not skip)
 1. Complete Meta login in held developer screen; select existing app or explicitly approve creation. Determine which Login product is configured. Read current story/media/token docs in authenticated dashboard.
 2. Confirm least-privilege read permissions. Instagram candidate: instagram_business_basic. Facebook candidate: instagram_basic plus applicable Page permissions; pages_show_list for discovery. Do not request content publishing/messaging unnecessarily. Confirm Standard/Advanced access and account roles against actual app configuration.
 3. Verify GET /{version}/{IG_ID}?fields=id,username then GET /{version}/{IG_ID}/stories?fields=id,media_type,media_url,thumbnail_url,timestamp. Test real image and video. Preserve sanitized field-presence evidence only, not raw tokens.
-4. Determine token expiry and refresh mechanism from actual token type. Implement secure refresh/storage or renewal alert before long-term operation; present exact secret destination for user approval. Never paste tokens in chat or commit them.
+4. Determine token expiry and refresh mechanism from actual token type. Connect and verify the refresh helper with approved secret storage, or implement renewal alert before long-term operation; present exact secret destination for user approval. Never paste tokens in chat or commit them.
 5. After approval, put token in GitHub Actions secret INSTAGRAM_ACCESS_TOKEN; configure repository variables INSTAGRAM_USER_ID, INSTAGRAM_LOGIN_MODE (instagram/facebook), INSTAGRAM_API_VERSION (verified version). Do not enable INSTAGRAM_STORIES_ENABLED yet.
 6. Finish browser tests and iPhone Safari physical-device verification, actual expiration/empty account tests, authenticated integration and regression tests. No live form submission during regression without approval.
 7. Obtain publication approval before merging feature branch into master and enabling INSTAGRAM_STORIES_ENABLED. Confirm Pages configuration and data-branch initial publication. Verify live results after activation.
 
 ## Tests and remaining work
-`node --test tests/stories.test.mjs`: 5 tests passed (mock data only): expiration boundaries/order/duplicates, empty/stale, unsafe URLs, collector pagination/account/output, auth/config/error rejection.
+`node --test tests/stories.test.mjs`: 7 tests passed (mock data only): expiration boundaries/order/duplicates, empty/stale, unsafe URLs, collector pagination/account/output, auth/config/error rejection; refresh persistence and expired/young-token handling.
 `node tests/browser.cjs`: not executed successfully. Playwright bundled Chromium/WebKit absent; installed Chromium fails with socket() Operation not permitted in this execution sandbox. No browser PASS, screenshots, iPhone or PC rendering claim.
 Browser test fixture generation: ffmpeg -f lavfi -i color=c=black:s=360x640:d=2 -c:v libx264 -pix_fmt yuv420p /tmp/sug-story-fixtures/video.mp4. Serve repo on port 8765. Mock external routes; fixtures never inserted into production data.
 Static preservation check: index diff contains only story links/markup/script/style additions. All previously tracked files except index.html unchanged; prices, form, apps-tools, logo/assets byte-identical to base.

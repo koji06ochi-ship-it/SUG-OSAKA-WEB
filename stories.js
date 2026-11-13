@@ -28,7 +28,7 @@ if (root) {
         media.addEventListener('ended',advance);
       }else{
         media.alt='S.u.G OSAKAのInstagramストーリー';
-        media.addEventListener('load',()=>{timer=setTimeout(advance,7000);});
+        media.addEventListener('load',()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setTimeout(advance,7000);});
       }
       media.addEventListener('error',()=>{clearTimeout(timer);stage.replaceChildren();fallback();});
       media.src=story.media_url;stage.append(media);
@@ -44,6 +44,7 @@ if (root) {
     if(dialog.open&&changed){index=Math.max(0,items.findIndex(s=>s.id===current));render();}
   }
   async function load(){
+    if(document.hidden)return;
     try{
       const r=await fetch(root.dataset.feed,{cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(10000)});
       if(!r.ok)throw Error();feed=await r.json();

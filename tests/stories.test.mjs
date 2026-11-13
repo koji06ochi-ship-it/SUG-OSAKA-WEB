@@ -32,3 +32,7 @@ test('wrong account, revoked token, missing config and invalid data reject',asyn
  await assert.rejects(collect(env,async()=>({ok:false,status:401}),now),/META_HTTP_401/);
  let n=0;await assert.rejects(collect(env,async()=>({ok:true,json:async()=>n++?{}:{id:'42',username:'ko_ji.sug'}}),now),/INVALID_RESPONSE/);
 });
+
+import {refreshInstagramToken} from '../scripts/refresh-instagram-token.mjs';
+test('refresh saves rotated token without exposing it in result',async()=>{let saved;const result=await refreshInstagramToken({now,readSecret:async()=>({token:'OLD_TEST',issuedAt:now-2*DAY,expiresAt:now+DAY}),writeSecret:async s=>{saved=s},fetcher:async u=>{assert.equal(u.origin,'https://graph.instagram.com');return {ok:true,json:async()=>({access_token:'NEW_TEST',expires_in:5184000})}}});assert.equal(result.status,'refreshed');assert.equal(saved.token,'NEW_TEST');assert(!JSON.stringify(result).includes('NEW_TEST'));});
+test('expired token requires reauthorization; young token is not refreshed',async()=>{for(const [issuedAt,expiresAt,status] of [[now-60*DAY,now,'reauthorization_required'],[now-1000,now+DAY,'not_due']]){const r=await refreshInstagramToken({now,readSecret:async()=>({token:'TEST',issuedAt,expiresAt}),writeSecret:()=>{throw Error()},fetcher:()=>{throw Error()}});assert.equal(r.status,status);}});

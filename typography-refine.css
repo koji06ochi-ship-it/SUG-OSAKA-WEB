@@ -1,0 +1,48 @@
+/* S.u.G OSAKA | typography & spacing refinement | 2026-11-13
+   Scoped to published HP sections. Keep existing layout/form behavior intact. */
+:root{--sug-ink:#24221e;--sug-copy:#56534d;--sug-accent:#987b40}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif!important;font-weight:400;letter-spacing:normal}
+#conditioning,#result,#price,#booking-policy,#app-tools-link,#profile,#access,#contact-form,#latest{line-height:1.85}
+#conditioning h2,#result h2,#price h2,#booking-policy h2,#app-tools-link h2,#profile h2,#access h2,#contact-form h2,#latest h2{
+  font-family:inherit!important;font-size:clamp(27px,3.4vw,43px)!important;
+  font-weight:600!important;line-height:1.38!important;letter-spacing:.015em!important;
+  text-shadow:none!important;margin:12px 0 26px!important;
+}
+#conditioning h3,#booking-policy h3,#app-tools-link h3,#profile h3{
+ font-family:inherit!important;font-weight:600!important;letter-spacing:.015em!important;
+}
+#conditioning p,#result p,#price p,#booking-policy p,#app-tools-link p,#profile p,#access p,#contact-form p,#latest p{
+ font-family:inherit!important;font-size:clamp(15px,1.2vw,16px)!important;
+ font-weight:400!important;line-height:1.95!important;letter-spacing:.012em!important;
+}
+#conditioning .eyebrow,#result .v2-kicker,#price .goldText,#booking-policy .v2-kicker,
+#app-tools-link .eyebrow,#profile .eyebrow,#access .eyebrow,#contact-form .v2-kicker,#latest .eyebrow{
+ font-family:inherit!important;font-size:11px!important;font-weight:500!important;
+ letter-spacing:.14em!important;text-shadow:none!important;
+}
+#price .priceRow{padding:19px 8px!important;box-shadow:none!important;transform:none!important;background:transparent!important}
+#price .priceRow strong{font-family:inherit!important;font-size:clamp(16px,1.7vw,20px)!important;font-weight:600!important;letter-spacing:0!important}
+#price .priceRow small{font-family:inherit!important;font-size:13px!important;font-weight:400!important}
+#price .priceTable{margin-top:22px!important}
+#conditioning .hp-service-grid{gap:clamp(16px,3vw,36px)!important;margin-top:32px!important}
+#conditioning .hp-service-grid article{border:0!important;background:transparent!important;box-shadow:none!important}
+#conditioning .hp-service-grid h3{font-size:clamp(18px,1.65vw,22px)!important}
+#conditioning .hp-more{margin-top:32px!important}
+#booking-policy p{max-width:780px}
+#profile .profileTags{opacity:.82}
+#app-tools-link{padding-top:48px!important;padding-bottom:60px!important}
+#app-tools-link .btn{font-weight:600!important;box-shadow:none!important}
+.hero h1 .hero-main-copy{font-family:inherit!important;font-weight:600!important;letter-spacing:-.025em!important;text-shadow:none!important}
+.hero .lead{font-size:clamp(15px,1.3vw,17px)!important;line-height:1.9!important;font-weight:400!important;letter-spacing:0!important}
+.header .brand{font-weight:600!important;letter-spacing:.10em!important}
+@media(max-width:760px){
+ #conditioning,#result,#price,#booking-policy,#app-tools-link,#profile,#access,#contact-form,#latest{
+  padding-top:56px!important;padding-bottom:56px!important;
+ }
+ #conditioning h2,#result h2,#price h2,#booking-policy h2,#app-tools-link h2,#profile h2,#access h2,#contact-form h2,#latest h2{
+  font-size:clamp(26px,7vw,34px)!important;line-height:1.38!important;margin:10px 0 20px!important;
+ }
+ #price .priceRow{padding:15px 4px!important}
+ #conditioning .hp-service-grid{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+ .hero .lead{font-size:15px!important;line-height:1.8!important}
+}

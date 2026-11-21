@@ -1140,6 +1140,90 @@ svg.leaflet-image-layer.leaflet-interactive path {
       box-shadow: 0 0 10px var(--neon-pink);
     }
 
+
+    /* R7 PREVIEW / NEON OVER REAL OSAKA MAP — mobile information composition */
+    :root { --map-panel-gap: 10px; }
+    html, body, .app-viewport, .phone-shell { height: 100% !important; min-height: 0 !important; }
+    .phone-shell { overflow: hidden; }
+    .map-stage {
+      min-height: 0 !important;
+      height: 100% !important;
+      flex: 1 1 auto;
+      border-inline: 1px solid rgba(255,46,147,.32);
+      touch-action: auto;
+      background: #06050d;
+    }
+    #sug-real-map { z-index: 1; }
+    #sug-real-map .leaflet-tile-pane { filter: grayscale(.40) saturate(.74) brightness(.83) contrast(1.12); }
+    .map-stage::after {
+      content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+      background: linear-gradient(to bottom, rgba(4,3,11,.78) 0%, rgba(4,3,11,.38) 12%, transparent 27%, transparent 48%, rgba(4,3,11,.4) 62%, rgba(4,3,11,.96) 100%);
+      box-shadow: inset 0 0 36px rgba(255,46,147,.20);
+    }
+    .top-overlay {
+      top: 0; padding: 8px 12px 10px; z-index: 530;
+      background: linear-gradient(180deg, rgba(3,2,9,.90), rgba(3,2,9,.56) 72%, transparent);
+    }
+    .brand-logo-img { height: 47px; max-width: 133px; }
+    .top-right-col { gap: 5px; padding-top: 1px; }
+    .lang-pill { background: rgba(8,5,18,.94); }
+    .spatial-pill { font-size: 10px; padding: 5px 10px; }
+    .map-tools-left {
+      top: auto !important; bottom: 134px; left: 10px; right: 10px; z-index: 535;
+      display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px;
+      padding: 11px 9px; border: 1px solid rgba(255,46,147,.7); border-radius: 17px;
+      background: linear-gradient(145deg, rgba(8,6,19,.98), rgba(21,10,30,.95));
+      box-shadow: 0 0 22px rgba(255,46,147,.22), 0 10px 32px rgba(0,0,0,.7);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .map-tools-left::before {
+      content: "EXPLORE OSAKA"; position: absolute; left: 13px; top: -19px; 
+      font-size: 10px; font-weight: 850; letter-spacing: .15em; color: #ffd8ef;
+      text-shadow: 0 0 9px rgba(255,46,147,.85); pointer-events: none;
+    }
+    .tool-btn {
+      min-width: 0; min-height: 37px; border-radius: 11px; padding: 6px 4px;
+      font-size: 10px; line-height: 1.25; white-space: normal; text-align: center;
+      border: 1px solid rgba(255,46,147,.55);
+      background: linear-gradient(135deg,rgba(255,46,147,.18),rgba(10,6,20,.9));
+      color: #f9eff7; box-shadow: inset 0 1px rgba(255,255,255,.08);
+    }
+    .tool-btn.pink { border-color: rgba(255,74,173,.92); }
+    .zoom-pair { position: absolute; right: 4px; top: -57px; gap: 6px; }
+    .zoom-circle {
+      width: 38px; height: 38px; font-size: 21px; background: rgba(7,4,15,.94);
+      border: 1px solid #ff479f; box-shadow: 0 0 12px rgba(255,46,147,.28);
+    }
+    .bottom-dock {
+      left: 0; right: 0; bottom: 0 !important; z-index: 525;
+      min-height: 126px; padding: 9px 11px 10px; gap: 8px;
+      background: linear-gradient(180deg,rgba(8,5,18,.98),rgba(6,4,13,1));
+      border-top: 1px solid rgba(255,46,147,.7);
+      box-shadow: 0 -9px 32px rgba(0,0,0,.7);
+    }
+    .discovery-banner { padding: 8px 10px; min-height: 33px; font-size: 10px; border-radius: 10px; }
+    .discovery-banner small { font-size: 9px; }
+    .metrics-row { gap: 4px; padding: 0 3px; }
+    .metric-mini .lbl { font-size: 8px; }
+    .metric-mini .val { font-size: 11px; }
+    .drawer-tabs-bar { gap: 3px; }
+    .drawer-tab { font-size: 9px; padding: 7px 1px; border-radius: 7px; }
+    #sug-real-map .leaflet-control-attribution { font-size: 8px !important; }
+    .char-map-slot { bottom: 258px; right: 13px; }
+    @media (max-width: 360px) {
+      .tool-btn { font-size: 9px; }
+      .map-tools-left { bottom: 131px; gap: 5px; }
+      .drawer-tab { font-size: 8px; }
+      .brand-logo-img { height: 41px; }
+    }
+    @media (max-height: 650px) {
+      .bottom-dock { min-height: 110px; gap: 4px; padding: 6px 10px; }
+      .map-tools-left { bottom: 117px; gap: 4px; padding: 7px; }
+      .tool-btn { min-height: 31px; padding: 4px 3px; }
+      .zoom-pair { top: -45px; }
+      .zoom-circle { width: 32px; height: 32px; }
+    }
+
     /* Modal / Dedicated Page Overlay */
     .modal-backdrop {
       position: fixed;

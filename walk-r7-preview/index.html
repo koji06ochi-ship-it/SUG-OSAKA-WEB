@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>S.u.G WALK R7｜正式5画面＋大阪水上観光 統合版</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #020205; overflow: hidden; }
+    .unified-root {
+      width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at 25% 15%, rgba(255,46,147,0.14), transparent 45%), #020205;
+    }
+    .phone-frame {
+      position: relative; width: 100%; max-width: 430px; height: 100vh; background: #040308;
+      box-shadow: 0 0 64px rgba(0,0,0,0.96), 0 0 0 1px rgba(255,46,147,0.34); overflow: hidden;
+    }
+    .screen-frame {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: #040308;
+      opacity: 0; pointer-events: none; z-index: 1; transition: opacity 0.16s ease;
+    }
+    .screen-frame.active { opacity: 1; pointer-events: auto; z-index: 5; }
+  </style>
+</head>
+<body>
+  <div class="unified-root">
+    <div class="phone-frame" aria-label="S.u.G WALK R7 正式5画面統合アプリ">
+      <iframe id="frame-home" class="screen-frame active" title="① ホーム"></iframe>
+      <iframe id="frame-map" class="screen-frame" title="② マップ"></iframe>
+      <iframe id="frame-meet" class="screen-frame" title="③ 出会う"></iframe>
+      <iframe id="frame-log" class="screen-frame" title="④ 記録"></iframe>
+      <iframe id="frame-settings" class="screen-frame" title="⑤ 設定"></iframe>
+    </div>
+  </div>
+  <script>
+    (function () {
+      'use strict';
+      
+      var TAB_KEYS = ['home', 'map', 'meet', 'log', 'settings'];
+      var currentTab = 'home';
+
+      TAB_KEYS.forEach(function (key) {
+        var el = document.getElementById('frame-' + key);
+        if (el) el.src = key + '.html';
+      });
+
+      function switchTab(tab) {
+        if (TAB_KEYS.indexOf(tab) === -1) return;
+        currentTab = tab;
+        const mapWindow = document.getElementById('frame-map').contentWindow;
+        mapWindow.dispatchEvent(new mapWindow.Event('sug:tabChanged'));
+        TAB_KEYS.forEach(function (k) {
+          var el = document.getElementById('frame-' + k);
+          if (el) el.classList.toggle('active', k === tab);
+        });
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.sugWalkR7) {
+          try { window.webkit.messageHandlers.sugWalkR7.postMessage({ action: 'onActiveTabChanged', payload: { tab: tab } }); } catch (e) {}
+        }
+      }
+
+      window.addEventListener('message', function (ev) {
+        if (ev.origin !== location.origin || !TAB_KEYS.some(k => document.getElementById('frame-'+k).contentWindow === ev.source) || !ev.data) return;
+        if (ev.data.type === 'SUG_SWITCH_TAB' && ev.data.tab) {
+          switchTab(ev.data.tab);
+        } else if (ev.data.type === 'SUG_SYNC_LANG' && ev.data.lang) {
+          TAB_KEYS.forEach(function (k) {
+            var el = document.getElementById('frame-' + k);
+            if (el && el.contentWindow) el.contentWindow.postMessage({ type: 'SUG_APPLY_LANG', lang: ev.data.lang }, '*');
+          });
+        } else if (ev.data.type === 'SUG_EVENTS_UPDATED') {
+          TAB_KEYS.forEach(function (k) {
+            var el = document.getElementById('frame-' + k);
+            if (el && el.contentWindow) el.contentWindow.postMessage({ type: 'SUG_EVENTS_UPDATED' }, '*');
+          });
+        }
+      });
+
+      window.SUGR7UnifiedBridge = {
+        switchTab: switchTab,
+        getActiveTab: function () { return currentTab; }
+      };
+    })();
+  </script>
+</body>
+</html>

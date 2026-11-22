@@ -454,7 +454,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           if(corners.length>=8)break;
         }
         for(const corner of corners){
-          for(const [kind,width] of [['halo',0.55],['core',0.16]]){
+          for(const [kind,width] of [['halo',1.8],['core',0.65]]){
             result.push({type:'Feature',properties:{kind,base:building.base,height:building.height},
               geometry:square(corner,width)});
           }

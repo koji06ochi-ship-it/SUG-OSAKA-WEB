@@ -38,6 +38,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let highlightedStoreMarkers = [];
   let highlightedStores = [];
   let trace = [];
+  let persistedNeon = {type:'FeatureCollection',features:[]};
   let routeCoords = [];
   let bearingAnchor = null;
   let lastFix = null;
@@ -1327,6 +1328,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const layer = obj => active.addLayer(Object.assign({ slot: 'middle' }, obj));
 
     src('sug-r7-walk-trace', featureLine(trace));
+    src('sug-r7-neon-history', persistedNeon);
     src('sug-r7-route', featureLine(routeCoords));
     src('sug-r7-user', featurePoint(lastFix));
     src('sug-r7-arrival-ring', radiusPolygon(HUB, 180));
@@ -1361,6 +1363,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
     // Zoom-interpolated Neon Pink Walked Trace & Active Walking Route (prevents thick pink bands)
     for (const [id, source, colorCore] of [
+      ['history', 'sug-r7-neon-history', '#ff54b0'],
       ['trace', 'sug-r7-walk-trace', '#ff007f'],
       ['route', 'sug-r7-route', '#FF007F']
     ]) {
@@ -1657,6 +1660,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
     },
     isActive,
     setHighlightedStores,
-    setVenueStatuses
+    setVenueStatuses,
+    setNeonHistory(geojson) {
+      if(!geojson || geojson.type!=='FeatureCollection'||!Array.isArray(geojson.features)||geojson.features.length>10000)return false;
+      if(!geojson.features.every(f=>f?.geometry?.type==='LineString' && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length===2 && f.geometry.coordinates.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite))))return false;
+      persistedNeon=geojson;
+      updateSource('sug-r7-neon-history',persistedNeon);
+      return true;
+    }
   };
 };

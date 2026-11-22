@@ -1727,10 +1727,14 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         {"name":"焼肉ホルモン 暸","category":"shop","address":"大阪府大阪市北区天神橋4-8-23 中山ビル","lat":34.70483414,"lng":135.51125867,"osmWayId":1158470731,"highlightColor":"#ffd065","approved":true,"highlight3D":true},
         {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4-7-11-501","lat":34.70355095,"lng":135.51109761,"osmWayId":221266078,"heightMetres":13,"highlightColor":"#00e5ff","approved":true,"highlight3D":true},
         {"name":"川の駅はちけんや","category":"shop","address":"大阪府大阪市中央区北浜東1-2","lat":34.690498,"lng":135.514475,"osmWayId":368384007,"levels":1,"highlightColor":"#2ee89a","approved":true,"highlight3D":true},
+        {"name":"関西テレビ（カンテレ）","category":"landmark","address":"大阪府大阪市北区扇町2-1-7","lat":34.7046972,"lng":135.5102667,"coordinateSource":"https://newikis.com/ja/関西テレビ放送"},
+        {"name":"扇町公園","category":"park","lat":34.70403816,"lng":135.50916285,"coordinateSource":"https://opd.opendata-japan.com/facility_and_place_v5s?facility_id=GV-G1MJ-JJQT-RYNB"},
+        {"name":"大阪城公園","category":"park","lat":34.68791361,"lng":135.5248403,"coordinateSource":"https://www.env.go.jp/nature/dobutsu/bird_flu/migratory/ap_wr_transit09/site_gaiyo/1080_oosakajyo.html"},
         {"name":"大阪城","category":"sightseeing","lat":34.68734,"lng":135.526},
         {"name":"大阪市中央公会堂","category":"sightseeing","lat":34.69361,"lng":135.50389},
         {"name":"造幣局","category":"sightseeing"},
         {"name":"JR天満駅","category":"station","lat":34.7049333,"lng":135.5121361},
+        {"name":"扇町駅","category":"station"},
         {"name":"南森町駅","category":"station"},
         {"name":"大阪天満宮駅","category":"station","lat":34.6974056,"lng":135.5134417},
         {"name":"天満橋駅","category":"station"},
@@ -1750,6 +1754,8 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         {"name":"OAP港","category":"port"},
         {"name":"大阪城御座船乗り場","category":"port"},
         {"name":"大阪城港","category":"port","lat":34.6895772,"lng":135.5329541},
+        {"name":"桜之宮公園","category":"park"},
+        {"name":"中之島公園","category":"park","lat":34.693213,"lng":135.504950},
         {"name":"ほたるまち","category":"waterfront"},
         {"name":"中之島バンクス","category":"waterfront"},
         {"name":"とんぼりリバーパーク","category":"waterfront"},
@@ -2107,7 +2113,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       function choosePlace(){
         openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<input type="search" id="place-query" placeholder="店舗・観光・駅・船着場を検索" aria-label="目的地名"><div id="place-choices"></div>'});
         const input=document.getElementById('place-query'),result=document.getElementById('place-choices');
-        const kind={shop:'色変更対象',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺'};
+        const kind={shop:'掲載店舗',landmark:'ランドマーク',park:'公園',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺'};
         function renderChoices(){
           result.replaceChildren();
           const q=input.value.trim().toLocaleLowerCase('ja');

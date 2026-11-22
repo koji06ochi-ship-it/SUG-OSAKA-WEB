@@ -819,6 +819,92 @@ window.createOsaka3D = function createOsaka3D(ui) {
     })();
   }
 
+  // Osaka Castle tower ONLY. Official building data:
+  // Osaka City (2026-10-16): 39.4 m tower over 13.3 m stone base,
+  // 52.7 m overall; official footprint 1177.97 m2.
+  // The polygon is an OSM map geometry, NOT an official surveyed footprint.
+  function addVerifiedOsakaCastleTower(active) {
+    const sourceId='sug-r7-osakajo-tower-exact';
+    const wayId=34619038;
+    const landmark=LANDMARKS.find(p=>p.name==='大阪城');
+    active.addSource(sourceId,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({
+      id:'sug-r7-osakajo-tower-gold',type:'fill-extrusion',slot:'top',source:sourceId,
+      paint:{
+        'fill-extrusion-color':'#ffce65',
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-base':0,
+        'fill-extrusion-opacity':1,
+        'fill-extrusion-emissive-strength':0.85,
+        'fill-extrusion-vertical-gradient':false
+      }
+    });
+    container.dataset.osakajoTowerStatus='loading';
+    const thisView=active;
+    (async()=>{
+      try{
+        const response=await fetch('https://api.openstreetmap.org/api/0.6/way/34619038/full.json',
+          {mode:'cors',credentials:'omit',signal:AbortSignal.timeout(12000)});
+        if(!response.ok)throw Error('OSM HTTP '+response.status);
+        const data=await response.json();
+        const elements=Array.isArray(data.elements)?data.elements:[];
+        const way=elements.find(e=>e.type==='way'&&e.id===wayId);
+        if(!way||!Array.isArray(way.nodes)||way.nodes.length<4||!way.tags?.building)
+          throw Error('Osaka Castle building way not found');
+        const tags=way.tags||{};
+        const identity=[tags.name,tags['name:ja'],tags['name:en'],tags.historic,tags.tourism]
+          .filter(Boolean).join(' ');
+        if(!/大阪城|大坂城|Osaka.Castle|castle/i.test(identity))
+          throw Error('OSM building identity does not match Osaka Castle');
+        const nodes=new Map(elements.filter(e=>e.type==='node').map(e=>[e.id,e]));
+        const ring=way.nodes.map(id=>nodes.get(id)).map(n=>n?[n.lon,n.lat]:null);
+        if(ring.length>1000||ring.some(p=>!p||!p.every(Number.isFinite)))
+          throw Error('OSM tower geometry invalid');
+        if(ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])
+          throw Error('OSM tower polygon not closed');
+        if(!landmark||(!pointInRing(landmark.lng,landmark.lat,ring)
+          && distanceToRing(landmark.lat,landmark.lng,ring)>35))
+          throw Error('OSM tower footprint does not match castle POI');
+        // Compute polygon area in local metric coordinates to reject a courtyard
+        // or entire park being mistaken for the tower.
+        const x0=ring[0][0],y0=ring[0][1];
+        const mx=111320*Math.cos(landmark.lat*Math.PI/180),my=111320;
+        let area=0;
+        for(let i=1;i<ring.length;i++){
+          const ax=(ring[i-1][0]-x0)*mx,ay=(ring[i-1][1]-y0)*my;
+          const bx=(ring[i][0]-x0)*mx,by=(ring[i][1]-y0)*my;
+          area+=ax*by-bx*ay;
+        }
+        area=Math.abs(area)/2;
+        if(area<400||area>4000)throw Error('Tower footprint area not plausible: '+Math.round(area));
+        if(view!==thisView)return;
+        const source=active.getSource(sourceId);
+        if(!source)return;
+        // Simplified single extrusion. This is not an architectural 3D reconstruction.
+        source.setData({type:'FeatureCollection',features:[{
+          type:'Feature',
+          properties:{name:'大阪城天守閣',height:52.7,wayId,areaM2:Math.round(area)},
+          geometry:{type:'Polygon',coordinates:[ring]}
+        }]});
+        container.dataset.osakajoTowerStatus='geometry-loaded';
+        container.dataset.osakajoTowerAreaM2=String(Math.round(area));
+        active.once('idle',()=>{
+          if(view!==thisView)return;
+          try{
+            const count=active.queryRenderedFeatures({layers:['sug-r7-osakajo-tower-gold']}).length;
+            container.dataset.osakajoTowerRendered=String(count);
+            container.dataset.osakajoTowerStatus=count>0?'rendered-in-current-view':'geometry-loaded-outside-view';
+          }catch(err){container.dataset.osakajoTowerError=String(err.message||err);}
+        });
+      }catch(err){
+        if(view===thisView){
+          container.dataset.osakajoTowerStatus='not-verified-fallback-preserved';
+          container.dataset.osakajoTowerError=String(err.message||err);
+        }
+      }
+    })();
+  }
+
   function addLandmarkBuildingLayers(active) {
     active.addSource('sug-r7-landmark-building-overlays',{
       type:'geojson',data:{type:'FeatureCollection',features:[]}});
@@ -1106,6 +1192,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addGeoLayers(active);
           addExactVenueLayers(active);
           addLandmarkBuildingLayers(active);
+          addVerifiedOsakaCastleTower(active);
           tryVerifiedKanteleFootprint(active);
           addSpotMarkers(gl);
           ready = true;

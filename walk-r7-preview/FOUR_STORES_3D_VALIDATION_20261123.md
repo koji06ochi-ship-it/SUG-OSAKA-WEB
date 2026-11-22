@@ -92,3 +92,12 @@
 - iPhoneキャッシュ更新：`r7-water-park-20261123m`。
 - 静的検証: index/map/JSの9ブロック構文解析エラー0、4施設Way ID維持、建物のランダム着色復活なし、景観レイヤー初期化順を確認。
 - **未検証:** iPhoneで川と公園の面が実際に色付くこと、Mapbox描画時の挙動、画面スクリーンショット。実機合格前にmasterへマージしない。
+
+## 川のみの修正・第1工程（2026-11-23）
+- 問題：ユーザーiPhoneスクショで大川の水面が黒く、前回の `#0a3566` / `bottom` では目標未達。
+- 公式確認：Mapbox Standard は bottom=land/water above、middle=roads above / 3D buildings below の挿入スロット（https://docs.mapbox.com/map-styles/reference/standard/）。Mapbox Streets v8 は water ポリゴンを提供（https://docs.mapbox.com/data/tilesets/reference/mapbox-streets-v8/）。
+- 今回変更したのは水面・岸辺レイヤーと水面色のみ：`sug-r7-water-surface` および `sug-r7-water-bank` を `middle` に移し、水面 `#096fb8` / 不透明度 1 / emissive 1.4、岸辺 `#35c4ff` / emissive 1.2 に設定。Standard の colorWater も `#096fb8`。
+- 一時的な大川診断パネルを撤去。公園・建物・駅・GPS/5画面を変更しない。
+- 静的検証: index/map/JSの9ブロックV8構文解析エラー0、対象色、slot、既存4WayID、公園の既存設定、キャッシュ `r7-river-blue-20261123o` 照合OK。
+- **iPhoneの水面表示は未検証。** 色が見えない場合、Mapbox実描画・ポリゴン数・エラー・レイヤーの重なりを特定してから次の修正を行う。
+- 第1工程（川）がiPhoneで合格するまで第2工程（公園）へ進まない。masterへマージしない。

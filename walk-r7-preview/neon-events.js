@@ -11,7 +11,7 @@ const https=(value)=>{
 function validStoreEvent(row,now=Date.now()){
  if(!row||!Number.isSafeInteger(row.osmWayId)||!STORE_STATUSES.has(row.liveStatus))return null;
  const starts=Date.parse(row.startsAt),ends=Date.parse(row.endsAt);
- if(!Number.isFinite(starts)||!Number.isFinite(ends)||starts>now||ends<=now||ends-starts>TEN_MINUTES)return null;
+ if(!Number.isFinite(starts)||!Number.isFinite(ends)||starts>now||ends<=now||ends-starts>(row.liveStatus==='sale'?TEN_MINUTES:12*3600000))return null;
  if(row.liveStatus==='normal')return null;
  if(row.liveStatus==='sale'){
    if(typeof row.offerText!=='string'||row.offerText.length<1||row.offerText.length>120)return null;

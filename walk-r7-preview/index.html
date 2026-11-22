@@ -57,6 +57,9 @@
               style.textContent = '.bottom-nav{display:none!important} html,body,.app-viewport,.phone-shell{height:100%!important;min-height:0!important}';
               doc.head.appendChild(style);
             } catch (e) { /* Fall back to original screen styling */ }
+            if (key === 'map' && currentTab === 'map') {
+              el.contentWindow.postMessage({ type: 'sug-r7-map-visible' }, '*');
+            }
           });
           el.src = key + '.html';
         }

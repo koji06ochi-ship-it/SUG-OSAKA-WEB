@@ -371,7 +371,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         source:sourceId,'source-layer':'building',minzoom:15,
         filter:['==',['get','extrude'],'true'],
         paint:{
-          'line-color':'#8D9ED0',
+          'line-color':'#D9B86C',
           'line-width':['interpolate',['linear'],['zoom'],15,0.35,17,0.75,19,1.3],
           'line-opacity':0.40,
           'line-blur':0.35,

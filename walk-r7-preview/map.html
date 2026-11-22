@@ -1551,7 +1551,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js?v=r7-seeded-colors-20261123g"></script></head>
+</script><script src="osaka-3d.js?v=r7-brighter-lit-facade-v2-20261123"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -1713,48 +1713,58 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         handlers: {}
       };
 
+      const PIER_COLOR = '#64e8da'; // All piers and ports: shared 2D/3D category palette.
+      const WATERFRONT_COLOR = '#b478ff'; // Waterfront destinations, distinct from piers.
       const places = [
         {name:'八軒家浜（川沿い遊歩道）',lat:34.690616,lng:135.514183},
-        {name:'八軒家浜船着場（水上バス）',lat:34.690739,lng:135.51619},
-        {name:'大阪水上バス 大阪城港',lat:34.6895772,lng:135.5329541},
+        {name:'八軒家浜船着場（水上バス）',category:'port',lat:34.690739,lng:135.51619},
+        {name:'大阪水上バス 大阪城港',category:'port',lat:34.6895772,lng:135.5329541},
+        {name:'本町橋船着場',category:'port',lat:34.68385,lng:135.51004},
         {name:'JR天満駅',lat:34.7049333,lng:135.5121361},
         {name:'中之島公園（中央公会堂前）',lat:34.693213,lng:135.504950}
       ];
       // User-selected R7 directory. Locations are set only when independently verified.
       // No dummy 0,0 coordinates; unlocated entries open an exact-name map search instead.
       const designatedPlaces = [
-        {"name":"大阪茶会","category":"shop","address":"大阪府大阪市北区天神橋2-1-25 1F","lat":34.6964688,"lng":135.5118458,"locationStatus":"osm-poi-coordinate","coordinateSource":"https://directindex.org/r/osakachakai.jp"},
-        {"name":"暸","category":"shop","address":"大阪府大阪市北区天神橋4-8-23 中山ビル","locationStatus":"address-verified","branch":"天満店"},
-        {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4-7-11-501","locationStatus":"address-verified"},
-        {"name":"川の駅はちけんや","category":"shop","address":"大阪府大阪市中央区北浜東1-2","lat":34.690616,"lng":135.514183,"locationStatus":"official-area-coordinate","coordinateSource":"大阪府公式・ビュースポット参考位置情報"},
-        {"name":"大阪城","category":"sightseeing","lat":34.68734,"lng":135.526},
-        {"name":"大阪市中央公会堂","category":"sightseeing","lat":34.69361,"lng":135.50389},
-        {"name":"造幣局","category":"sightseeing"},
+        {"name":"大阪茶会","category":"shop","address":"大阪府大阪市北区天神橋2-1-25 1F","lat":34.6964688,"lng":135.5118458,"osmWayId":195060089,"heightMetres":11,"highlightColor":"#ff4fa6","approved":true,"highlight3D":true},
+        {"name":"焼肉ホルモン 暸","category":"shop","address":"大阪府大阪市北区天神橋4-8-23 中山ビル","lat":34.70483414,"lng":135.51125867,"osmWayId":1158470731,"highlightColor":"#ffd065","approved":true,"highlight3D":true},
+        {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4-7-11-501","lat":34.70355095,"lng":135.51109761,"osmWayId":221266078,"heightMetres":13,"highlightColor":"#00e5ff","approved":true,"highlight3D":true},
+        {"name":"川の駅はちけんや","category":"shop","address":"大阪府大阪市中央区北浜東1-2","lat":34.690498,"lng":135.514475,"osmWayId":368384007,"levels":1,"highlightColor":"#2ee89a","approved":true,"highlight3D":true},
+        {"name":"関西テレビ（カンテレ）","category":"landmark","address":"大阪府大阪市北区扇町2-1-7","officialUrl":"https://www.ktv.jp/corp/map/","lat":34.7046972,"lng":135.5102667,"coordinateSource":"https://newikis.com/ja/関西テレビ放送"},
+        {"name":"扇町公園","category":"park","lat":34.70403816,"lng":135.50916285,"coordinateSource":"https://opd.opendata-japan.com/facility_and_place_v5s?facility_id=GV-G1MJ-JJQT-RYNB"},
+        {"name":"大阪城公園","category":"park","lat":34.68791361,"lng":135.5248403,"coordinateSource":"https://www.env.go.jp/nature/dobutsu/bird_flu/migratory/ap_wr_transit09/site_gaiyo/1080_oosakajyo.html"},
+        {"name":"大阪城","category":"sightseeing","address":"大阪府大阪市中央区大阪城1-1","officialUrl":"https://www.osakacastle.net/access/","lat":34.68734,"lng":135.526},
+        {"name":"大阪市中央公会堂","category":"sightseeing","address":"大阪府大阪市北区中之島1-1-27","officialUrl":"https://osaka-chuokokaido.com/ja/access","lat":34.69361,"lng":135.50389},
+        {"name":"造幣局","category":"sightseeing","address":"大阪府大阪市北区天満1-1-79","lat":34.696833,"lng":135.521194,"coordinateSource":"https://ja.wikipedia.org/wiki/造幣局_(日本)","coordinateNote":"大阪本局の代表点。博物館の位置・造幣局全敷地の輪郭とは別","officialUrl":"https://www.mint.go.jp/"},
+        {"name":"造幣博物館","category":"sightseeing","address":"大阪府大阪市北区天満1-1-79","lat":34.69592,"lng":135.52167,"coordinateSource":"https://www.museums.yamato-kenkou.com/osaka/mint-museum/","officialUrl":"https://www.mint.go.jp/"},
         {"name":"JR天満駅","category":"station","lat":34.7049333,"lng":135.5121361},
+        {"name":"扇町駅","category":"station"},
         {"name":"南森町駅","category":"station"},
         {"name":"大阪天満宮駅","category":"station","lat":34.6974056,"lng":135.5134417},
         {"name":"天満橋駅","category":"station"},
-        {"name":"本町橋船着場","category":"port"},
+        {"name":"本町橋船着場","category":"port","lat":34.68385,"lng":135.51004,"coordinateSource":"https://www.openstreetmap.org/node/5732806230"},
         {"name":"八軒家船着場","category":"port","lat":34.690739,"lng":135.51619},
-        {"name":"ローズポート","category":"port"},
-        {"name":"若松浜船着場","category":"port"},
-        {"name":"堂島浜船着場","category":"port"},
-        {"name":"淀屋橋船着場","category":"port"},
-        {"name":"福島港","category":"port"},
-        {"name":"大阪国際会議場前港","category":"port"},
-        {"name":"ぽんぽん船船着場","category":"port"},
-        {"name":"大阪市中央卸売市場前港","category":"port"},
-        {"name":"中之島GATEターミナル","category":"port"},
-        {"name":"天満橋港","category":"port"},
-        {"name":"桜ノ宮桟橋","category":"port"},
-        {"name":"OAP港","category":"port"},
-        {"name":"大阪城御座船乗り場","category":"port"},
+        {"name":"ローズポート","category":"port","lat":34.69212,"lng":135.50952,"coordinateSource":"https://www.openstreetmap.org/node/4022223493","address":"大阪府大阪市北区中之島1丁目地先"},
+        {"name":"若松浜船着場","category":"port","address":"大阪府大阪市北区西天満2-1","officialUrl":"https://www.suito-osaka.jp/info/port/wakamatsu/"},
+        {"name":"堂島浜船着場","category":"port","lat":34.69515,"lng":135.50028,"coordinateSource":"https://www.openstreetmap.org/node/12399018871","address":"大阪府大阪市北区堂島浜1丁目地先"},
+        {"name":"淀屋橋船着場","category":"port","lat":34.69266,"lng":135.50174,"coordinateSource":"https://www.openstreetmap.org/node/7993837502","address":"大阪府大阪市中央区北浜3丁目1-20付近","coordinateNote":"OSM名称は淀屋橋港（アクアライナー乗り場）"},
+        {"name":"福島港","category":"port","address":"大阪府大阪市福島区福島1丁目地先","officialUrl":"https://www.suito-osaka.jp/cruise/"},
+        {"name":"大阪国際会議場前港","category":"port","address":"大阪府大阪市北区中之島5丁目地先","officialUrl":"https://www.suito-osaka.jp/cruise/port_gco/"},
+        {"name":"ぽんぽん船船着場","category":"port","officialUrl":"https://www.suito-osaka.jp/info/port/ponpon/","coordinateNote":"河岸の乗船地点の座標未確認"},
+        {"name":"大阪市中央卸売市場前港","category":"port","lat":34.68491,"lng":135.48084,"coordinateSource":"https://www.openstreetmap.org/node/5506825810","address":"大阪府大阪市福島区野田1丁目地先","coordinateNote":"OSMのOsaka Central Fish Market terminalに一致"},
+        {"name":"中之島GATEターミナル","category":"port","officialUrl":"https://nakanoshimagate.jp/access","coordinateNote":"中之島GATEサウスピア等と船着場名称を照合中。仮座標なし"},
+        {"name":"天満橋港","category":"port","coordinateNote":"八軒家浜船着場と同一とは未確認。別の仮ピンを置かない"},
+        {"name":"桜ノ宮桟橋","category":"port","address":"大阪府大阪市北区天満橋1丁目・帝国ホテル大阪の川側","coordinateNote":"桜ノ宮駅付近の船着場名に揺れがあるため桟橋座標は未確定"},
+        {"name":"OAP港","category":"port","address":"大阪府大阪市北区天満橋1丁目・大川右岸","officialUrl":"https://www.suito-osaka.jp/info/port/oap/","lat":34.70057,"lng":135.52064,"coordinateSource":"https://www.openstreetmap.org/way/610362551","coordinateNote":"OSMのOAP Pier設備ポリゴン中心。実際の乗船口位置と異なる可能性あり"},
+        {"name":"大阪城御座船乗り場","category":"port","address":"大阪府大阪市中央区大阪城2・極楽橋北西","officialUrl":"https://www.suito-osaka.jp/info/port/gozabune/"},
         {"name":"大阪城港","category":"port","lat":34.6895772,"lng":135.5329541},
-        {"name":"ほたるまち","category":"waterfront"},
-        {"name":"中之島バンクス","category":"waterfront"},
-        {"name":"とんぼりリバーパーク","category":"waterfront"},
-        {"name":"キャナルテラス堀江","category":"waterfront"},
-        {"name":"TUGBOAT TAISHO","category":"waterfront"}
+        {"name":"桜之宮公園","category":"park","address":"大阪府大阪市北区天満橋1丁目・2丁目ほか、大川沿い","officialUrl":"https://parksgreenery.city.osaka.lg.jp/article/parks-sakuranomiya/","coordinateNote":"大川両岸の細長い公園。単一点を代表座標として推定しない。既存緑地レイヤーを維持"},
+        {"name":"中之島公園","category":"park","lat":34.693213,"lng":135.50495},
+        {"name":"ほたるまち","category":"waterfront","address":"大阪府大阪市福島区福島1丁目","officialUrl":"https://www.city.osaka.lg.jp/toshikeikaku/page/0000162394.html","lat":34.693605,"lng":135.489531,"coordinateSource":"https://nightview.useless-landscape.com/details/red-blue-street/","coordinateNote":"ほたるまち南側の福島浜緑道上の案内点であり、地区中心点ではない"},
+        {"name":"中之島バンクス","category":"waterfront","address":"大阪府大阪市北区中之島5-3-60","officialUrl":"https://nakanoshima-banks.com/access/","lat":34.691304,"lng":135.487009,"coordinateSource":"https://nightview.useless-landscape.com/details/nakanoshima-banks/","coordinateNote":"堂島川沿いの中之島バンクス施設内案内点。約400mの水辺空間全体の中心とは限らない"},
+        {"name":"とんぼりリバーパーク","category":"waterfront","officialUrl":"https://www.tonbori.jp/","lat":34.669146,"lng":135.502691,"coordinateSource":"https://www.mlit.go.jp/river/kankyo/main/kankyou/machizukuri/map/kinki/osaka_shi.html","coordinateNote":"国土交通省掲載のとんぼりリバーウォーク案内地点。遊歩道全体の形状ではない"},
+        {"name":"キャナルテラス堀江","category":"waterfront","address":"大阪府大阪市西区南堀江1-5-26（東棟）・1-5-17（西棟）","officialUrl":"https://www.sumitomo-soko.co.jp/news/detail/1348756367.html","lat":34.66942,"lng":135.49555,"coordinateSource":"https://www.openstreetmap.org/way/264999392","coordinateNote":"OSMの商業施設エリア代表点。東西2棟の建物輪郭ではない","buildingNote":"住友倉庫公式資料によると東西とも鉄骨造2階建"},
+        {"name":"TUGBOAT TAISHO","category":"waterfront","address":"大阪府大阪市大正区三軒家西1-1-14","officialUrl":"https://tugboat-taisho.jp/","lat":34.66741,"lng":135.47872,"coordinateSource":"https://www.openstreetmap.org/way/853045847","coordinateNote":"商業施設敷地の代表点。隣接する専用船着場は34.66738,135.47825で別施設"}
       ];
       const locatedDesignated = designatedPlaces.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng));
       const directoryCoords = p => Number.isFinite(p.lat)&&Number.isFinite(p.lng);
@@ -1795,7 +1805,8 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         pauseFollow:()=>{follow=false;},
         select:selectPlace,
         spots:places,
-        hub:{lat:34.690616,lng:135.514183},
+        hub:{lat:34.690498,lng:135.514475},
+        selectedVenues: designatedPlaces.slice(0,4),
         onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,null,follow);}
       });
       const public3dToggle=document.getElementById('osaka-toggle');
@@ -2093,7 +2104,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       let selectedPin=null;
       function selectPlace(place) {
         if(selectedPin) selectedPin.remove();
-        selectedPin=L.circleMarker([place.lat,place.lng],{radius:12,color:"#bd005e",weight:3,fill:false,interactive:false}).addTo(map);
+        selectedPin=L.circleMarker([place.lat,place.lng],{radius:12,color:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#bd005e',weight:3,fill:false,interactive:false}).addTo(map);
         destination=place; destinationReached=false; follow=false;
          osaka3D.destination(place);
         map.setView([place.lat,place.lng],16);
@@ -2106,16 +2117,22 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       function choosePlace(){
         openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<input type="search" id="place-query" placeholder="店舗・観光・駅・船着場を検索" aria-label="目的地名"><div id="place-choices"></div>'});
         const input=document.getElementById('place-query'),result=document.getElementById('place-choices');
-        const kind={shop:'色変更対象',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺'};
+        const kind={shop:'掲載店舗',landmark:'ランドマーク',park:'公園',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺'};
         function renderChoices(){
           result.replaceChildren();
           const q=input.value.trim().toLocaleLowerCase('ja');
           const listed=designatedPlaces.filter(p=>p.name.toLocaleLowerCase('ja').includes(q));
           for(const place of listed){
             const row=document.createElement('div');
-            row.style.cssText='padding:6px 0;border-bottom:1px solid rgba(255,59,154,.14)';
+            row.style.cssText='padding:6px 0;border-bottom:1px solid '+(place.category==='port'?'rgba(100,232,218,.35)':place.category==='waterfront'?'rgba(180,120,255,.35)':'rgba(255,59,154,.14)')+';';
             const b=document.createElement('button');
             b.type='button';b.className='drawer-btn';
+            if(place.category==='port'||place.category==='waterfront'){
+              const color=place.category==='port'?PIER_COLOR:WATERFRONT_COLOR;
+              b.style.borderColor=color;
+              b.style.color=color;
+              b.style.boxShadow='0 0 12px '+(place.category==='port'?'rgba(100,232,218,.23)':'rgba(180,120,255,.23)');
+            }
             const located=directoryCoords(place);
             b.textContent=(kind[place.category]||'スポット')+'｜'+place.name+(located?'':'　位置照合中');
             if(located){
@@ -2140,7 +2157,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         input.oninput=renderChoices;renderChoices();
       }
       for(const place of places){
-        L.circleMarker([place.lat,place.lng],{radius:7,color:'#ae005b',fillColor:'#ff479e',fillOpacity:1,weight:2,bubblingMouseEvents:false})
+        L.circleMarker([place.lat,place.lng],{radius:7,color:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#ae005b',fillColor:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#ff479e',fillOpacity:1,weight:2,bubblingMouseEvents:false})
           .addTo(map).bindTooltip(place.name).on('click',()=>selectPlace(place));
       }
       map.on('click',e=>selectPlace({name:'選んだ地点',lat:e.latlng.lat,lng:e.latlng.lng}));

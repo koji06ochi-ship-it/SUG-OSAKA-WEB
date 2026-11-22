@@ -272,7 +272,16 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const sourceId = 'sug-r7-neon-streets-buildings';
     const layerId = 'sug-r7-neon-building-extrusions';
     active.addSource(sourceId, {type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
-    const variety = ['%', ['to-number',['coalesce',['id'],['get','height'],0]], 5];
+    // Streets v8 features may not have a feature id. Never coalesce a missing id to zero
+    // before palette selection: doing so painted all buildings the same pink.
+    // Seed Mapbox's supported deterministic random expression from available feature
+    // attributes. The colors are decorative; they do not identify approved stores.
+    const featureSeed = ['concat',
+      ['to-string',['coalesce',['get','building_id'],['id'],['get','height'],0]],
+      ':',
+      ['to-string',['coalesce',['get','type'],'building']]
+    ];
+    const variety = ['floor',['random',0,5,featureSeed]];
     active.addLayer({
       id:layerId, type:'fill-extrusion', slot:'top',
       source:sourceId, 'source-layer':'building',

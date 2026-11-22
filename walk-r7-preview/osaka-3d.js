@@ -50,7 +50,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dObjects: false,
     show3dFacades: false,
     show3dLandmarks: false,
-    colorBuildings: '#63728E',
+    colorBuildings: '#445269',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
@@ -346,7 +346,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // not recognizable lit windows on facades. Do not reuse that failed approach.
   // Bright navy walls + restrained wall flood lighting keep the city readable.
   // Actual lit windows require separate facade geometry and remain unimplemented.
-  const ORDINARY_BUILDING_COLOR='#63728E';
+  const ORDINARY_BUILDING_COLOR='#445269';
   function addNeonCityBuildings(active) {
     const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
     active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});

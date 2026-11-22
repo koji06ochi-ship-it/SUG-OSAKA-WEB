@@ -320,7 +320,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   function addOsakaLandscapeLayers(active) {
     const sourceId='sug-r7-neon-streets-buildings'; // existing Streets v8 source
     active.addLayer({
-      id:'sug-r7-water-surface',type:'fill',slot:'middle',
+      id:'sug-r7-water-surface',type:'fill',slot:'top',
       source:sourceId,'source-layer':'water',
       paint:{
         'fill-color':'#096fb8',
@@ -329,7 +329,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       }
     });
     active.addLayer({
-      id:'sug-r7-water-bank',type:'line',slot:'middle',
+      id:'sug-r7-water-bank',type:'line',slot:'top',
       source:sourceId,'source-layer':'water',
       paint:{
         'line-color':'#35c4ff',

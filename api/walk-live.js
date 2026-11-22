@@ -1,4 +1,4 @@
-import {requireR7User} from '../server/r7-auth-gate.js';
+import {requireR7User,authorizeR7LiveRole} from '../server/r7-auth-gate.js';
 import {BUDGET_YEN,LIMITS,rejectDisabled} from './_r7-budget-policy.js';
 /* Read-only status; no room token, publisher grant, or service is provisioned. */
 export default async function handler(req,res){
@@ -18,6 +18,9 @@ export default async function handler(req,res){
  if(req.method!=='POST')return res.status(405).json({error:'METHOD_NOT_ALLOWED'});
  const access=await requireR7User(req);
  if(!access.allowed)return res.status(access.status).json({error:access.error});
- // LIVE creation remains disabled for ALL users, even verified users.
+ const requestedMode=req.body?.mode;
+ const permission=authorizeR7LiveRole(access,requestedMode);
+ if(!permission.allowed)return res.status(permission.status).json({error:permission.error});
+ // Even verified hosts/viewers cannot create paid streams before owner approval.
  return rejectDisabled(res,'walk-live');
 }

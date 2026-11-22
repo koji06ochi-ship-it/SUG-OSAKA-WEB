@@ -31,7 +31,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const BASEMAP_CONFIG = {
     lightPreset: 'night',
     theme: 'default',
-    show3dObjects: true,
+    show3dObjects: false,
     show3dFacades: false,
     show3dLandmarks: false,
     colorBuildings: '#ff4fa6',
@@ -263,6 +263,36 @@ window.createOsaka3D = function createOsaka3D(ui) {
     } catch (e) {
       /* setFog optional if unsupported */
     }
+  }
+
+  // Mapbox Standard colorBuildings was rendered nearly black on iPhone.
+  // Use the documented Streets v8 building source with luminous extrusions instead.
+  // Building palette is visual decoration, NOT a verified store-to-building match.
+  function addNeonCityBuildings(active) {
+    const sourceId = 'sug-r7-neon-streets-buildings';
+    const layerId = 'sug-r7-neon-building-extrusions';
+    active.addSource(sourceId, {type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
+    const variety = ['%', ['to-number',['coalesce',['id'],['get','height'],0]], 5];
+    active.addLayer({
+      id:layerId, type:'fill-extrusion', slot:'top',
+      source:sourceId, 'source-layer':'building',
+      minzoom:14, filter:['==',['get','extrude'],'true'],
+      paint:{
+        'fill-extrusion-color':['match',variety,
+          0,'#ff4fa6',1,'#04e6ff',2,'#b76aff',3,'#ffd065','#32e8a5'],
+        'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
+        'fill-extrusion-base':['to-number',['get','min_height'],0],
+        'fill-extrusion-opacity':0.96,
+        'fill-extrusion-emissive-strength':0.95,
+        'fill-extrusion-vertical-gradient':false
+      }
+    });
+    container.dataset.buildingPalette = 'pink-cyan-violet-gold-mint';
+    active.on('idle', () => {
+      if (view !== active || !active.getLayer(layerId)) return;
+      const count = active.queryRenderedFeatures({layers:[layerId]}).length;
+      container.dataset.renderedNeonBuildings = String(count);
+    });
   }
 
   function addGeoLayers(active) {
@@ -525,12 +555,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
               /* Ignore unsupported config tokens in older style revisions */
             }
           }
-          // Favor building color over detailed facade shading in night mode.
-          for (const [key, value] of Object.entries({show3dFacades:false,show3dLandmarks:false,colorBuildings:'#ff4fa6'})) {
-            try { active.setConfigProperty('basemap', key, value); } catch (e) { container.dataset.colorConfigError = key; }
-          }
-          container.dataset.buildingColorRequested = '#ff4fa6';
+          // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
+          active.setConfigProperty('basemap','show3dObjects',false);
+          container.dataset.buildingColorRequested = 'five-color-vector-extrusions';
           applyNightAtmosphere(active);
+          addNeonCityBuildings(active);
           addGeoLayers(active);
           addSpotMarkers(gl);
           ready = true;

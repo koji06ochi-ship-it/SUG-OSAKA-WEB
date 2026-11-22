@@ -19,6 +19,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let timeout = null;
   let currentMarker = null;
   let spotMarkers = [];
+  let highlightedStoreMarkers = [];
+  let highlightedStores = [];
   let trace = [];
   let routeCoords = [];
   let bearingAnchor = null;
@@ -98,6 +100,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       '.sug-r7-spot{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0;border:0;background:transparent;cursor:pointer;}',
       '.sug-r7-spot-pill{padding:5px 12px;border:1.3px solid rgba(255,79,166,.92);border-radius:999px;background:rgba(12,6,22,.84);color:#fff;box-shadow:0 0 16px rgba(255,59,154,.48),inset 0 0 8px rgba(255,59,154,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:700 11.5px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.03em;white-space:nowrap;}',
       '.sug-r7-spot-drop{width:16px;height:20px;filter:drop-shadow(0 0 7px rgba(255,59,154,.95));}',
+      '.sug-r7-selected-shop{padding:7px 12px;border:1.5px solid var(--sug-store-color);border-radius:999px;background:rgba(5,5,13,.94);color:var(--sug-store-color);font:700 12px -apple-system,sans-serif;white-space:nowrap;box-shadow:0 0 12px var(--sug-store-color);}',
       '.sug-r7-spot:focus-visible .sug-r7-spot-pill{outline:2px solid #fff;outline-offset:2px;}',
       '.sug-r7-gps-pulse{position:relative;width:22px;height:22px;border:2.5px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0%,#ff80c2 55%,#ff2a8d 100%);box-shadow:0 0 16px #ff3b9a,0 0 28px rgba(255,59,154,.85);animation:sug-r7-gps-pulse 1.9s ease-in-out infinite;}',
       '@keyframes sug-r7-gps-pulse{0%,100%{box-shadow:0 0 10px 3px rgba(255,59,154,.55)}50%{box-shadow:0 0 24px 14px rgba(255,59,154,.82)}}'
@@ -106,6 +109,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   }
 
   function clearMarkers() {
+    for (const m of highlightedStoreMarkers) m.remove();
+    highlightedStoreMarkers = [];
     for (const m of spotMarkers) m.remove();
     spotMarkers = [];
     if (currentMarker) {
@@ -137,6 +142,61 @@ window.createOsaka3D = function createOsaka3D(ui) {
       });
       spotMarkers.push(new gl.Marker({ element: el, anchor: 'bottom' }).setLngLat([place.lng, place.lat]).addTo(view));
     }
+  }
+
+  // Only explicitly approved, selected stores can receive a colored 3D overlay.
+  // No inferred address, footprint, height or shop color is generated.
+  function approvedHighlight(p) {
+    return p && p.approved === true && p.highlight3D === true &&
+      p.category === 'shop' && typeof p.name === 'string' &&
+      Number.isFinite(p.lat) && Number.isFinite(p.lng) &&
+      Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180;
+  }
+  function storeColor(p) {
+    return typeof p.highlightColor === 'string' && /^#[0-9a-f]{6}$/i.test(p.highlightColor)
+      ? p.highlightColor : '#ff3b9a';
+  }
+  function approvedFootprint(p) {
+    const ring = p.footprint;
+    if (!Array.isArray(ring) || ring.length < 4 || ring.length > 100 ||
+        !Number.isFinite(p.heightMetres) || p.heightMetres <= 0 || p.heightMetres > 500) return null;
+    if (!ring.every(pt => Array.isArray(pt) && pt.length === 2 &&
+          pt.every(Number.isFinite) && Math.abs(pt[0] - p.lng) < 0.003 && Math.abs(pt[1] - p.lat) < 0.003)) return null;
+    const first = ring[0], last = ring[ring.length - 1];
+    return first[0] === last[0] && first[1] === last[1] ? ring : null;
+  }
+  function selectedBuildings() {
+    return {type:'FeatureCollection',features:highlightedStores.flatMap(p => {
+      const ring = approvedFootprint(p);
+      return ring ? [{type:'Feature',properties:{color:storeColor(p),height:p.heightMetres},
+        geometry:{type:'Polygon',coordinates:[ring]}}] : [];
+    })};
+  }
+  function drawHighlightedStores(gl) {
+    for(const marker of highlightedStoreMarkers) marker.remove();
+    highlightedStoreMarkers=[];
+    if(!view) return;
+    styleMarkers();
+    for(const store of highlightedStores) {
+      const el=document.createElement('button');
+      el.type='button';
+      el.className='sug-r7-spot sug-r7-selected-shop';
+      el.style.setProperty('--sug-store-color',storeColor(store));
+      el.textContent=store.name;
+      el.title=store.name;
+      el.addEventListener('click',event=>{event.stopPropagation();ui.select(store);});
+      highlightedStoreMarkers.push(new gl.Marker({element:el,anchor:'bottom'})
+        .setLngLat([store.lng,store.lat]).addTo(view));
+    }
+  }
+  function setHighlightedStores(stores) {
+    highlightedStores=Array.isArray(stores)?stores.filter(approvedHighlight):[];
+    if(view && ready) {
+      const source=view.getSource('sug-r7-selected-buildings');
+      if(source)source.setData(selectedBuildings());
+      drawHighlightedStores(window.mapboxgl);
+    }
+    return highlightedStores.length;
   }
 
   function close(message) {
@@ -208,6 +268,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
     src('sug-r7-route', featureLine(routeCoords));
     src('sug-r7-user', featurePoint(lastFix));
     src('sug-r7-arrival-ring', radiusPolygon(HUB, 180));
+    // Empty unless a store is explicitly selected AND has a supplied verified footprint + height.
+    src('sug-r7-selected-buildings', selectedBuildings());
+    active.addLayer({id:'sug-r7-selected-shop-buildings',type:'fill-extrusion',
+      slot:'top',source:'sug-r7-selected-buildings',
+      paint:{'fill-extrusion-color':['get','color'],
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-base':0,'fill-extrusion-opacity':0.65}});
 
     // 180m Arrival Zone (subtle neon-pink halo)
     layer({
@@ -457,6 +524,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addGeoLayers(active);
           addSpotMarkers(gl);
           ready = true;
+          drawHighlightedStores(gl);
           if (lastFix) position(lastFix, null, false);
           pending = false;
           clearTimeout(timeout);
@@ -509,6 +577,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       view.zoomTo(view.getZoom() + delta);
       return true;
     },
-    isActive
+    isActive,
+    setHighlightedStores
   };
 };

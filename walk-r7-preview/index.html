@@ -33,7 +33,7 @@
   <div class="unified-root">
     <div class="phone-frame" aria-label="S.u.G WALK R7 正式5画面統合アプリ">
       <iframe id="frame-home" class="screen-frame active" title="① ホーム"></iframe>
-      <iframe id="frame-map" class="screen-frame" title="② マップ"></iframe>
+      <iframe id="frame-map" class="screen-frame" title="② マップ" allow="geolocation; accelerometer; gyroscope"></iframe>
       <iframe id="frame-meet" class="screen-frame" title="③ 出会う"></iframe>
       <iframe id="frame-log" class="screen-frame" title="④ 記録"></iframe>
       <iframe id="frame-settings" class="screen-frame" title="⑤ 設定"></iframe>
@@ -56,11 +56,22 @@
               var style = doc.createElement('style');
               style.textContent = '.bottom-nav{display:none!important} html,body,.app-viewport,.phone-shell{height:100%!important;min-height:0!important}';
               doc.head.appendChild(style);
+              if (key === 'map' && currentTab === 'map') notifyMapVisible();
             } catch (e) { /* Fall back to original screen styling */ }
           });
           el.src = key + '.html';
         }
       });
+
+      function notifyMapVisible() {
+        var mapFrame = document.getElementById('frame-map');
+        if (!mapFrame || !mapFrame.contentWindow) return;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            mapFrame.contentWindow.postMessage({ type: 'sug-r7-map-visible' }, location.origin);
+          });
+        });
+      }
 
       function switchTab(tab) {
         if (TAB_KEYS.indexOf(tab) === -1) return;
@@ -75,6 +86,7 @@
           var el = document.getElementById('frame-' + k);
           if (el) el.classList.toggle('active', k === tab);
         });
+        if (tab === 'map') notifyMapVisible();
         if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.sugWalkR7) {
           try { window.webkit.messageHandlers.sugWalkR7.postMessage({ action: 'onActiveTabChanged', payload: { tab: tab } }); } catch (e) {}
         }

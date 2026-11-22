@@ -6,7 +6,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let sdkPromise = null, view = null, pin = null, userMarker = null;
   let pending = false, generation = 0, timeoutId = null, bearingAnchor = null;
   let lastGPS = null, following = true, headingUpdates = 0, gpsUpdates = 0, lastMeasure = 0;
-  let spots = [], track = [], lastPulse = 0, lastError = '';
+  let spots = [], track = [], lastPulse = 0, lastError = '', pulseFrame = null;
   const HUB = {lat:34.690616,lng:135.514183};
   const SPOTS = [
     {name:'八軒家浜（川沿い遊歩道）',lat:34.690616,lng:135.514183},
@@ -34,6 +34,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     pending = false;
     clearTimeout(timeoutId);
     timeoutId = null;
+    if (pulseFrame !== null && typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(pulseFrame);
+    pulseFrame = null;
     if (view) { try { view.remove(); } catch (_) {} }
     view = pin = userMarker = bearingAnchor = lastGPS = null;
     spots.forEach(m => {try {m.remove();} catch (_) {}});
@@ -132,6 +134,22 @@ window.createOsaka3D = function createOsaka3D(ui) {
       paint:{'circle-radius':5.5,'circle-color':PINK,'circle-opacity':1,
         'circle-stroke-color':'#fff','circle-stroke-width':1.5,
         'circle-emissive-strength':1}});
+  }
+  function startPulse(active) {
+    if (typeof window.requestAnimationFrame !== 'function') return;
+    function frame(timestamp) {
+      if (active !== view || container.hidden) return;
+      if (timestamp - lastPulse >= 60 && !document.hidden) {
+        lastPulse = timestamp;
+        const phase = (Math.sin(timestamp / 380) + 1) / 2;
+        if (active.getLayer('sug-r7-user-pulse')) {
+          active.setPaintProperty('sug-r7-user-pulse','circle-radius',9 + 12 * phase);
+          active.setPaintProperty('sug-r7-user-pulse','circle-opacity',0.36 * (1 - phase) + 0.08);
+        }
+      }
+      pulseFrame = window.requestAnimationFrame(frame);
+    }
+    pulseFrame = window.requestAnimationFrame(frame);
   }
   function refreshPosition(active) {
     if (active !== view || !active.getSource('sug-r7-position')) return;
@@ -253,6 +271,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         toggle.textContent='2D';
         toggle.setAttribute('aria-pressed','true');
         active.on('render',()=>onCameraRender(active));
+        startPulse(active);
         resize();
         if (typeof ui.onReady==='function') ui.onReady();
       });

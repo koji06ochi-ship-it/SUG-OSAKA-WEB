@@ -1559,6 +1559,10 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
     <p>公開トークン（pk.）はこの端末だけに保存します。GitHubには保存しません。Mapboxへの通信には使用します。</p>
     <label for="sug-r7-token-input">Mapbox公開トークン</label>
     <input id="sug-r7-token-input" type="password" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="pk.から始まるトークン">
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.5;margin:12px 0">
+      <input type="checkbox" id="sug-r7-mapbox-consent" style="margin-top:3px">
+      <span>Mapboxの利用条件・無料枠・従量課金の可能性を自分のアカウントで確認し、3D通信の開始を承認する。</span>
+    </label>
     <p id="sug-r7-token-status" role="status" aria-live="polite"></p>
     <div id="sug-r7-token-actions">
       <button type="button" id="sug-r7-token-save">保存・再設定して3D起動</button>
@@ -1748,6 +1752,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       const tokenModal=document.getElementById('sug-r7-token-modal');
       const tokenInput=document.getElementById('sug-r7-token-input');
       const tokenStatus=document.getElementById('sug-r7-token-status');
+      const mapboxConsent=document.getElementById('sug-r7-mapbox-consent');
       const tokenKey='sug-r7-mapbox-pk';
       const validToken=t=>typeof t==='string' && /^pk\.[A-Za-z0-9._-]+$/.test(t.trim());
       function readToken(){
@@ -1760,20 +1765,21 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         return validToken(t)?t.trim():'';
       }
       function closeTokenModal(){tokenModal.hidden=true;tokenStatus.textContent='';}
-      function openTokenModal(){tokenInput.value=readToken();tokenStatus.textContent='';tokenModal.hidden=false;requestAnimationFrame(()=>tokenInput.focus());}
+      function openTokenModal(){tokenInput.value=readToken();mapboxConsent.checked=false;tokenStatus.textContent='';tokenModal.hidden=false;requestAnimationFrame(()=>tokenInput.focus());}
       function activate3D(t){
+        if(!mapboxConsent.checked){openTokenModal();tokenStatus.textContent='Mapbox利用条件と課金可能性の確認・承認が必要です。';return;}
         if(!validToken(t)){tokenStatus.textContent='pk.で始まる公開トークンを入力してください。';return;}
         try{localStorage.setItem(tokenKey,t.trim());}
         catch(e){tokenStatus.textContent='端末に保存できません。Safariの保存設定を確認してください。';return;}
         window.SUGMapboxPublicToken=t.trim();
-        window.SUGMapboxFreeTierConfirmed=true;
+        window.SUGMapboxFreeTierConfirmed=true; // Explicit checkbox consent in this session only.
         closeTokenModal();
         if(osaka3D.isActive())osaka3D.close(); // Reconfigure an already-running 3D session.
         if(public3dToggle.getAttribute('aria-pressed')!=='true')original3dClick.call(public3dToggle);
       }
       public3dToggle.onclick=function(){
         if(osaka3D.isActive() || public3dToggle.getAttribute('aria-pressed')==='true'){original3dClick.call(this);return;}
-        const t=readToken();if(!t){openTokenModal();return;}activate3D(t);
+        const t=readToken();if(!t || window.SUGMapboxFreeTierConfirmed!==true){openTokenModal();return;}activate3D(t);
       };
       document.getElementById('sug-r7-token-settings').onclick=openTokenModal;
       document.getElementById('sug-r7-token-save').onclick=()=>activate3D(tokenInput.value);
@@ -1781,7 +1787,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       document.getElementById('sug-r7-token-clear').onclick=()=>{
         try{localStorage.removeItem(tokenKey);}catch(e){}
         try{sessionStorage.removeItem(tokenKey);}catch(e){}
-        window.SUGMapboxPublicToken='';tokenInput.value='';osaka3D.close();
+        window.SUGMapboxPublicToken='';window.SUGMapboxFreeTierConfirmed=false;mapboxConsent.checked=false;tokenInput.value='';osaka3D.close();
         tokenStatus.textContent='保存トークンを削除しました。';tokenInput.focus();
       };
       tokenInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();activate3D(tokenInput.value);}});

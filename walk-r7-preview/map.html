@@ -1551,7 +1551,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js?v=r7-osaka-tenmangu-20261123a"></script></head>
+</script><script src="osaka-3d.js?v=r7-hommachibashi-pier-20261123a"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -1717,6 +1717,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         {name:'八軒家浜（川沿い遊歩道）',lat:34.690616,lng:135.514183},
         {name:'八軒家浜船着場（水上バス）',lat:34.690739,lng:135.51619},
         {name:'大阪水上バス 大阪城港',lat:34.6895772,lng:135.5329541},
+        {name:'本町橋船着場',category:'port',lat:34.68385,lng:135.51004},
         {name:'JR天満駅',lat:34.7049333,lng:135.5121361},
         {name:'中之島公園（中央公会堂前）',lat:34.693213,lng:135.504950}
       ];
@@ -1739,7 +1740,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         {"name":"南森町駅","category":"station"},
         {"name":"大阪天満宮駅","category":"station","lat":34.6974056,"lng":135.5134417},
         {"name":"天満橋駅","category":"station"},
-        {"name":"本町橋船着場","category":"port"},
+        {"name":"本町橋船着場","category":"port","lat":34.68385,"lng":135.51004,"coordinateSource":"https://www.openstreetmap.org/node/5732806230"},
         {"name":"八軒家船着場","category":"port","lat":34.690739,"lng":135.51619},
         {"name":"ローズポート","category":"port"},
         {"name":"若松浜船着場","category":"port"},

@@ -342,22 +342,71 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   // Streets v8 is retained only for dark background building geometry.
   // Random building colors are prohibited: verified OSM ways own the accents.
+  // Procedural 64x64 window texture. No paid assets, new network calls, or
+  // building-by-building geometry. Fixed seed keeps lights stable while walking.
+  // 27-33% of window cells appear illuminated, with dark navy walls between.
+  function createCityWindowTexture() {
+    const size=64;
+    const canvas=document.createElement('canvas');
+    canvas.width=canvas.height=size;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    if(!ctx)return null;
+    ctx.fillStyle='#1A1F2B';
+    ctx.fillRect(0,0,size,size);
+    let seed=0x5a17c0de;
+    function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
+    const colors=['#e7bb84','#e7bb84','#c4d9e8','#f3d8aa','#abc8de'];
+    for(let y=5;y<64;y+=9){
+      for(let x=5;x<64;x+=9){
+        if(random()>0.30)continue;
+        ctx.fillStyle=colors[Math.floor(random()*colors.length)];
+        ctx.fillRect(x,y,3,4);
+      }
+    }
+    return ctx.getImageData(0,0,size,size);
+  }
   function addNeonCityBuildings(active) {
     const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
     active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
-    active.addLayer({
-      id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
-      minzoom:14,filter:['==',['get','extrude'],'true'],
-      paint:{
-        'fill-extrusion-color':'#202538',
-        'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
-        'fill-extrusion-base':['to-number',['get','min_height'],0],
-        'fill-extrusion-opacity':0.94,
-        'fill-extrusion-emissive-strength':0.12,
-        'fill-extrusion-vertical-gradient':false
+    const paint={
+      'fill-extrusion-color':'#1A1F2B',
+      'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
+      'fill-extrusion-base':['to-number',['get','min_height'],0],
+      'fill-extrusion-opacity':0.90,
+      'fill-extrusion-emissive-strength':0.12,
+      'fill-extrusion-vertical-gradient':false
+    };
+    let mode='navy-solid-fallback';
+    try{
+      const texture=createCityWindowTexture();
+      if(texture){
+        const imageId='sug-r7-city-window-lights-64';
+        if(!active.hasImage(imageId))active.addImage(imageId,texture,{pixelRatio:1});
+        paint['fill-extrusion-pattern']=imageId;
+        mode='navy-window-lights-pattern';
       }
-    });
-    container.dataset.buildingPalette='dark-only-with-verified-osm-overlays';
+    }catch(err){
+      container.dataset.cityWindowTextureError=String(err.message||err);
+    }
+    // Only ordinary Streets buildings get the pattern. Approved facilities,
+    // castle, museum and landmark overlays are drawn independently on top.
+    try{
+      active.addLayer({
+        id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
+        minzoom:14,filter:['==',['get','extrude'],'true'],paint
+      });
+    }catch(err){
+      // A pattern must not break the whole map: retry one time with plain navy.
+      if(!paint['fill-extrusion-pattern'])throw err;
+      delete paint['fill-extrusion-pattern'];
+      active.addLayer({
+        id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
+        minzoom:14,filter:['==',['get','extrude'],'true'],paint
+      });
+      mode='navy-solid-fallback';
+      container.dataset.cityWindowTextureError=String(err.message||err);
+    }
+    container.dataset.buildingPalette=mode;
   }
 
   // Explicit landscape fills: Standard's colorWater/colorGreenspace configuration

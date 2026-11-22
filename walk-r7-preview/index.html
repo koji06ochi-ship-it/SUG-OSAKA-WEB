@@ -33,7 +33,7 @@
   <div class="unified-root">
     <div class="phone-frame" aria-label="S.u.G WALK R7 正式5画面統合アプリ">
       <iframe id="frame-home" class="screen-frame active" title="① ホーム"></iframe>
-      <iframe id="frame-map" class="screen-frame" title="② マップ"></iframe>
+      <iframe id="frame-map" class="screen-frame" title="② マップ" allow="geolocation; accelerometer; gyroscope"></iframe>
       <iframe id="frame-meet" class="screen-frame" title="③ 出会う"></iframe>
       <iframe id="frame-log" class="screen-frame" title="④ 記録"></iframe>
       <iframe id="frame-settings" class="screen-frame" title="⑤ 設定"></iframe>
@@ -70,11 +70,19 @@
           else button.removeAttribute('aria-current');
         });
         const mapWindow = document.getElementById('frame-map').contentWindow;
-        mapWindow.dispatchEvent(new mapWindow.Event('sug:tabChanged'));
+        try { mapWindow.dispatchEvent(new mapWindow.Event('sug:tabChanged')); } catch (e) { /* Map not ready yet */ }
         TAB_KEYS.forEach(function (k) {
           var el = document.getElementById('frame-' + k);
           if (el) el.classList.toggle('active', k === tab);
         });
+        if (tab === 'map') {
+          // Wait until the iframe has a measurable viewport before Mapbox resize.
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              mapWindow.postMessage({ type: 'sug-r7-map-visible' }, '*');
+            });
+          });
+        }
         if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.sugWalkR7) {
           try { window.webkit.messageHandlers.sugWalkR7.postMessage({ action: 'onActiveTabChanged', payload: { tab: tab } }); } catch (e) {}
         }

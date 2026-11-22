@@ -362,36 +362,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
       minzoom:14,filter:['==',['get','extrude'],'true'],paint
     });
-    // Neon = diffuse outer halo + brighter inner line. Uses true Streets
-    // building footprints; this does not fake roof or vertical 3D edges.
-    // Keep short range and moderate opacity to avoid distracting from spots.
-    try {
-      const base={type:'line',slot:'top',source:sourceId,
-        'source-layer':'building',minzoom:15,
-        filter:['==',['get','extrude'],'true']};
-      active.addLayer({...base,id:'sug-r7-building-outline-glow',
-        paint:{
-          'line-color':'#EFC86F',
-          'line-width':['interpolate',['linear'],['zoom'],15,1.5,17,3.5,19,6],
-          'line-opacity':0.50,
-          'line-blur':1.8,
-          'line-emissive-strength':1
-        }
-      });
-      active.addLayer({...base,id:'sug-r7-building-outline',
-        paint:{
-          'line-color':'#FFE8A3',
-          'line-width':['interpolate',['linear'],['zoom'],15,0.6,17,1.25,19,2.1],
-          'line-opacity':0.90,
-          'line-blur':0.05,
-          'line-emissive-strength':1
-        }
-      });
-      container.dataset.cityOutline='champagne-neon-footprint-halo-and-core';
-    }catch(err){
-      container.dataset.cityOutline='unavailable';
-      container.dataset.cityOutlineError=String(err.message||err);
-    }
+    // Previous line layers traced the *roof* instead of vertical building edges.
+    // They are deliberately retired; see addPilotVerticalNeonEdges().
+    container.dataset.cityOutline='roof-footprint-lines-disabled';
     // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
       active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#F1CA7A');
@@ -405,6 +378,102 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.buildingPalette='readable-navy-no-roof-dots';
     container.dataset.cityFacadeColor=ORDINARY_BUILDING_COLOR;
     container.dataset.cityWindowStatus='not-implemented-facade-geometry-required';
+  }
+
+  // First pilot: real vertical neon geometry on up to six nearby Mapbox
+  // Streets buildings, not 2D footprint lines. A thin extruded square at
+  // each verified building corner makes a vertical neon strip on its facade.
+  // Two extrusion widths create a soft halo + a brighter inner core.
+  // Limited to Hachikenyahama to protect iPhone frame rate.
+  function addPilotVerticalNeonEdges(active) {
+    const sourceId='sug-r7-pilot-vertical-neon-source';
+    const empty={type:'FeatureCollection',features:[]};
+    active.addSource(sourceId,{type:'geojson',data:empty});
+    const base={
+      type:'fill-extrusion',slot:'top',source:sourceId,minzoom:16,
+      paint:{
+        'fill-extrusion-base':['get','base'],
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-vertical-gradient':false
+      }
+    };
+    active.addLayer({...base,id:'sug-r7-pilot-vertical-neon-halo',
+      paint:{...base.paint,'fill-extrusion-color':'#D8A43C',
+        'fill-extrusion-opacity':0.26,
+        'fill-extrusion-emissive-strength':1},
+      filter:['==',['get','kind'],'halo']
+    });
+    active.addLayer({...base,id:'sug-r7-pilot-vertical-neon-core',
+      paint:{...base.paint,'fill-extrusion-color':'#FFE5A0',
+        'fill-extrusion-opacity':0.96,
+        'fill-extrusion-emissive-strength':1},
+      filter:['==',['get','kind'],'core']
+    });
+    const toRad=Math.PI/180;
+    const cosLat=Math.cos(HUB.lat*toRad);
+    const dist=(a,b)=>Math.hypot((a[0]-b[0])*111320*cosLat,(a[1]-b[1])*111320);
+    function square(center,width){
+      const dx=width/(2*111320*cosLat),dy=width/(2*111320);
+      return {type:'Polygon',coordinates:[[
+        [center[0]-dx,center[1]-dy],[center[0]+dx,center[1]-dy],
+        [center[0]+dx,center[1]+dy],[center[0]-dx,center[1]+dy],
+        [center[0]-dx,center[1]-dy]
+      ]]};
+    }
+    let updated=false;
+    function refresh() {
+      if(active!==view||updated)return;
+      let features=[];
+      try{features=active.querySourceFeatures('sug-r7-neon-streets-buildings',{sourceLayer:'building'});}
+      catch(e){container.dataset.verticalNeonStatus='source-unavailable';return;}
+      if(!features.length){container.dataset.verticalNeonStatus='waiting-for-building-tiles';return;}
+      const candidates=[],seen=new Set();
+      for(const feature of features){
+        if(!feature||!feature.geometry||!['Polygon','MultiPolygon'].includes(feature.geometry.type))continue;
+        if(String(feature.properties&&feature.properties.extrude)!=='true')continue;
+        const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
+        const ring=polygons[0]&&polygons[0][0];
+        if(!Array.isArray(ring)||ring.length<4||ring.length>100)continue;
+        const center=ring.slice(0,-1).reduce((p,c)=>[p[0]+c[0]/(ring.length-1),p[1]+c[1]/(ring.length-1)],[0,0]);
+        const d=dist(center,[HUB.lng,HUB.lat]);
+        if(d>250)continue;
+        const height=Number(feature.properties.height);
+        if(!Number.isFinite(height)||height<9||height>160)continue;
+        const key=String(feature.id??'')+'|'+center.map(n=>n.toFixed(5)).join(',');
+        if(seen.has(key))continue;
+        seen.add(key);
+        candidates.push({ring,height,base:Math.max(0,Number(feature.properties.min_height)||0),d});
+      }
+      candidates.sort((a,b)=>a.d-b.d);
+      const result=[],chosen=candidates.slice(0,6);
+      for(const building of chosen){
+        // Sample max 8 real corners, omit ring closure and near-duplicates.
+        let corners=[];
+        for(const corner of building.ring.slice(0,-1)){
+          if(corners.every(p=>dist(p,corner)>2))corners.push(corner);
+          if(corners.length>=8)break;
+        }
+        for(const corner of corners){
+          for(const [kind,width] of [['halo',0.55],['core',0.16]]){
+            result.push({type:'Feature',properties:{kind,base:building.base,height:building.height},
+              geometry:square(corner,width)});
+          }
+        }
+      }
+      active.getSource(sourceId).setData({type:'FeatureCollection',features:result});
+      updated=true;
+      container.dataset.verticalNeonStatus=chosen.length?'pilot-geometry-ready':'no-eligible-buildings';
+      container.dataset.verticalNeonBuildings=String(chosen.length);
+      container.dataset.verticalNeonStrips=String(result.length);
+    }
+    // Wait until source tiles have been loaded; no perpetual animation loop.
+    active.once('idle',refresh);
+    active.on('sourcedata',e=>{
+      if(!updated&&e.sourceId==='sug-r7-neon-streets-buildings'&&e.isSourceLoaded){
+        active.once('idle',refresh);
+      }
+    });
+    container.dataset.verticalNeonStatus='waiting-for-building-tiles';
   }
 
   // Explicit landscape fills: Standard's colorWater/colorGreenspace configuration
@@ -1407,6 +1476,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
           applyNightAtmosphere(active);
           addNeonCityBuildings(active);
+          addPilotVerticalNeonEdges(active);
           addOsakaLandscapeLayers(active);
           addVerifiedOgimachiPark(active);
           addVerifiedNakanoshimaPark(active);

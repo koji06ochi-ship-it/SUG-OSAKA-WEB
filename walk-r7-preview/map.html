@@ -1768,6 +1768,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         window.SUGMapboxPublicToken=t.trim();
         window.SUGMapboxFreeTierConfirmed=true;
         closeTokenModal();
+        if(osaka3D.isActive())osaka3D.close(); // Reconfigure an already-running 3D session.
         if(public3dToggle.getAttribute('aria-pressed')!=='true')original3dClick.call(public3dToggle);
       }
       public3dToggle.onclick=function(){

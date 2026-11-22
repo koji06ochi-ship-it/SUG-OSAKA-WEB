@@ -1781,7 +1781,22 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           places.push({name:p.name,lat:p.lat,lng:p.lng,category:p.category});
         }
       }
-      let destination=null, follow=true, anchor=null, walked=0, destinationReached=false;
+      // Local-only GPS walking distance; never persist precise coordinates or consent.
+      const GPS_DISTANCE_KEY='sug_walk_r7_gps_distance_m_v1';
+      function restoreWalkedDistance(){
+        try{
+          const raw=localStorage.getItem(GPS_DISTANCE_KEY);
+          if(raw===null)return 0;
+          const value=Number(raw);
+          return Number.isFinite(value)&&value>=0&&value<=100000000?value:0;
+        }catch{return 0;}
+      }
+      function saveWalkedDistance(){
+        try{localStorage.setItem(GPS_DISTANCE_KEY,String(Math.round(walked*100)/100));return true;}
+        catch{return false;}
+      }
+      let destination=null, follow=true, anchor=null, walked=restoreWalkedDistance(), destinationReached=false;
+      document.getElementById('val-dist').textContent=(walked/1000).toFixed(2)+' km';
       var map = L.map('sug-real-map', {
         center: [34.6935, 135.5105],
         zoom: 15,
@@ -1931,6 +1946,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         });
       }
 
+      // When GPS stops or the app goes into background, retain saved distance only.
       let watchID = null;
       let gpsGeneration = 0;
       function stopGPS() {
@@ -2449,7 +2465,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           const step=anchor?map.distance([anchor.lat,anchor.lng],[lat,lng]):0;
           if (!anchor || dt>60) anchor=fix;
           else if (step>=Math.max(4,(accuracy+anchor.accuracy)/2) && step<=4*dt) {
-            walked+=step;anchor=fix;
+            walked+=step;anchor=fix;saveWalkedDistance();
           }
           document.getElementById('val-dist').textContent=(walked/1000).toFixed(2)+' km';
         }

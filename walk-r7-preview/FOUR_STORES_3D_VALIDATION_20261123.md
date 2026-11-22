@@ -83,3 +83,12 @@
 - 表示失敗の調査用: `data-landmark-building-count` と `data-landmark-source-candidates`。
 - JS 9ブロック構文解析エラー0、座標・WayID・公式住所・キャッシュ設定を再照合。masterは変更なし。
 - **未達:** PC/iPhone実建物の色・建物一致を示すスクリーンショット未取得。OSM Wayも公式サイトから確定できたわけではない。合格までmasterへマージしない。
+
+## 大川・公園の面着色追加（2026-11-23）
+- iPhone画像では大阪市中央公会堂の紫色とカンテレの金色は見えている一方、川の水面と公園の土地が暗色のままだった。
+- Mapbox公式Streets v8仕様（https://docs.mapbox.com/data/tilesets/reference/mapbox-streets-v8/）で確認した `water` polygon と `landuse`（class=park/grass/wood）polygon を利用。
+- 同じ Streets v8 ベクターソースに `sug-r7-water-surface`（濃紺 #0a3566）、`sug-r7-water-bank`（青縁 #2188c0）、`sug-r7-green-parks`（緑 #145b42 等）、`sug-r7-park-border`（明緑 #30d38b）を `bottom` スロットで追加。ピンク道路、3D建物、施設の個別色、GPS・検索・5画面は維持。
+- `data-water-polygon-count` と `data-park-polygon-count` に描画済みポリゴン件数を記録する診断を追加。
+- iPhoneキャッシュ更新：`r7-water-park-20261123m`。
+- 静的検証: index/map/JSの9ブロック構文解析エラー0、4施設Way ID維持、建物のランダム着色復活なし、景観レイヤー初期化順を確認。
+- **未検証:** iPhoneで川と公園の面が実際に色付くこと、Mapbox描画時の挙動、画面スクリーンショット。実機合格前にmasterへマージしない。

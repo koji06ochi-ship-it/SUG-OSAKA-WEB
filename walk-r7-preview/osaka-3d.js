@@ -176,7 +176,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       active.on('error',e=>{
         if(active!==view)return;
         const msg=String(e.error?.message||'');
-        if(!ready || /401|403|unauthorized|forbidden|invalid token/i.test(msg))close(errorText(e.error));
+        if(!ready || /401|403|unauthorized|forbidden|invalid token|network|fetch|offline|webgl|context lost/i.test(msg) || !navigator.onLine)close(errorText(e.error));
       });
       active.on('webglcontextlost',()=>{if(active===view)close('WebGL描画が停止しました。2Dに戻しました。');});
       active.on('dragstart',()=>{if(active===view)ui.pauseFollow();});

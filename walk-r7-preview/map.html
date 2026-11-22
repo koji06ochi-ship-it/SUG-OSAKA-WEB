@@ -1725,7 +1725,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       const designatedPlaces = [
         {"name":"大阪茶会","category":"shop"},
         {"name":"暸","category":"shop"},
-        {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4丁目7-11-501","highlight3D":true,"highlightColor":"#00e5ff"},
+        {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4丁目7-11-501","lat":34.7036111111,"lng":135.5111111111,"approved":true,"highlight3D":true,"highlightColor":"#00e5ff","coordinateSource":"user-compass","coordinateAccuracy":"unverified"},
         {"name":"川の駅はちけんや","category":"shop"},
         {"name":"大阪城","category":"sightseeing","lat":34.68734,"lng":135.526},
         {"name":"大阪市中央公会堂","category":"sightseeing","lat":34.69361,"lng":135.50389},
@@ -1801,7 +1801,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,null,follow);}
       });
       // Highlight only coordinates already confirmed for a designated landmark.
-      osaka3D.setHighlightedStores(designatedPlaces.filter(p => p.category === 'landmark' && p.approved === true && p.highlight3D === true));
+      osaka3D.setHighlightedStores(designatedPlaces.filter(p => (p.category === 'landmark' || p.category === 'shop') && p.approved === true && p.highlight3D === true));
       const public3dToggle=document.getElementById('osaka-toggle');
       const original3dClick=public3dToggle.onclick;
       const tokenModal=document.getElementById('sug-r7-token-modal');
@@ -2015,7 +2015,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           state.spots = spots.filter(p => p && point(p) && p.approved===true);
           window.SUG_WALK_VERIFIED_PLACES = state.spots;
           // Only a store explicitly opted in for 3D highlighting can change its color.
-          osaka3D.setHighlightedStores([...designatedPlaces.filter(p => p.category === 'landmark' && p.approved === true && p.highlight3D === true),...state.spots.filter(p => p.category === 'shop' && p.highlight3D === true)]);
+          osaka3D.setHighlightedStores([...designatedPlaces.filter(p => (p.category === 'landmark' || p.category === 'shop') && p.approved === true && p.highlight3D === true),...state.spots.filter(p => p.category === 'shop' && p.highlight3D === true)]);
           spots = rows().find(row=>row.type==='shops').items;
           spotsLayer.clearLayers();
           spots.forEach(function (spot) {

@@ -11,6 +11,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let verifiedVenueFeatures = [];
   let venueLabels = [];
   let venueLoadGeneration = 0;
+  const LANDMARKS = [
+    {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47'},
+    {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65'},
+    {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff'}
+  ];
+  let landmarkGeometryHashes = '';
+  let landmarkColorsReady = false;
   const EMPTY = { type: 'FeatureCollection', features: [] };
   const spots = Array.isArray(ui.spots)
     ? ui.spots.filter(p => p && Number.isFinite(p.lat) && Number.isFinite(p.lng) && typeof p.name === 'string')
@@ -137,7 +144,16 @@ window.createOsaka3D = function createOsaka3D(ui) {
       el.type = 'button';
       el.className = 'sug-r7-spot';
       const colors={landmark:'#ffcb63',sightseeing:'#ffcb63',station:'#80b9ff',port:'#64e8da',park:'#65d896',waterfront:'#64e8da'};
-      el.style.setProperty('--sug-spot-color',colors[place.category]||'#ff4fa6');
+      const pinColor=colors[place.category]||'#ff4fa6';
+      el.style.setProperty('--sug-spot-color',pinColor);
+      el.style.color=pinColor; // SVG currentColor previously inherited dark text and lost its mark.
+      el.style.zIndex='6';
+      if(place.name==='関西テレビ（カンテレ）') {
+        const sign=document.createElement('span');
+        sign.textContent='8'; // Numeric landmark marker, not a recreated corporate logo.
+        sign.style.cssText='position:absolute;right:-8px;top:-13px;display:grid;place-items:center;min-width:20px;height:20px;border-radius:50%;background:#10121c;border:2px solid #ffbf47;color:#ffbf47;font:bold 13px sans-serif;box-shadow:0 0 12px #ffbf47;';
+        el.appendChild(sign);
+      }
       const pill = document.createElement('span');
       pill.className = 'sug-r7-spot-pill';
       pill.textContent = place.name;
@@ -223,6 +239,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     for(const marker of venueLabels) marker.remove();
     venueLabels=[];
     verifiedVenueFeatures=[];
+    landmarkGeometryHashes='';
     if (view) {
       try { view.remove(); } catch (e) {}
     }
@@ -419,6 +436,58 @@ window.createOsaka3D = function createOsaka3D(ui) {
         'fill-extrusion-vertical-gradient':false
       }});
     loadOfficialVenueWays(active);
+  }
+
+  // Color only real Mapbox Streets building geometry that actually contains the landmark POI.
+  // Do not use generated rectangles or indiscriminate radius coloring.
+  function landmarkGeometryMatch(geom,point) {
+    const polygons=geom.type==='Polygon'?[geom.coordinates]:geom.type==='MultiPolygon'?geom.coordinates:[];
+    for(const polygon of polygons) {
+      const outer=polygon[0];
+      if(Array.isArray(outer)&&pointInRing(point.lng,point.lat,outer))return true;
+    }
+    return false;
+  }
+  function updateLandmarkBuildingColors(active) {
+    if(view!==active || !active.getLayer('sug-r7-neon-building-extrusions'))return;
+    const features=[];
+    const labels=[];
+    for(const landmark of LANDMARKS) {
+      const p=active.project([landmark.lng,landmark.lat]);
+      if(!p || p.x < -25 || p.y < -25 || p.x > active.getCanvas().width+25 || p.y>active.getCanvas().height+25)continue;
+      let candidates=[];
+      try {
+        candidates=active.queryRenderedFeatures([[p.x-24,p.y-24],[p.x+24,p.y+24]],{layers:['sug-r7-neon-building-extrusions']});
+      } catch(e){container.dataset.landmarkQueryError=String(e.message||e);continue;}
+      const match=candidates.find(f=>f.geometry&&landmarkGeometryMatch(f.geometry,landmark));
+      if(!match)continue;
+      const height=Number(match.properties?.height);
+      if(!Number.isFinite(height)||height<=0||height>300)continue;
+      features.push({type:'Feature',properties:{name:landmark.name,color:landmark.color,height:height+3},
+        geometry:match.geometry});
+      labels.push(landmark.name);
+    }
+    const hash=features.map(f=>f.properties.name).sort().join('|');
+    if(hash===landmarkGeometryHashes)return;
+    landmarkGeometryHashes=hash;
+    const source=active.getSource('sug-r7-landmark-building-overlays');
+    if(source) source.setData({type:'FeatureCollection',features});
+    container.dataset.landmarkBuildingsMatched=labels.join(' / ')||'none';
+    container.dataset.landmarkBuildingCount=String(features.length);
+  }
+  function addLandmarkBuildingLayers(active) {
+    active.addSource('sug-r7-landmark-building-overlays',{
+      type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({id:'sug-r7-landmark-building-extrusions',type:'fill-extrusion',
+      slot:'top',source:'sug-r7-landmark-building-overlays',
+      paint:{'fill-extrusion-color':['get','color'],
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-base':0,
+        'fill-extrusion-opacity':1,
+        'fill-extrusion-emissive-strength':0.8,
+        'fill-extrusion-vertical-gradient':false}});
+    active.on('idle',()=>updateLandmarkBuildingColors(active));
+    active.on('moveend',()=>updateLandmarkBuildingColors(active));
   }
 
   function addGeoLayers(active) {
@@ -688,6 +757,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addNeonCityBuildings(active);
           addGeoLayers(active);
           addExactVenueLayers(active);
+          addLandmarkBuildingLayers(active);
           addSpotMarkers(gl);
           ready = true;
           drawHighlightedStores(gl);

@@ -148,7 +148,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // No inferred address, footprint, height or shop color is generated.
   function approvedHighlight(p) {
     return p && p.approved === true && p.highlight3D === true &&
-      p.category === 'shop' && typeof p.name === 'string' &&
+      (p.category === 'shop' || p.category === 'landmark') && typeof p.name === 'string' &&
       Number.isFinite(p.lat) && Number.isFinite(p.lng) &&
       Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180;
   }

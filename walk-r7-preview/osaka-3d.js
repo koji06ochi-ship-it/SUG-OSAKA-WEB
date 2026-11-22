@@ -43,6 +43,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let bearingAnchor = null;
   let lastFix = null;
   let ready = false;
+  let replayFrame = null;
+  let replayRunning = false;
+  let replayPreviousCamera = null;
   // No LIVE / sale claim unless trusted venue status data is supplied.
   let venueStatusByWay = new Map();
   let pulseTimer = null;
@@ -333,6 +336,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   }
 
   function close(message) {
+    stopNeonReplay();
     generation++;
     pending = false;
     ready = false;
@@ -1497,6 +1501,56 @@ window.createOsaka3D = function createOsaka3D(ui) {
     view.easeTo(camera);
   }
 
+
+  // 10-second camera replay is generated exclusively from accepted real GPS
+  // segments; it never creates new walked routes or exports a video file.
+  function replayPoints() {
+    const result=[];
+    for(const f of persistedNeon.features){
+      if(!f || f.geometry?.type!=='LineString')continue;
+      for(const p of f.geometry.coordinates){
+        if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite))continue;
+        if(!result.length||Math.hypot(p[0]-result[result.length-1][0],p[1]-result[result.length-1][1])>0.00001)result.push(p);
+      }
+    }
+    return result;
+  }
+  function stopNeonReplay() {
+    replayRunning=false;
+    if(replayFrame!==null){cancelAnimationFrame(replayFrame);replayFrame=null;}
+    if(view&&replayPreviousCamera){
+      try{view.jumpTo(replayPreviousCamera);}catch(_){}
+    }
+    replayPreviousCamera=null;
+    container.dataset.neonReplay='stopped';
+  }
+  function startNeonReplay() {
+    if(!view||!ready)return {started:false,reason:'3D_NOT_READY'};
+    const points=replayPoints();
+    if(points.length<2)return {started:false,reason:'NO_RECORDED_WALK'};
+    if(replayRunning)stopNeonReplay();
+    const active=view,started=performance.now(),duration=10000;
+    replayPreviousCamera={center:active.getCenter(),zoom:active.getZoom(),pitch:active.getPitch(),bearing:active.getBearing()};
+    replayRunning=true;
+    container.dataset.neonReplay='playing';
+    const frame=(now)=>{
+      if(!replayRunning||view!==active||document.hidden){stopNeonReplay();return;}
+      const progress=Math.min(1,(now-started)/duration),index=progress*(points.length-1);
+      const lower=Math.min(Math.floor(index),points.length-2),fraction=index-lower;
+      const first=points[lower],second=points[lower+1];
+      const lng=first[0]+(second[0]-first[0])*fraction;
+      const lat=first[1]+(second[1]-first[1])*fraction;
+      const bearing=Math.atan2((second[0]-first[0])*Math.cos(lat*Math.PI/180),second[1]-first[1])*180/Math.PI;
+      try{
+        active.jumpTo({center:[lng,lat],pitch:Math.round(56+12*Math.sin(Math.PI*progress)),zoom:16.4+1.2*Math.sin(Math.PI*progress),bearing});
+      }catch(_){stopNeonReplay();return;}
+      if(progress>=1){stopNeonReplay();return;}
+      replayFrame=requestAnimationFrame(frame);
+    };
+    replayFrame=requestAnimationFrame(frame);
+    return {started:true,durationMs:10000,recordedPoints:points.length};
+  }
+
   function route(coordinates) {
     // Only actual supplied route geometry is drawn. No invented walking directions.
     routeCoords = Array.isArray(coordinates)
@@ -1661,6 +1715,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     isActive,
     setHighlightedStores,
     setVenueStatuses,
+    startNeonReplay,
+    stopNeonReplay,
     setNeonHistory(geojson) {
       if(!geojson || geojson.type!=='FeatureCollection'||!Array.isArray(geojson.features)||geojson.features.length>10000)return false;
       if(!geojson.features.every(f=>f?.geometry?.type==='LineString' && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length===2 && f.geometry.coordinates.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite))))return false;

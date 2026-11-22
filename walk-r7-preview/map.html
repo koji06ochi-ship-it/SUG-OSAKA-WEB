@@ -1540,7 +1540,17 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js"></script></head>
+</script><script src="osaka-3d.js"></script><style id="r7-token-style">
+#r7-token-dialog[hidden]{display:none!important}
+#r7-token-dialog{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.85);font:14px -apple-system,sans-serif}
+#r7-token-dialog .panel{width:min(100%,390px);padding:20px;border:1px solid #ff3b9a;border-radius:16px;background:#120b1d;color:#fff;box-shadow:0 0 28px #ff3b9a55}
+#r7-token-dialog label{display:block;margin:12px 0 7px}
+#r7-token-dialog input{width:100%;min-height:44px;background:#0a0610;color:#fff;border:1px solid #ff3b9a;border-radius:8px;padding:10px;font-size:16px}
+#r7-token-dialog .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+#r7-token-dialog button{flex:1 1 44%;min-height:40px;border:1px solid #ff3b9a;border-radius:8px;background:#351229;color:#fff;font-size:13px}
+#r7-token-dialog button[data-action="save"]{background:#b90b64}
+#r7-token-dialog p{font-size:12px;color:#c8bbd2;line-height:1.5}
+</style></head>
 <body>
   <div class="app-viewport">
     <main class="phone-shell" aria-label="S.u.G WALK R7 マップ画面">
@@ -1576,7 +1586,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 
         <!-- Compact Left Map Action Controls -->
         <div class="map-tools-left">
-          <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button>
+          <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn" id="r7-token-settings">3D設定</button>
           <button type="button" class="tool-btn" id="btn-search-open">検索</button>
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
           <button type="button" class="tool-btn" id="btn-ai-guide">AI観光案内</button>
@@ -1716,22 +1726,88 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
          select:selectPlace,
          onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,null,follow);}
        });
+
        const public3dToggle=document.getElementById('osaka-toggle');
        const original3dClick=public3dToggle.onclick;
-       public3dToggle.onclick=function(){
-         if(public3dToggle.getAttribute('aria-pressed')!=='true'){
-           let pk='';
-           try{pk=sessionStorage.getItem('sug-r7-mapbox-pk')||'';}catch(e){}
-           if(!pk)pk=window.prompt('Mapbox公開トークン（pk.で始まるもの）を入力してください。GitHubには保存しません。')||'';
-           pk=pk.trim();
-           if(!/^pk\.[A-Za-z0-9._-]+$/.test(pk)){showToast('Mapbox公開トークンを入力してください。');return;}
-           try{sessionStorage.setItem('sug-r7-mapbox-pk',pk);}catch(e){}
-           window.SUGMapboxPublicToken=pk;
-           window.SUGMapboxFreeTierConfirmed=true;
-         }
-         return original3dClick.call(this);
+       const tokenKey='sug-r7-mapbox-pk';
+       const validPK=pk=>typeof pk==='string' && /^pk\.[A-Za-z0-9._-]+$/.test(pk.trim());
+       function readToken(){
+         let pk='';
+         try{pk=localStorage.getItem(tokenKey)||'';}catch(e){}
+         if(!pk)try{pk=sessionStorage.getItem(tokenKey)||'';}catch(e){}
+         if(!validPK(pk))return '';
+         try{localStorage.setItem(tokenKey,pk.trim());}catch(e){}
+         return pk.trim();
+       }
+       const tokenDialog=document.createElement('div');
+       tokenDialog.id='r7-token-dialog';
+       tokenDialog.setAttribute('role','dialog');
+       tokenDialog.setAttribute('aria-modal','true');
+       tokenDialog.setAttribute('aria-label','Mapbox公開トークン設定');
+       tokenDialog.hidden=true;
+       tokenDialog.innerHTML='<div class="panel"><strong>大阪3D MAP｜認証設定</strong>'+
+         '<p>公開トークンは端末内に保存し、GitHubへ書き込みません。3D利用時はMapboxへの通信が発生します。</p>'+
+         '<label for="r7-token-input">Mapbox公開トークン（pk.）</label>'+
+         '<input type="password" id="r7-token-input" placeholder="pk.から始まるトークン" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+         '<div class="actions"><button type="button" data-action="save">保存・再設定・3D起動</button>'+
+         '<button type="button" data-action="delete">トークンを削除</button>'+
+         '<button type="button" data-action="cancel">閉じる</button></div></div>';
+       document.body.appendChild(tokenDialog);
+       const tokenInput=tokenDialog.querySelector('#r7-token-input');
+       const tokenSettings=document.getElementById('r7-token-settings');
+       function openTokenDialog(){
+         tokenInput.value=readToken();
+         tokenDialog.hidden=false;
+         tokenInput.focus();
+       }
+       function closeTokenDialog(){
+         tokenDialog.hidden=true;
+         tokenSettings.focus();
+       }
+       tokenDialog.querySelector('[data-action="cancel"]').onclick=closeTokenDialog;
+       tokenDialog.addEventListener('keydown',e=>{if(e.key==='Escape')closeTokenDialog();});
+       tokenDialog.addEventListener('click',e=>{if(e.target===tokenDialog)closeTokenDialog();});
+       tokenDialog.querySelector('[data-action="delete"]').onclick=function(){
+         try{localStorage.removeItem(tokenKey);}catch(e){}
+         try{sessionStorage.removeItem(tokenKey);}catch(e){}
+         window.SUGMapboxPublicToken='';
+         osaka3D.close();
+         tokenInput.value='';
+         showToast('端末内のMapboxトークンを削除しました。');
        };
-
+       tokenDialog.querySelector('[data-action="save"]').onclick=function(){
+         const pk=tokenInput.value.trim();
+         if(!validPK(pk)){showToast('pk.から始まる公開トークンを入力してください。');tokenInput.focus();return;}
+         try{localStorage.setItem(tokenKey,pk);}catch(e){showToast('端末保存できないため、今回の表示だけに使用します。');}
+         try{sessionStorage.setItem(tokenKey,pk);}catch(e){}
+         window.SUGMapboxPublicToken=pk;
+         window.SUGMapboxFreeTierConfirmed=true;
+         osaka3D.close();
+         closeTokenDialog();
+         original3dClick.call(public3dToggle);
+       };
+       tokenSettings.onclick=openTokenDialog;
+       public3dToggle.onclick=function(){
+         if(public3dToggle.getAttribute('aria-pressed')==='true'){
+           original3dClick.call(this);
+           map.invalidateSize({pan:false});
+           return;
+         }
+         const pk=readToken();
+         if(!pk){openTokenDialog();return;}
+         window.SUGMapboxPublicToken=pk;
+         window.SUGMapboxFreeTierConfirmed=true;
+         original3dClick.call(this);
+       };
+       function resizeVisibleMap(){
+         if(!osaka3D.resize())map.invalidateSize({pan:false});
+       }
+       window.addEventListener('message',e=>{
+         if(e.source!==parent || e.origin!==location.origin || !e.data ||
+           e.data.type!=='sug-r7-map-visible')return;
+         requestAnimationFrame(()=>requestAnimationFrame(resizeVisibleMap));
+       });
+       window.addEventListener('orientationchange',()=>requestAnimationFrame(resizeVisibleMap));
 
       var toastTimer = null;
       function showToast(msg) {
@@ -1781,6 +1857,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 
       function requestGPSWithConsent() {
         follow=true;
+        osaka3D.resumeFollow();
         if (state.gpsConsent) {
           if(fresh()) map.panTo([fix.lat,fix.lng]);
           acquireGPS();
@@ -2266,7 +2343,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         if (!fresh()) return;
         const nearby=selectedEvents().filter(e=>e.status==='published' && point(e) && Date.parse(e.startAt)<=Date.now() && Date.now()<Date.parse(e.endAt) && distance(e)+fix.accuracy<=150);
         const ids=new Set(nearby.map(e=>'event:'+ (e.id || e.title)));
-        if (fix.accuracy<=80 && distance(hub)+fix.accuracy<=200) ids.add('hub');
+        if (fix.accuracy<=80 && distance(hub)+fix.accuracy<=180) ids.add('hub');
         const event=nearby.find(e=>!arrived.has('event:'+(e.id||e.title)));
         if (event) { list('events'); showToast(event.title+'に到着しました'); }
         else if (ids.has('hub') && !arrived.has('hub')) document.getElementById('btn-hachikenya-hub').click();

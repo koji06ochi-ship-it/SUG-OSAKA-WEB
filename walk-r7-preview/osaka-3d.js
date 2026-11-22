@@ -32,7 +32,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     lightPreset: 'night',
     theme: 'default',
     show3dObjects: true,
-    colorBuildings: '#bb44cf',
+    show3dFacades: false,
+    show3dLandmarks: false,
+    colorBuildings: '#ff4fa6',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
@@ -523,6 +525,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
               /* Ignore unsupported config tokens in older style revisions */
             }
           }
+          // Favor building color over detailed facade shading in night mode.
+          for (const [key, value] of Object.entries({show3dFacades:false,show3dLandmarks:false,colorBuildings:'#ff4fa6'})) {
+            try { active.setConfigProperty('basemap', key, value); } catch (e) { container.dataset.colorConfigError = key; }
+          }
+          container.dataset.buildingColorRequested = '#ff4fa6';
           applyNightAtmosphere(active);
           addGeoLayers(active);
           addSpotMarkers(gl);

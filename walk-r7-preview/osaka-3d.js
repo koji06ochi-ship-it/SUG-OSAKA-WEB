@@ -730,6 +730,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     }
     const features=[], matched=[];
     for(const landmark of LANDMARKS) {
+      // The verified OSM footprint supersedes the approximate Streets landmark overlay.
+      if(landmark.name==='大阪市中央公会堂' && container.dataset.centralPublicHallStatus?.startsWith('geometry-loaded'))continue;
       // For Kantele only, Osaka City confirms a shared Kids Plaza building.
       // Its OSM POI is a second reference point; it is NOT a building Way ID.
       const anchors=[landmark];
@@ -914,6 +916,97 @@ window.createOsaka3D = function createOsaka3D(ui) {
         if(view===thisView){
           container.dataset.osakajoTowerStatus='not-verified-fallback-preserved';
           container.dataset.osakajoTowerError=String(err.message||err);
+        }
+      }
+    })();
+  }
+
+
+  // Central Public Hall only: OSM Way 162382613 is a mapped building footprint.
+  // Official building area: 2164m2; three storeys (building height not published).
+  // This extrusion reproduces a verified outline, NOT the ornate roof/domes.
+  function addVerifiedCentralPublicHall(active) {
+    const sourceId='sug-r7-central-public-hall-exact', layerId='sug-r7-central-public-hall-brick';
+    const wayId=162382613;
+    const hall=LANDMARKS.find(p=>p.name==='大阪市中央公会堂');
+    active.addSource(sourceId,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,
+      paint:{
+        'fill-extrusion-color':'#b85c45',
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-base':0,
+        'fill-extrusion-opacity':1,
+        'fill-extrusion-emissive-strength':0.82,
+        'fill-extrusion-vertical-gradient':false
+      }});
+    container.dataset.centralPublicHallStatus='loading';
+    (async()=>{
+      try {
+        const response=await fetch('https://api.openstreetmap.org/api/0.6/way/162382613/full.json',
+          {mode:'cors',credentials:'omit',signal:AbortSignal.timeout(12000)});
+        if(!response.ok)throw Error('OSM HTTP '+response.status);
+        const data=await response.json();
+        const elements=Array.isArray(data.elements)?data.elements:[];
+        const way=elements.find(e=>e.type==='way'&&e.id===wayId);
+        if(!way||!way.tags?.building||!Array.isArray(way.nodes)||way.nodes.length<4)
+          throw Error('Public Hall building way not found');
+        const tags=way.tags;
+        const identity=[tags.name,tags['name:ja'],tags['name:en'],tags['alt_name']]
+          .filter(Boolean).join(' ');
+        if(!/中央公会堂|Central.Public.Hall/i.test(identity))
+          throw Error('OSM way identity is not Central Public Hall');
+        const nodes=new Map(elements.filter(e=>e.type==='node').map(e=>[e.id,e]));
+        const ring=way.nodes.map(id=>nodes.get(id)).map(n=>n?[n.lon,n.lat]:null);
+        if(ring.length>1000||ring.some(p=>!p||!p.every(Number.isFinite)))
+          throw Error('Invalid Public Hall outline');
+        if(ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])
+          throw Error('Public Hall polygon not closed');
+        if(!hall||(!pointInRing(hall.lng,hall.lat,ring)
+          && distanceToRing(hall.lat,hall.lng,ring)>45))
+          throw Error('OSM outline does not match mapped Public Hall location');
+        const x0=ring[0][0], y0=ring[0][1];
+        const mx=111320*Math.cos(hall.lat*Math.PI/180),my=111320;
+        let area=0;
+        for(let i=1;i<ring.length;i++){
+          const ax=(ring[i-1][0]-x0)*mx,ay=(ring[i-1][1]-y0)*my;
+          const bx=(ring[i][0]-x0)*mx,by=(ring[i][1]-y0)*my;
+          area+=ax*by-bx*ay;
+        }
+        area=Math.abs(area)/2;
+        if(area<950||area>4500)throw Error('Unexpected Public Hall footprint area '+Math.round(area));
+        let height=Number(tags.height);
+        let heightSource='osm-height';
+        if(!Number.isFinite(height)||height<8||height>65){
+          // 3 floors is confirmed; this 15m block is a visual approximation, not measured.
+          height=15;heightSource='estimated-three-storey-block';
+        }
+        if(view!==active)return;
+        const source=active.getSource(sourceId);
+        if(!source)return;
+        source.setData({type:'FeatureCollection',features:[{
+          type:'Feature',properties:{name:'大阪市中央公会堂',height:height+3,wayId,areaM2:Math.round(area)},
+          geometry:{type:'Polygon',coordinates:[ring]}
+        }]});
+        container.dataset.centralPublicHallHeightSource=heightSource;
+        container.dataset.centralPublicHallAreaM2=String(Math.round(area));
+        container.dataset.centralPublicHallStatus='geometry-loaded';
+        // Remove the former purple landmark candidate only after the exact polygon loads.
+        landmarkGeometryHashes='';
+        updateLandmarkBuildingColors(active);
+        active.once('idle',()=>{
+          if(view!==active)return;
+          try{
+            const count=active.queryRenderedFeatures({layers:[layerId]}).length;
+            container.dataset.centralPublicHallRendered=String(count);
+            container.dataset.centralPublicHallStatus=count>0
+              ? 'geometry-loaded-rendered-in-current-view'
+              : 'geometry-loaded-outside-current-view';
+          }catch(err){container.dataset.centralPublicHallRenderError=String(err.message||err);}
+        });
+      }catch(err){
+        if(view===active){
+          container.dataset.centralPublicHallStatus='not-verified-fallback-preserved';
+          container.dataset.centralPublicHallError=String(err.message||err);
         }
       }
     })();
@@ -1207,6 +1300,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addExactVenueLayers(active);
           addLandmarkBuildingLayers(active);
           addVerifiedOsakaCastleTower(active);
+          addVerifiedCentralPublicHall(active);
           tryVerifiedKanteleFootprint(active);
           addSpotMarkers(gl);
           ready = true;

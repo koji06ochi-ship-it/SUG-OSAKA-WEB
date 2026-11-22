@@ -12,7 +12,7 @@
    try{
      const raw=storage.getItem(KEY);if(!raw)return [];
      const rows=JSON.parse(raw);if(!Array.isArray(rows))return [];
-     return rows.filter(x=>x&&typeof x.day==='string'&&/^20\\d{2}-\\d{2}-\\d{2}$/.test(x.day)&&Number.isFinite(Date.parse(x.day+'T00:00:00+09:00'))&&Date.parse(x.day+'T00:00:00+09:00')>now-MAX_AGE&&validSegment(x.line)&&Number.isFinite(x.metres)&&x.metres>0&&x.metres<=300).slice(-MAX);
+     return rows.filter(x=>x&&typeof x.day==='string'&&/^20\d{2}-\d{2}-\d{2}$/.test(x.day)&&Number.isFinite(Date.parse(x.day+'T00:00:00+09:00'))&&Date.parse(x.day+'T00:00:00+09:00')>now-MAX_AGE&&validSegment(x.line)&&Number.isFinite(x.metres)&&x.metres>0&&x.metres<=300).slice(-MAX);
    }catch{return [];}
  }
  function point(fix){return [Math.round(fix.lng*1e5)/1e5,Math.round(fix.lat*1e5)/1e5];}

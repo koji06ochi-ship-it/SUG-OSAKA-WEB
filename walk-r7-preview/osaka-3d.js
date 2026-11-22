@@ -42,6 +42,59 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let bearingAnchor = null;
   let lastFix = null;
   let ready = false;
+  // No LIVE / sale claim unless trusted venue status data is supplied.
+  let venueStatusByWay = new Map();
+  let pulseTimer = null;
+  const VENUE_STATUS = new Set(['normal','live','sale']);
+  const VENUE_HOSTS = new Set(['17.live','www.17.live','instagram.com','www.instagram.com']);
+  function externalLiveUrl(raw) {
+    if (typeof raw !== 'string' || raw.length > 1200) return null;
+    try { const u = new URL(raw); return u.protocol === 'https:' && !u.username && !u.password && VENUE_HOSTS.has(u.hostname.toLowerCase()) ? u.href : null; } catch (_) { return null; }
+  }
+  function venueStatus(venue) {return venueStatusByWay.get(String(venue.osmWayId)) || {status:'normal',live_url:null};}
+  function decorateVenueFeature(feature) {
+    const row=venueStatusByWay.get(String(feature.properties.wayId));
+    const active=!!row && row.status!=='normal';
+    return {...feature,properties:{...feature.properties,active:active?1:0}};
+  }
+  function refreshVenueDisplay() {
+    if (!view || !ready) return;
+    const source=view.getSource('sug-r7-exact-venue-buildings');
+    if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures.map(decorateVenueFeature)});
+    for(const marker of venueLabels)marker.remove();
+    venueLabels=[];
+    createVerifiedVenueLabels(view);
+    syncVenuePulse();
+  }
+  function setVenueStatuses(rows) {
+    if (!Array.isArray(rows) || rows.length>4) return false;
+    const known=new Set(venueRecords.map(v=>String(v.osmWayId)));
+    const next=new Map();
+    for(const row of rows) {
+      if(!row || !known.has(String(row.osmWayId)) || !VENUE_STATUS.has(row.status) || next.has(String(row.osmWayId)))return false;
+      if(row.status==='live' && !externalLiveUrl(row.live_url))return false;
+      next.set(String(row.osmWayId),{status:row.status,live_url:row.status==='live'?externalLiveUrl(row.live_url):null});
+    }
+    venueStatusByWay=next;
+    refreshVenueDisplay();
+    return true;
+  }
+  function syncVenuePulse() {
+    if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null;}
+    if(!view || !ready || !venueRecords.some(v=>venueStatus(v).status!=='normal'))return;
+    const activeView=view;
+    pulseTimer=setInterval(()=>{
+      if(view!==activeView || !ready || document.hidden)return;
+      try {
+        const value=1.0+0.45*(1+Math.sin(Date.now()/800));
+        activeView.setPaintProperty('sug-r7-exact-venue-extrusions','fill-extrusion-emissive-strength',
+          ['case',['==',['get','active'],1],value,0.95]);
+      } catch(e) { // Some GPU/style versions may not accept this property as data-driven.
+        clearInterval(pulseTimer);pulseTimer=null;
+        container.dataset.venuePulseGpu='unsupported';
+      }
+    },350);
+  }
 
   // Mapbox Standard v3 runtime basemap configuration (black x neon-pink x midnight-river)
   const BASEMAP_CONFIG = {
@@ -122,6 +175,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
       '.sug-r7-spot-pill{padding:5px 12px;border:1.3px solid var(--sug-spot-color,#ff4fa6);border-radius:999px;background:rgba(12,6,22,.84);color:#fff;box-shadow:0 0 14px var(--sug-spot-color,#ff4fa6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:700 11.5px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.03em;white-space:nowrap;}',
       '.sug-r7-spot-drop{width:16px;height:20px;color:var(--sug-spot-color,#ff4fa6);filter:drop-shadow(0 0 7px var(--sug-spot-color,#ff4fa6));}',
       '.sug-r7-selected-shop{padding:7px 12px;border:1.5px solid var(--sug-store-color);border-radius:999px;background:rgba(5,5,13,.94);color:var(--sug-store-color);font:700 12px -apple-system,sans-serif;white-space:nowrap;box-shadow:0 0 12px var(--sug-store-color);}',
+      '.sug-r7-venue-active{animation:sug-r7-venue-breathe 2.1s ease-in-out infinite;}',
+      '.sug-r7-venue-badge{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font:800 12px -apple-system,sans-serif;border-radius:999px;padding:4px 10px;background:#dc1946;box-shadow:0 0 14px #dc1946;}',
+      '.sug-r7-venue-badge-sale{background:#ae5d06;box-shadow:0 0 14px #f7ad2f;}',
+      '@keyframes sug-r7-venue-breathe{0%,100%{box-shadow:0 0 9px var(--sug-store-color)}50%{box-shadow:0 0 28px 7px var(--sug-store-color)}}',
+      '@media (prefers-reduced-motion:reduce){.sug-r7-venue-active{animation:none!important}}',
       '.sug-r7-spot:focus-visible .sug-r7-spot-pill{outline:2px solid #fff;outline-offset:2px;}',
       '.sug-r7-gps-pulse{position:relative;width:22px;height:22px;border:2.5px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0%,#ff80c2 55%,#ff2a8d 100%);box-shadow:0 0 16px #ff3b9a,0 0 28px rgba(255,59,154,.85);animation:sug-r7-gps-pulse 1.9s ease-in-out infinite;}',
       '@keyframes sug-r7-gps-pulse{0%,100%{box-shadow:0 0 10px 3px rgba(255,59,154,.55)}50%{box-shadow:0 0 24px 14px rgba(255,59,154,.82)}}'
@@ -280,6 +338,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     clearTimeout(timeout);
     timeout = null;
     clearMarkers();
+    if (pulseTimer) { clearInterval(pulseTimer); pulseTimer=null; }
     ++venueLoadGeneration;
     for(const marker of venueLabels) marker.remove();
     venueLabels=[];
@@ -868,6 +927,32 @@ window.createOsaka3D = function createOsaka3D(ui) {
       container.dataset.venueStreetsColorError=String(err.message||err);
     }
   }
+  function createVerifiedVenueLabels(active) {
+    styleMarkers();
+    for(const venue of venueRecords) {
+      if(!verifiedVenueFeatures.some(f=>String(f.properties.wayId)===String(venue.osmWayId)))continue;
+      const st=venueStatus(venue);
+      const el=document.createElement('button');
+      el.type='button';el.className='sug-r7-spot sug-r7-selected-shop';
+      el.style.setProperty('--sug-store-color',venue.highlightColor);
+      el.textContent=venue.name;
+      el.title=venue.name+' (OSM Way '+venue.osmWayId+')';
+      if(st.status!=='normal') {
+        el.classList.add('sug-r7-venue-active');
+        const badge=document.createElement('span');
+        badge.className='sug-r7-venue-badge'+(st.status==='sale'?' sug-r7-venue-badge-sale':'');
+        badge.textContent=st.status==='live'?'🔴 LIVE中':'⚡ 今だけ';
+        el.appendChild(badge);
+      }
+      el.addEventListener('click',event=>{
+        event.stopPropagation();
+        if(st.status==='live' && st.live_url){window.open(st.live_url,'_blank','noopener,noreferrer');return;}
+        ui.select(venue);
+      });
+      venueLabels.push(new window.mapboxgl.Marker({element:el,anchor:'bottom'})
+        .setLngLat([venue.lng,venue.lat]).addTo(active));
+    }
+  }
   async function loadOfficialVenueWays(active) {
     const current=++venueLoadGeneration;
     container.dataset.venueFootprints='loading';
@@ -879,22 +964,12 @@ window.createOsaka3D = function createOsaka3D(ui) {
     if(current!==venueLoadGeneration||view!==active)return;
     verifiedVenueFeatures=answers.filter(x=>x.feature).map(x=>x.feature);
     const source=active.getSource('sug-r7-exact-venue-buildings');
-    if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures});
+    if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures.map(decorateVenueFeature)});
     recolorVerifiedStreetsBuildings(active,answers);
     for(const marker of venueLabels)marker.remove();
     venueLabels=[];
-    styleMarkers();
-    for(const {venue,feature} of answers) {
-      if(!feature)continue; // Never show an approved-colored building without the verified way.
-      const el=document.createElement('button');
-      el.type='button';el.className='sug-r7-spot sug-r7-selected-shop';
-      el.style.setProperty('--sug-store-color',venue.highlightColor);
-      el.textContent=venue.name;
-      el.title=venue.name+' (OSM Way '+venue.osmWayId+')';
-      el.addEventListener('click',event=>{event.stopPropagation();ui.select(venue);});
-      venueLabels.push(new window.mapboxgl.Marker({element:el,anchor:'bottom'})
-        .setLngLat([venue.lng,venue.lat]).addTo(active));
-    }
+    createVerifiedVenueLabels(active);
+    syncVenuePulse();
     container.dataset.venueFootprints=verifiedVenueFeatures.length+'/4';
     container.dataset.venueErrors=answers.filter(x=>x.error).map(x=>x.venue.osmWayId+':'+x.error).join('; ');
   }
@@ -908,7 +983,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         'fill-extrusion-height':['+',3,['get','height']],
         'fill-extrusion-base':0,
         'fill-extrusion-opacity':1,
-        'fill-extrusion-emissive-strength':0.95,
+        'fill-extrusion-emissive-strength':['case',['==',['get','active'],1],1.5,0.95],
         'fill-extrusion-vertical-gradient':false
       }});
     loadOfficialVenueWays(active);
@@ -1581,6 +1656,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       return true;
     },
     isActive,
-    setHighlightedStores
+    setHighlightedStores,
+    setVenueStatuses
   };
 };

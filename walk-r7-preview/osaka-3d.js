@@ -462,8 +462,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const features=[], matched=[];
     for(const landmark of LANDMARKS) {
       const hits=candidates.filter(f=>f.geometry&&landmarkGeometryMatch(f.geometry,landmark));
-      if(hits.length!==1)continue; // no guessing if multiple building polygons overlap
-      const hit=hits[0], height=Number(hit.properties?.height);
+      // Vector tiles can repeat the same feature across tile boundaries.
+      const distinct=new Map(hits.map(f=>[JSON.stringify(f.geometry),f]));
+      if(distinct.size!==1)continue; // no guessing if multiple different buildings overlap
+      const hit=[...distinct.values()][0], height=Number(hit.properties?.height);
       if(!Number.isFinite(height)||height<=0||height>300)continue;
       features.push({type:'Feature',
         properties:{name:landmark.name,color:landmark.color,height:height+3},

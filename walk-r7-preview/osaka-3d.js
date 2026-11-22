@@ -755,6 +755,70 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.landmarkBuildingCount=String(features.length);
     container.dataset.landmarkSourceCandidates=String(candidates.length);
   }
+  // Kantele only: candidate OSM way from external mapping records.
+  // Never replace the existing landmark coloring unless this is verified as
+  // the specific office building containing the Kantele point.
+  function tryVerifiedKanteleFootprint(active) {
+    const wayId=160444453, lat=34.7046972, lng=135.5102667;
+    const sourceId='sug-r7-kantele-verified-building';
+    active.addSource(sourceId,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({
+      id:'sug-r7-kantele-exact-extrusion',type:'fill-extrusion',slot:'top',source:sourceId,
+      paint:{
+        'fill-extrusion-color':'#ffbf47',
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-base':0,
+        'fill-extrusion-opacity':1,
+        'fill-extrusion-emissive-strength':0.8,
+        'fill-extrusion-vertical-gradient':false
+      }
+    });
+    container.dataset.kanteleWayStatus='checking';
+    (async()=>{
+      try{
+        const response=await fetch('https://api.openstreetmap.org/api/0.6/way/'+wayId+'/full.json',
+          {mode:'cors',credentials:'omit',signal:AbortSignal.timeout(12000)});
+        if(!response.ok)throw Error('OSM HTTP '+response.status);
+        const data=await response.json();
+        const elements=Array.isArray(data.elements)?data.elements:[];
+        const way=elements.find(e=>e.type==='way'&&e.id===wayId);
+        if(!way||!Array.isArray(way.nodes)||way.nodes.length<4||!way.tags?.building)
+          throw Error('Way is not a confirmed building footprint');
+        const textTags=[way.tags.name,way.tags['name:ja'],way.tags.operator,way.tags.description]
+          .filter(Boolean).join(' ');
+        if(!/関西テレビ|カンテレ|Kansai Television|KTV|扇町スクエア|キッズプラザ/i.test(textTags))
+          throw Error('Way name is not attributable to Kantele');
+        const nodeMap=new Map(elements.filter(e=>e.type==='node').map(e=>[e.id,e]));
+        const ring=way.nodes.map(id=>nodeMap.get(id)).map(n=>n?[n.lon,n.lat]:null);
+        if(ring.length>1500||ring.some(p=>!p||!p.every(Number.isFinite)))
+          throw Error('Invalid building coordinates');
+        if(ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])
+          throw Error('Unclosed building polygon');
+        if(!pointInRing(lng,lat,ring) && distanceToRing(lat,lng,ring)>25)
+          throw Error('Way is too far from the official address marker');
+        let height=Number(way.tags.height);
+        if(!Number.isFinite(height)||height<10||height>200) {
+          const levels=Number(way.tags['building:levels']);
+          height=Number.isFinite(levels)&&levels>=3&&levels<=55?levels*3:null;
+        }
+        if(!height)throw Error('No confirmed building height');
+        if(view!==active)return;
+        const source=active.getSource(sourceId);
+        if(!source)return;
+        source.setData({type:'FeatureCollection',features:[{
+          type:'Feature',properties:{name:'関西テレビ（カンテレ）',height},
+          geometry:{type:'Polygon',coordinates:[ring]}
+        }]});
+        container.dataset.kanteleWayStatus='verified-geometry-loaded';
+      }catch(err){
+        if(view===active){
+          container.dataset.kanteleWayStatus='not-verified-original-preserved';
+          container.dataset.kanteleWayError=String(err.message||err);
+        }
+      }
+    })();
+  }
+
   function addLandmarkBuildingLayers(active) {
     active.addSource('sug-r7-landmark-building-overlays',{
       type:'geojson',data:{type:'FeatureCollection',features:[]}});
@@ -1042,6 +1106,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addGeoLayers(active);
           addExactVenueLayers(active);
           addLandmarkBuildingLayers(active);
+          tryVerifiedKanteleFootprint(active);
           addSpotMarkers(gl);
           ready = true;
           drawHighlightedStores(gl);

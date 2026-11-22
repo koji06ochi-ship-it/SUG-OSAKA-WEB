@@ -73,6 +73,7 @@ function open(opts){
  root.append(button('翻訳した定型文を読み上げる',()=>{if(!speak(translated.textContent,lang.value))status.textContent='読み上げは利用できません。';}));
  root.append(button('読み上げ停止',()=>{if('speechSynthesis' in window)speechSynthesis.cancel();}));
  const warning=item('p','※定型文は事前翻訳です。任意の文章のAI翻訳ではありません。');warning.style.cssText='font-size:11px;opacity:.8';root.append(warning);
+ if(window.SUGR7AIChat)window.SUGR7AIChat.mount(root,lang.value);
 }
 window.SUGR7TourGuide={open,locationsCount:locations.length,phrasesCount:phrases.length};
 })();

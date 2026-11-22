@@ -7,6 +7,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const container = document.getElementById('osaka-3d');
   const toggle = document.getElementById('osaka-toggle');
   const HUB = ui.hub || { lat: 34.690616, lng: 135.514183 };
+  // iPhone inspection route: map.html?focus=mint-museum (no effect on regular map).
+  const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -779,6 +781,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const source=active.getSource('sug-r7-landmark-building-overlays');
     if(source)source.setData({type:'FeatureCollection',features});
     container.dataset.landmarkBuildingsMatched=matched.join(' / ')||'none';
+    container.dataset.mintMuseumStatus=matched.includes('造幣博物館') ? 'unique-streets-footprint-match' : 'not-verified';
     container.dataset.landmarkBuildingCount=String(features.length);
     container.dataset.landmarkSourceCandidates=String(candidates.length);
   }
@@ -1257,8 +1260,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
         style: 'mapbox://styles/mapbox/standard',
         config: { basemap: BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
-        center: [HUB.lng, HUB.lat],
-        zoom: 16.9,
+        center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
+        zoom: MINT_MUSEUM_INSPECTION ? 18 : 16.9,
         pitch: 68,
         bearing: -68,
         maxPitch: 78,
@@ -1323,7 +1326,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
           container.dataset.state = 'style-ready';
           container.dataset.basemap = 'mapbox-standard-night-neon';
-          container.dataset.camera = 'hachikenya-okawa-eye-level';
+          container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
           container.dataset.renderedBuildings = 'unverified';
           toggle.textContent = '2D';
           toggle.setAttribute('aria-pressed', 'true');

@@ -335,6 +335,44 @@ window.createOsaka3D = function createOsaka3D(ui) {
       properties:{name:venue.name,color:venue.highlightColor,height,wayId:venue.osmWayId},
       geometry:{type:'Polygon',coordinates:[ring]}};
   }
+  function interiorPoint(feature, venue) {
+    const ring=feature.geometry.coordinates[0];
+    if(pointInRing(venue.lng,venue.lat,ring))return [venue.lng,venue.lat];
+    const xs=ring.map(p=>p[0]),ys=ring.map(p=>p[1]);
+    const loX=Math.min(...xs),hiX=Math.max(...xs),loY=Math.min(...ys),hiY=Math.max(...ys);
+    // Find a point strictly inside the verified OSM polygon. Never guess another building.
+    for(let scale=0;scale<4;scale++) {
+      const steps=8*(scale+1);
+      for(let y=1;y<steps;y++)for(let x=1;x<steps;x++){
+        const lng=loX+(hiX-loX)*x/steps,lat=loY+(hiY-loY)*y/steps;
+        if(pointInRing(lng,lat,ring))return [lng,lat];
+      }
+    }
+    return null;
+  }
+  function recolorVerifiedStreetsBuildings(active, answers) {
+    const layer='sug-r7-neon-building-extrusions';
+    if(!active.getLayer(layer))return;
+    const condition=['case'];
+    let matches=0;
+    for(const {venue,feature} of answers) {
+      if(!feature)continue;
+      const pt=interiorPoint(feature,venue);
+      if(!pt)continue;
+      // This recolors Streets v8's real extruded building intersecting the
+      // independently verified OSM way, avoiding a hidden competing overlay.
+      condition.push(['<=',['distance',{type:'Point',coordinates:pt}],0.8],venue.highlightColor);
+      matches++;
+    }
+    condition.push('#202538');
+    try {
+      active.setPaintProperty(layer,'fill-extrusion-color',matches?condition:'#202538');
+      container.dataset.venueStreetsColorRules=String(matches);
+      container.dataset.venueStreetsColorError='';
+    } catch (err) {
+      container.dataset.venueStreetsColorError=String(err.message||err);
+    }
+  }
   async function loadOfficialVenueWays(active) {
     const current=++venueLoadGeneration;
     container.dataset.venueFootprints='loading';
@@ -347,6 +385,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     verifiedVenueFeatures=answers.filter(x=>x.feature).map(x=>x.feature);
     const source=active.getSource('sug-r7-exact-venue-buildings');
     if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures});
+    recolorVerifiedStreetsBuildings(active,answers);
     for(const marker of venueLabels)marker.remove();
     venueLabels=[];
     styleMarkers();
@@ -371,9 +410,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       type:'fill-extrusion',slot:'top',source:'sug-r7-exact-venue-buildings',
       paint:{
         'fill-extrusion-color':['get','color'],
-        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-height':['+',3,['get','height']],
         'fill-extrusion-base':0,
-        'fill-extrusion-opacity':0.98,
+        'fill-extrusion-opacity':1,
         'fill-extrusion-emissive-strength':0.95,
         'fill-extrusion-vertical-gradient':false
       }});

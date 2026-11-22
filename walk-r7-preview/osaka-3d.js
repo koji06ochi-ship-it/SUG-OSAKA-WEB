@@ -12,9 +12,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let venueLabels = [];
   let venueLoadGeneration = 0;
   const LANDMARKS = [
-    {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47'},
-    {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65'},
-    {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff'}
+    {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47',officialAddress:'大阪市北区扇町2-1-7',officialUrl:'https://www.ktv.jp/corp/map/'},
+    {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65',officialAddress:'大阪市中央区大阪城1-1',officialUrl:'https://www.osakacastle.net/access/'},
+    {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff',officialAddress:'大阪市北区中之島1-1-27',officialUrl:'https://osaka-chuokokaido.com/ja/access'}
   ];
   let landmarkGeometryHashes = '';
   let landmarkColorsReady = false;
@@ -450,30 +450,34 @@ window.createOsaka3D = function createOsaka3D(ui) {
   }
   function updateLandmarkBuildingColors(active) {
     if(view!==active || !active.getLayer('sug-r7-neon-building-extrusions'))return;
-    const features=[];
-    const labels=[];
-    for(const landmark of LANDMARKS) {
-      const p=active.project([landmark.lng,landmark.lat]);
-      if(!p || p.x < -25 || p.y < -25 || p.x > active.getContainer().clientWidth+25 || p.y>active.getContainer().clientHeight+25)continue;
-      let candidates=[];
-      try {
-        candidates=active.queryRenderedFeatures([[p.x-24,p.y-24],[p.x+24,p.y+24]],{layers:['sug-r7-neon-building-extrusions']});
-      } catch(e){container.dataset.landmarkQueryError=String(e.message||e);continue;}
-      const match=candidates.find(f=>f.geometry&&landmarkGeometryMatch(f.geometry,landmark));
-      if(!match)continue;
-      const height=Number(match.properties?.height);
-      if(!Number.isFinite(height)||height<=0||height>300)continue;
-      features.push({type:'Feature',properties:{name:landmark.name,color:landmark.color,height:height+3},
-        geometry:match.geometry});
-      labels.push(landmark.name);
+    let candidates=[];
+    try {
+      // Source query is independent of camera pitch, whereas a rendered
+      // screen-box query at a ground POI can miss a tall 3D building.
+      candidates=active.querySourceFeatures('sug-r7-neon-streets-buildings',{sourceLayer:'building'});
+    } catch(err) {
+      container.dataset.landmarkQueryError=String(err.message||err);
+      return;
     }
-    const hash=features.map(f=>f.properties.name).sort().join('|');
+    const features=[], matched=[];
+    for(const landmark of LANDMARKS) {
+      const hits=candidates.filter(f=>f.geometry&&landmarkGeometryMatch(f.geometry,landmark));
+      if(hits.length!==1)continue; // no guessing if multiple building polygons overlap
+      const hit=hits[0], height=Number(hit.properties?.height);
+      if(!Number.isFinite(height)||height<=0||height>300)continue;
+      features.push({type:'Feature',
+        properties:{name:landmark.name,color:landmark.color,height:height+3},
+        geometry:hit.geometry});
+      matched.push(landmark.name);
+    }
+    const hash=JSON.stringify(features.map(f=>[f.properties.name,f.geometry]));
     if(hash===landmarkGeometryHashes)return;
     landmarkGeometryHashes=hash;
     const source=active.getSource('sug-r7-landmark-building-overlays');
-    if(source) source.setData({type:'FeatureCollection',features});
-    container.dataset.landmarkBuildingsMatched=labels.join(' / ')||'none';
+    if(source)source.setData({type:'FeatureCollection',features});
+    container.dataset.landmarkBuildingsMatched=matched.join(' / ')||'none';
     container.dataset.landmarkBuildingCount=String(features.length);
+    container.dataset.landmarkSourceCandidates=String(candidates.length);
   }
   function addLandmarkBuildingLayers(active) {
     active.addSource('sug-r7-landmark-building-overlays',{

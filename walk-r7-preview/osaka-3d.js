@@ -59,9 +59,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     colorLand: '#090D19',
     colorWater: '#102B48',
     colorGreenspace: '#163F34',
-    colorMotorways: '#773455',
-    colorTrunks: '#66304F',
-    colorRoads: '#4A283D'
+    colorMotorways: '#FF007F',
+    colorTrunks: '#C60072',
+    colorRoads: '#672846'
   };
 
   container.dataset.state = 'closed';
@@ -1251,7 +1251,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     // Zoom-interpolated Neon Pink Walked Trace & Active Walking Route (prevents thick pink bands)
     for (const [id, source, colorCore] of [
       ['trace', 'sug-r7-walk-trace', '#ff007f'],
-      ['route', 'sug-r7-route', '#FFE0F0']
+      ['route', 'sug-r7-route', '#FF007F']
     ]) {
       layer({
         id: 'sug-r7-' + id + '-glow',

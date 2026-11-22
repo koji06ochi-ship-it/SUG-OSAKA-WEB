@@ -454,7 +454,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const labels=[];
     for(const landmark of LANDMARKS) {
       const p=active.project([landmark.lng,landmark.lat]);
-      if(!p || p.x < -25 || p.y < -25 || p.x > active.getCanvas().width+25 || p.y>active.getCanvas().height+25)continue;
+      if(!p || p.x < -25 || p.y < -25 || p.x > active.getContainer().clientWidth+25 || p.y>active.getContainer().clientHeight+25)continue;
       let candidates=[];
       try {
         candidates=active.queryRenderedFeatures([[p.x-24,p.y-24],[p.x+24,p.y+24]],{layers:['sug-r7-neon-building-extrusions']});

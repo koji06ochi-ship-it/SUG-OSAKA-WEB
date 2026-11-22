@@ -30,6 +30,7 @@ export async function verifySupabaseUser({authorization,env=process.env,fetchImp
      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(result.id))
     throw Error('SESSION_INVALID_USER');
   if(result.is_anonymous===true)throw Error('ANONYMOUS_USER_NOT_ALLOWED');
-  return {userId:result.id}; // No access-token echo, location or profile fields.
+  // app_metadata is administrator-controlled; user_metadata is NOT trusted.
+  return {userId:result.id,canBroadcast:result.app_metadata?.sug_walk_live_broadcaster===true};
  }finally{clearTimeout(timer);}
 }

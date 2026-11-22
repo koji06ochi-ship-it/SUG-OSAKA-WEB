@@ -177,6 +177,25 @@ window.createOsaka3D = function createOsaka3D(ui) {
     }
   }
 
+  // JR Temma is an elevated railway station. Do not turn its railway viaduct
+  // into an invented rectangular building without surveyed geometry.
+  function addJRTemmaStationMarker(gl) {
+    const station = {name:'JR天満駅',lat:34.7049333,lng:135.5121361};
+    const el=document.createElement('button');
+    el.type='button';
+    el.className='sug-r7-spot';
+    el.setAttribute('aria-label','JR天満駅に移動');
+    el.innerHTML='<span class="sug-r7-spot-pill" style="border-color:#49caff;color:#d7f6ff;box-shadow:0 0 15px #168dff88;background:#061929ee">🚉 JR天満駅</span>';
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(view) view.easeTo({center:[station.lng,station.lat],zoom:18,pitch:65,duration:750});
+      if(typeof ui.select==='function')ui.select(station);
+    });
+    spotMarkers.push(new gl.Marker({element:el,anchor:'bottom'})
+      .setLngLat([station.lng,station.lat]).addTo(view));
+    container.dataset.jrTemmaStation='marker-added-no-unverified-building';
+  }
+
   // Only explicitly approved, selected stores can receive a colored 3D overlay.
   // No inferred address, footprint, height or shop color is generated.
   function approvedHighlight(p) {
@@ -1317,6 +1336,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addVerifiedCentralPublicHall(active);
           tryVerifiedKanteleFootprint(active);
           addSpotMarkers(gl);
+          addJRTemmaStationMarker(gl);
           ready = true;
           drawHighlightedStores(gl);
           if (lastFix) position(lastFix, null, false);

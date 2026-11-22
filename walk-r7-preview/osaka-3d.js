@@ -13,6 +13,84 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let verifiedVenueFeatures = [];
   let venueLabels = [];
   let venueLoadGeneration = 0;
+  // Server-fed status hook; default NORMAL and never infer that a venue is LIVE.
+  let venueStatuses = Object.create(null);
+  let venuePulseTimer = null;
+  let venuePulsePhase = 0;
+  const venueKey = venue => String(venue.osmWayId);
+  function safeVenueLink(link) {
+    try {
+      const url = new URL(link);
+      return url.protocol === 'https:' &&
+        /^(?:17\.live|(?:www\.)?instagram\.com|(?:www\.)?youtube\.com|youtu\.be|(?:www\.)?tiktok\.com)$/.test(url.hostname)
+        ? url.href : null;
+    } catch (_) { return null; }
+  }
+  function venueStatus(venue) {
+    const v = venueStatuses[venueKey(venue)];
+    return v?.status === 'LIVE' || v?.status === 'SALE' ? v.status : 'NORMAL';
+  }
+  function openVenue(venue) {
+    const v = venueStatuses[venueKey(venue)];
+    const link = v?.status === 'LIVE' ? safeVenueLink(v.live_url) : null;
+    if(link) window.open(link,'_blank','noopener,noreferrer');
+    else ui.select(venue);
+  }
+  function stopVenuePulse() {
+    if(venuePulseTimer !== null) clearInterval(venuePulseTimer);
+    venuePulseTimer = null;
+  }
+  function refreshVenuePulse() {
+    if(!view || !ready)return;
+    const features=verifiedVenueFeatures.filter(f=>{
+      const v=venueRecords.find(v=>v.osmWayId===f.properties?.wayId);
+      return v && venueStatus(v)!=='NORMAL';
+    });
+    const src=view.getSource('sug-r7-live-venue-buildings');
+    if(src)src.setData({type:'FeatureCollection',features});
+    stopVenuePulse();
+    if(!features.length)return;
+    const tick=()=>{
+      if(!view || !ready || !view.getLayer('sug-r7-live-venue-halo')){stopVenuePulse();return;}
+      venuePulsePhase=(venuePulsePhase+1)%32;
+      const alpha=0.14+0.24*(0.5+0.5*Math.sin(venuePulsePhase*Math.PI/16));
+      view.setPaintProperty('sug-r7-live-venue-halo','fill-extrusion-opacity',alpha);
+    };
+    tick();
+    venuePulseTimer=setInterval(tick,180);
+  }
+  function refreshVenueLabels() {
+    for(const item of venueLabels){
+      const status=venueStatus(item.venue);
+      item.el.classList.toggle('sug-r7-live-shop-active',status!=='NORMAL');
+      item.el.dataset.status=status;
+      item.el.replaceChildren();
+      const title=document.createElement('span');
+      title.textContent=item.venue.name;
+      item.el.append(title);
+      if(status!=='NORMAL'){
+        const flag=document.createElement('strong');
+        flag.className='sug-r7-shop-flag';
+        flag.textContent=status==='LIVE'?'🔴 LIVE中':'⚡ 今だけ';
+        item.el.append(flag);
+      }
+      item.el.setAttribute('aria-label',item.venue.name+(status==='LIVE'?' ライブ中':status==='SALE'?' 今だけ特典':''));
+    }
+  }
+  function setVenueStatuses(records) {
+    // To be fed by a trusted read-only backend; browser-side data is display only.
+    const next=Object.create(null);
+    if(Array.isArray(records))for(const rec of records){
+      const venue=venueRecords.find(v=>venueKey(v)===String(rec?.osmWayId));
+      if(!venue)continue;
+      const status=rec.status==='LIVE'||rec.status==='SALE'?rec.status:'NORMAL';
+      next[venueKey(venue)]={status,live_url:status==='LIVE'?safeVenueLink(rec.live_url):null};
+    }
+    venueStatuses=next;
+    if(view&&ready){refreshVenuePulse();refreshVenueLabels();}
+    return Object.keys(next).length;
+  }
+
   const LANDMARKS = [
     {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47',officialAddress:'大阪市北区扇町2-1-7',officialUrl:'https://www.ktv.jp/corp/map/',sharedBuildingAnchor:{lat:34.70453,lng:135.51027}},
     {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65',officialAddress:'大阪市中央区大阪城1-1',officialUrl:'https://www.osakacastle.net/access/'},
@@ -122,6 +200,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
       '.sug-r7-spot-pill{padding:5px 12px;border:1.3px solid var(--sug-spot-color,#ff4fa6);border-radius:999px;background:rgba(12,6,22,.84);color:#fff;box-shadow:0 0 14px var(--sug-spot-color,#ff4fa6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:700 11.5px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.03em;white-space:nowrap;}',
       '.sug-r7-spot-drop{width:16px;height:20px;color:var(--sug-spot-color,#ff4fa6);filter:drop-shadow(0 0 7px var(--sug-spot-color,#ff4fa6));}',
       '.sug-r7-selected-shop{padding:7px 12px;border:1.5px solid var(--sug-store-color);border-radius:999px;background:rgba(5,5,13,.94);color:var(--sug-store-color);font:700 12px -apple-system,sans-serif;white-space:nowrap;box-shadow:0 0 12px var(--sug-store-color);}',
+      '.sug-r7-live-shop-active{animation:sug-r7-shop-breathe 3.8s ease-in-out infinite;flex-direction:column;gap:4px;}',
+      '.sug-r7-shop-flag{display:block;padding:2px 8px;border-radius:12px;background:#20101d;border:1px solid var(--sug-store-color);color:#fff;font:800 10px -apple-system,sans-serif;}',
+      '@keyframes sug-r7-shop-breathe{0%,100%{box-shadow:0 0 8px var(--sug-store-color)}50%{box-shadow:0 0 26px 6px var(--sug-store-color)}}',
+      '@media (prefers-reduced-motion:reduce){.sug-r7-live-shop-active{animation:none}}',
       '.sug-r7-spot:focus-visible .sug-r7-spot-pill{outline:2px solid #fff;outline-offset:2px;}',
       '.sug-r7-gps-pulse{position:relative;width:22px;height:22px;border:2.5px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0%,#ff80c2 55%,#ff2a8d 100%);box-shadow:0 0 16px #ff3b9a,0 0 28px rgba(255,59,154,.85);animation:sug-r7-gps-pulse 1.9s ease-in-out infinite;}',
       '@keyframes sug-r7-gps-pulse{0%,100%{box-shadow:0 0 10px 3px rgba(255,59,154,.55)}50%{box-shadow:0 0 24px 14px rgba(255,59,154,.82)}}'
@@ -281,7 +363,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     timeout = null;
     clearMarkers();
     ++venueLoadGeneration;
-    for(const marker of venueLabels) marker.remove();
+    stopVenuePulse();
+    for(const item of venueLabels) item.marker.remove();
     venueLabels=[];
     verifiedVenueFeatures=[];
     landmarkGeometryHashes='';
@@ -881,7 +964,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const source=active.getSource('sug-r7-exact-venue-buildings');
     if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures});
     recolorVerifiedStreetsBuildings(active,answers);
-    for(const marker of venueLabels)marker.remove();
+    for(const item of venueLabels)item.marker.remove();
     venueLabels=[];
     styleMarkers();
     for(const {venue,feature} of answers) {
@@ -891,10 +974,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
       el.style.setProperty('--sug-store-color',venue.highlightColor);
       el.textContent=venue.name;
       el.title=venue.name+' (OSM Way '+venue.osmWayId+')';
-      el.addEventListener('click',event=>{event.stopPropagation();ui.select(venue);});
-      venueLabels.push(new window.mapboxgl.Marker({element:el,anchor:'bottom'})
-        .setLngLat([venue.lng,venue.lat]).addTo(active));
+      el.addEventListener('click',event=>{event.stopPropagation();openVenue(venue);});
+      const marker=new window.mapboxgl.Marker({element:el,anchor:'bottom'})
+        .setLngLat([venue.lng,venue.lat]).addTo(active);
+      venueLabels.push({marker,el,venue});
     }
+    refreshVenueLabels();
+    refreshVenuePulse();
     container.dataset.venueFootprints=verifiedVenueFeatures.length+'/4';
     container.dataset.venueErrors=answers.filter(x=>x.error).map(x=>x.venue.osmWayId+':'+x.error).join('; ');
   }
@@ -909,6 +995,19 @@ window.createOsaka3D = function createOsaka3D(ui) {
         'fill-extrusion-base':0,
         'fill-extrusion-opacity':1,
         'fill-extrusion-emissive-strength':0.95,
+        'fill-extrusion-vertical-gradient':false
+      }});
+    // Separate verified OSM footprint overlay; ordinary building palette unchanged.
+    active.addSource('sug-r7-live-venue-buildings',{
+      type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({id:'sug-r7-live-venue-halo',type:'fill-extrusion',
+      slot:'top',source:'sug-r7-live-venue-buildings',
+      paint:{
+        'fill-extrusion-color':['get','color'],
+        'fill-extrusion-base':0,
+        'fill-extrusion-height':['+',4,['get','height']],
+        'fill-extrusion-opacity':0.2,
+        'fill-extrusion-emissive-strength':1,
         'fill-extrusion-vertical-gradient':false
       }});
     loadOfficialVenueWays(active);
@@ -1581,6 +1680,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       return true;
     },
     isActive,
-    setHighlightedStores
+    setHighlightedStores,
+    setVenueStatuses
   };
 };

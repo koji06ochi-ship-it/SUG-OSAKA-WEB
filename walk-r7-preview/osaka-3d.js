@@ -43,6 +43,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let bearingAnchor = null;
   let lastFix = null;
   let ready = false;
+  let venuePulseVisibilityInstalled = false;
   let replayFrame = null;
   let replayRunning = false;
   let replayPreviousCamera = null;
@@ -61,10 +62,16 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const active=!!row && row.status!=='normal';
     return {...feature,properties:{...feature.properties,active:active?1:0}};
   }
+  function activeVenueRingFeatures() {
+    return {type:'FeatureCollection',features:venueRecords.filter(v=>venueStatus(v).status!=='normal' && verifiedVenueFeatures.some(f=>String(f.properties.wayId)===String(v.osmWayId)))
+      .map(v=>({type:'Feature',properties:{color:v.highlightColor,status:venueStatus(v).status},geometry:{type:'Point',coordinates:[v.lng,v.lat]}}))};
+  }
   function refreshVenueDisplay() {
     if (!view || !ready) return;
     const source=view.getSource('sug-r7-exact-venue-buildings');
     if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures.map(decorateVenueFeature)});
+    const ringSource=view.getSource('sug-r7-venue-live-rings');
+    if(ringSource)ringSource.setData(activeVenueRingFeatures());
     for(const marker of venueLabels)marker.remove();
     venueLabels=[];
     createVerifiedVenueLabels(view);
@@ -85,19 +92,25 @@ window.createOsaka3D = function createOsaka3D(ui) {
   }
   function syncVenuePulse() {
     if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null;}
-    if(!view || !ready || !venueRecords.some(v=>venueStatus(v).status!=='normal'))return;
+    if(!view || !ready || document.hidden || !venueRecords.some(v=>venueStatus(v).status!=='normal' && verifiedVenueFeatures.some(f=>String(f.properties.wayId)===String(v.osmWayId))))return;
     const activeView=view;
     pulseTimer=setInterval(()=>{
-      if(view!==activeView || !ready || document.hidden)return;
+      if(view!==activeView || !ready || document.hidden){clearInterval(pulseTimer);pulseTimer=null;return;}
       try {
-        const value=1.0+0.45*(1+Math.sin(Date.now()/800));
+        const wave=(1+Math.sin(Date.now()/780))/2;
         activeView.setPaintProperty('sug-r7-exact-venue-extrusions','fill-extrusion-emissive-strength',
-          ['case',['==',['get','active'],1],value,0.95]);
-      } catch(e) { // Some GPU/style versions may not accept this property as data-driven.
+          ['case',['==',['get','active'],1],0.55+wave*0.45,0.55]);
+        activeView.setPaintProperty('sug-r7-venue-live-ring-layer','circle-radius',8+wave*15);
+        activeView.setPaintProperty('sug-r7-venue-live-ring-layer','circle-opacity',0.70-wave*0.48);
+      } catch(e) {
         clearInterval(pulseTimer);pulseTimer=null;
         container.dataset.venuePulseGpu='unsupported';
       }
-    },350);
+    },60);
+  }
+  if(!venuePulseVisibilityInstalled){
+    document.addEventListener('visibilitychange',()=>{if(document.hidden){if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null;}}else syncVenuePulse();});
+    venuePulseVisibilityInstalled=true;
   }
 
   // Mapbox Standard v3 runtime basemap configuration (black x neon-pink x midnight-river)
@@ -971,6 +984,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     const source=active.getSource('sug-r7-exact-venue-buildings');
     if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures.map(decorateVenueFeature)});
     recolorVerifiedStreetsBuildings(active,answers);
+    const ringSource=active.getSource('sug-r7-venue-live-rings');
+    if(ringSource)ringSource.setData(activeVenueRingFeatures());
     for(const marker of venueLabels)marker.remove();
     venueLabels=[];
     createVerifiedVenueLabels(active);
@@ -979,6 +994,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.venueErrors=answers.filter(x=>x.error).map(x=>x.venue.osmWayId+':'+x.error).join('; ');
   }
   function addExactVenueLayers(active) {
+    active.addSource('sug-r7-venue-live-rings',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({id:'sug-r7-venue-live-ring-layer',type:'circle',slot:'top',source:'sug-r7-venue-live-rings',
+      paint:{'circle-color':['get','color'],'circle-radius':10,'circle-opacity':0.65,'circle-blur':0.65,'circle-stroke-color':['get','color'],'circle-stroke-width':2}});
     active.addSource('sug-r7-exact-venue-buildings',{
       type:'geojson',data:{type:'FeatureCollection',features:[]}});
     active.addLayer({id:'sug-r7-exact-venue-extrusions',
@@ -1660,6 +1678,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addOsakaTenmanguFocus(gl);
           ready = true;
           drawHighlightedStores(gl);
+          syncVenuePulse();
           if (lastFix) position(lastFix, null, false);
           pending = false;
           clearTimeout(timeout);

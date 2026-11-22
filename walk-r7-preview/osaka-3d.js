@@ -45,7 +45,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   // Mapbox Standard v3 runtime basemap configuration (black x neon-pink x midnight-river)
   const BASEMAP_CONFIG = {
-    lightPreset: 'night',
+    lightPreset: 'dusk',
     theme: 'default',
     show3dObjects: false,
     show3dFacades: false,

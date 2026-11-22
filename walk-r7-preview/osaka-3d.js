@@ -50,18 +50,18 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dObjects: false,
     show3dFacades: false,
     show3dLandmarks: false,
-    colorBuildings: '#445269',
+    colorBuildings: '#3B465D',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
     showTransitLabels: false,
     showRoadLabels: true,
-    colorLand: '#070712',
-    colorWater: '#071b3d',
-    colorGreenspace: '#0b1e22',
-    colorMotorways: '#ff3b9a',
-    colorTrunks: '#d92b82',
-    colorRoads: '#ff3b9a'
+    colorLand: '#090D19',
+    colorWater: '#102B48',
+    colorGreenspace: '#163F34',
+    colorMotorways: '#773455',
+    colorTrunks: '#66304F',
+    colorRoads: '#4A283D'
   };
 
   container.dataset.state = 'closed';
@@ -346,7 +346,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // not recognizable lit windows on facades. Do not reuse that failed approach.
   // Bright navy walls + restrained wall flood lighting keep the city readable.
   // Actual lit windows require separate facade geometry and remain unimplemented.
-  const ORDINARY_BUILDING_COLOR='#445269';
+  const ORDINARY_BUILDING_COLOR='#3B465D';
   function addNeonCityBuildings(active) {
     const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
     active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
@@ -355,7 +355,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
       'fill-extrusion-base':['to-number',['get','min_height'],0],
       'fill-extrusion-opacity':1,
-      'fill-extrusion-emissive-strength':0.95,
+      'fill-extrusion-emissive-strength':0.40,
       'fill-extrusion-vertical-gradient':false
     };
     active.addLayer({
@@ -368,9 +368,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
       active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#F1CA7A');
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.48);
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.25);
       active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',9);
-      container.dataset.cityFacadeLighting='soft-cool-wall-flood';
+      container.dataset.cityFacadeLighting='subtle-warm-dusk-flood';
     }catch(err){
       container.dataset.cityFacadeLighting='emissive-only-fallback';
       container.dataset.cityFacadeLightingError=String(err.message||err);
@@ -485,9 +485,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       id:'sug-r7-water-surface',type:'fill',slot:'bottom',
       source:sourceId,'source-layer':'water',
       paint:{
-        'fill-color':'#0a3566',
-        'fill-opacity':0.96,
-        'fill-emissive-strength':0.82
+        'fill-color':'#102B48',
+        'fill-opacity':0.98,
+        'fill-emissive-strength':0.18
       }
     });
     // Wide, soft outer glow follows actual water polygon boundaries.
@@ -495,9 +495,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       id:'sug-r7-water-bank-glow',type:'line',slot:'bottom',
       source:sourceId,'source-layer':'water',
       paint:{
-        'line-color':'#279DDE',
+        'line-color':'#32C8EF',
         'line-width':['interpolate',['linear'],['zoom'],12,1.3,16,3.2,19,5.5],
-        'line-opacity':0.55,
+        'line-opacity':0.40,
         'line-blur':2.0,
         'line-emissive-strength':0.80
       }
@@ -506,9 +506,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       id:'sug-r7-water-bank',type:'line',slot:'bottom',
       source:sourceId,'source-layer':'water',
       paint:{
-        'line-color':'#51C3F5',
+        'line-color':'#79E9FF',
         'line-width':['interpolate',['linear'],['zoom'],12,0.5,16,1.25,19,2.1],
-        'line-opacity':0.96,
+        'line-opacity':0.82,
         'line-blur':0.18,
         'line-emissive-strength':0.85
       }
@@ -519,9 +519,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       filter:['in',['get','class'],['literal',['park','grass','wood']]],
       paint:{
         'fill-color':['match',['get','class'],
-          'park','#145b42','grass','#1a6845','wood','#114b37','#145b42'],
+          'park','#163F34','grass','#1B4939','wood','#112E29','#163F34'],
         'fill-opacity':0.96,
-        'fill-emissive-strength':0.78
+        'fill-emissive-strength':0.28
       }
     });
     active.addLayer({
@@ -529,10 +529,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
       source:sourceId,'source-layer':'landuse',
       filter:['==',['get','class'],'park'],
       paint:{
-        'line-color':'#30d38b',
+        'line-color':'#41B98E',
         'line-width':['interpolate',['linear'],['zoom'],12,0.7,16,1.3,19,2.3],
-        'line-opacity':0.82,
-        'line-emissive-strength':0.8
+        'line-opacity':0.60,
+        'line-emissive-strength':0.5
       }
     });
     container.dataset.landscapeLayerMode='streets-v8-water-and-landuse';
@@ -1251,7 +1251,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     // Zoom-interpolated Neon Pink Walked Trace & Active Walking Route (prevents thick pink bands)
     for (const [id, source, colorCore] of [
       ['trace', 'sug-r7-walk-trace', '#ffd6ee'],
-      ['route', 'sug-r7-route', '#9af6ff']
+      ['route', 'sug-r7-route', '#FFE0F0']
     ]) {
       layer({
         id: 'sug-r7-' + id + '-glow',
@@ -1259,7 +1259,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         source,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': id === 'route' ? '#38e8ff' : '#ff3b9a',
+          'line-color': id === 'route' ? '#FF4CA0' : '#ff3b9a',
           'line-width': ['interpolate', ['exponential', 1.6], ['zoom'], 14, 4, 17, 9, 19, 14],
           'line-blur': 5,
           'line-opacity': 0.55,

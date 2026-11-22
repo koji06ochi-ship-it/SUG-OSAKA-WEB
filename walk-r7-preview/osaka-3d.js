@@ -131,6 +131,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   function addSpotMarkers(gl) {
     styleMarkers();
     for (const place of spots) {
+      // Official venues get exactly one label, only after their OSM way matches.
+      if (venueRecords.some(v => v.name === place.name)) continue;
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'sug-r7-spot';

@@ -314,6 +314,63 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.buildingPalette='dark-only-with-verified-osm-overlays';
   }
 
+  // Explicit landscape fills: Standard's colorWater/colorGreenspace configuration
+  // did not visibly tint the water and park polygons in the iPhone screenshots.
+  // Streets v8 has actual water polygons and landuse class=park/grass/wood geometry.
+  function addOsakaLandscapeLayers(active) {
+    const sourceId='sug-r7-neon-streets-buildings'; // existing Streets v8 source
+    active.addLayer({
+      id:'sug-r7-water-surface',type:'fill',slot:'bottom',
+      source:sourceId,'source-layer':'water',
+      paint:{
+        'fill-color':'#0a3566',
+        'fill-opacity':0.96,
+        'fill-emissive-strength':0.82
+      }
+    });
+    active.addLayer({
+      id:'sug-r7-water-bank',type:'line',slot:'bottom',
+      source:sourceId,'source-layer':'water',
+      paint:{
+        'line-color':'#2188c0',
+        'line-width':['interpolate',['linear'],['zoom'],12,0.5,16,1.7,19,3],
+        'line-opacity':0.88,
+        'line-blur':0.65,
+        'line-emissive-strength':0.85
+      }
+    });
+    active.addLayer({
+      id:'sug-r7-green-parks',type:'fill',slot:'bottom',
+      source:sourceId,'source-layer':'landuse',
+      filter:['in',['get','class'],['literal',['park','grass','wood']]],
+      paint:{
+        'fill-color':['match',['get','class'],
+          'park','#145b42','grass','#1a6845','wood','#114b37','#145b42'],
+        'fill-opacity':0.96,
+        'fill-emissive-strength':0.78
+      }
+    });
+    active.addLayer({
+      id:'sug-r7-park-border',type:'line',slot:'bottom',
+      source:sourceId,'source-layer':'landuse',
+      filter:['==',['get','class'],'park'],
+      paint:{
+        'line-color':'#30d38b',
+        'line-width':['interpolate',['linear'],['zoom'],12,0.7,16,1.3,19,2.3],
+        'line-opacity':0.82,
+        'line-emissive-strength':0.8
+      }
+    });
+    container.dataset.landscapeLayerMode='streets-v8-water-and-landuse';
+    active.on('idle',()=>{
+      if(view!==active)return;
+      try {
+        container.dataset.waterPolygonCount=String(active.queryRenderedFeatures({layers:['sug-r7-water-surface']}).length);
+        container.dataset.parkPolygonCount=String(active.queryRenderedFeatures({layers:['sug-r7-green-parks']}).length);
+      }catch(err){container.dataset.landscapeQueryError=String(err.message||err);}
+    });
+  }
+
   function distanceMetres(lat1,lng1,lat2,lng2) {
     const r=Math.PI/180, dy=(lat2-lat1)*111320, dx=(lng2-lng1)*111320*Math.cos(((lat1+lat2)/2)*r);
     return Math.hypot(dx,dy);
@@ -761,6 +818,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
           applyNightAtmosphere(active);
           addNeonCityBuildings(active);
+          addOsakaLandscapeLayers(active);
           addGeoLayers(active);
           addExactVenueLayers(active);
           addLandmarkBuildingLayers(active);

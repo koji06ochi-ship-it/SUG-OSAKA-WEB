@@ -17,7 +17,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47',officialAddress:'大阪市北区扇町2-1-7',officialUrl:'https://www.ktv.jp/corp/map/',sharedBuildingAnchor:{lat:34.70453,lng:135.51027}},
     {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65',officialAddress:'大阪市中央区大阪城1-1',officialUrl:'https://www.osakacastle.net/access/'},
     {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff',officialAddress:'大阪市北区中之島1-1-27',officialUrl:'https://osaka-chuokokaido.com/ja/access'},
-    {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#b65a43',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'}
+    {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#b65a43',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'},
+    {name:'大阪天満宮',lat:34.696025,lng:135.5126194,color:'#bf483c',officialAddress:'大阪市北区天神橋2-1-8',officialUrl:'https://osakatemmangu.or.jp/'}
   ];
   let landmarkGeometryHashes = '';
   let cachedKanteleLandmark = null; // Keep only a previously verified actual Streets polygon across tile transitions.
@@ -194,6 +195,27 @@ window.createOsaka3D = function createOsaka3D(ui) {
     spotMarkers.push(new gl.Marker({element:el,anchor:'bottom'})
       .setLngLat([station.lng,station.lat]).addTo(view));
     container.dataset.jrTemmaStation='marker-added-no-unverified-building';
+  }
+
+  // Osaka Tenmangu: point is a shrine locator, not proof of a particular main-hall polygon.
+  // The existing unique Streets footprint matcher colors a building only if the
+  // source identifies one footprint containing this point and provides a height.
+  function addOsakaTenmanguFocus(gl) {
+    const shrine=LANDMARKS.find(p=>p.name==='大阪天満宮');
+    if(!shrine||!view)return;
+    const el=document.createElement('button');
+    el.type='button';el.className='sug-r7-spot';
+    el.setAttribute('aria-label','大阪天満宮を3Dで見る');
+    const pill=document.createElement('span');pill.className='sug-r7-spot-pill';
+    pill.textContent='⛩ 大阪天満宮';
+    pill.style.cssText='border-color:#bf483c;color:#fff3ed;box-shadow:0 0 15px #bf483c99;background:#36150fee';
+    el.appendChild(pill);
+    el.addEventListener('click',event=>{
+      event.stopPropagation();view.easeTo({center:[shrine.lng,shrine.lat],zoom:18,pitch:65,duration:750});
+      if(typeof ui.select==='function')ui.select(shrine);
+    });
+    spotMarkers.push(new gl.Marker({element:el,anchor:'bottom'}).setLngLat([shrine.lng,shrine.lat]).addTo(view));
+    container.dataset.osakaTenmanguStatus='locator-added-footprint-unverified';
   }
 
   // Only explicitly approved, selected stores can receive a colored 3D overlay.
@@ -769,6 +791,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       const isKantele=landmark.name==='関西テレビ（カンテレ）';
       let verifiedFeature=null;
       if(chosen){
+        if(landmark.name==='大阪天満宮')container.dataset.osakaTenmanguStatus='unique-streets-footprint-found';
         const measured=Number(chosen.properties?.height);
         const isMint=landmark.name==='造幣博物館';
         // Mint Museum: 1911 red-brick former power station, per Mint Bureau / MOF.
@@ -1337,6 +1360,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           tryVerifiedKanteleFootprint(active);
           addSpotMarkers(gl);
           addJRTemmaStationMarker(gl);
+          addOsakaTenmanguFocus(gl);
           ready = true;
           drawHighlightedStores(gl);
           if (lastFix) position(lastFix, null, false);

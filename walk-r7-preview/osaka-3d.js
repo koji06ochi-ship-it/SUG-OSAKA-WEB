@@ -409,6 +409,17 @@ window.createOsaka3D = function createOsaka3D(ui) {
         'fill-extrusion-emissive-strength':1},
       filter:['==',['get','kind'],'core']
     });
+    // Ground-level neon strips only; no rooftop tracing or wall-covering glow.
+    // GeoJSON extrusion bands follow real Streets-v8 building edges.
+    for (const [kind,color,opacity] of [
+      ['base-halo','#FF007F',0.30],['base-core','#FF4BA9',0.98]
+    ]) {
+      active.addLayer({...base,id:'sug-r7-building-'+kind,
+        filter:['==',['get','kind'],kind],
+        paint:{...base.paint,'fill-extrusion-color':color,
+          'fill-extrusion-opacity':opacity,'fill-extrusion-emissive-strength':1}
+      });
+    }
     const toRad=Math.PI/180;
     const cosLat=Math.cos(HUB.lat*toRad);
     const dist=(a,b)=>Math.hypot((a[0]-b[0])*111320*cosLat,(a[1]-b[1])*111320);
@@ -419,6 +430,17 @@ window.createOsaka3D = function createOsaka3D(ui) {
         [center[0]+dx,center[1]+dy],[center[0]-dx,center[1]+dy],
         [center[0]-dx,center[1]-dy]
       ]]};
+    }
+    function baseStrip(a,b,width) {
+      const mx=111320*cosLat,my=111320;
+      const dx=(b[0]-a[0])*mx,dy=(b[1]-a[1])*my;
+      const length=Math.hypot(dx,dy);
+      if(length<2||length>120)return null;
+      const offsetX=(-dy/length)*width/(2*mx);
+      const offsetY=(dx/length)*width/(2*my);
+      const p=[[a[0]+offsetX,a[1]+offsetY],[b[0]+offsetX,b[1]+offsetY],
+        [b[0]-offsetX,b[1]-offsetY],[a[0]-offsetX,a[1]-offsetY]];
+      return {type:'Polygon',coordinates:[[...p,p[0]]]};
     }
     let updated=false;
     function refresh() {
@@ -459,9 +481,23 @@ window.createOsaka3D = function createOsaka3D(ui) {
               geometry:square(corner,width)});
           }
         }
+        // Continuous low bands on the actual building footprint, capped at 12 edges
+        // per building to avoid excessive geometry on iPhone.
+        const fullRing=building.ring;
+        for(let i=0;i<Math.min(fullRing.length-1,12);i++){
+          const a=fullRing[i],b=fullRing[i+1];
+          for(const [kind,width] of [['base-halo',1.5],['base-core',0.40]]){
+            const geometry=baseStrip(a,b,width);
+            if(geometry)result.push({type:'Feature',
+              properties:{kind,base:building.base+0.15,height:building.base+1.05},
+              geometry});
+          }
+        }
       }
       active.getSource(sourceId).setData({type:'FeatureCollection',features:result});
       updated=true;
+      container.dataset.baseNeonStatus=chosen.length?'geometry-ready':'no-eligible-buildings';
+      container.dataset.baseNeonBands=String(result.filter(f=>f.properties.kind.startsWith('base-')).length);
       container.dataset.verticalNeonStatus=chosen.length?'pilot-geometry-ready':'no-eligible-buildings';
       container.dataset.verticalNeonBuildings=String(chosen.length);
       container.dataset.verticalNeonStrips=String(result.length);

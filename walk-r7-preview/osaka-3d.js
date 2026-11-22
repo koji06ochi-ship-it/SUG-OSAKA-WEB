@@ -50,7 +50,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dObjects: false,
     show3dFacades: false,
     show3dLandmarks: false,
-    colorBuildings: '#202538',
+    colorBuildings: '#63728E',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
@@ -342,83 +342,39 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   // Streets v8 is retained only for dark background building geometry.
   // Random building colors are prohibited: verified OSM ways own the accents.
-  // Procedural 64x64 window texture. No paid assets, new network calls, or
-  // building-by-building geometry. Fixed seed keeps lights stable while walking.
-  // 27-33% of window cells appear illuminated, with dark navy walls between.
-  function createCityWindowTexture() {
-    // 64px repeat is intentionally high-contrast at typical iPhone map zoom:
-    // 5x6 lit windows, not the former 3x4 nearly invisible dots.
-    const size=64;
-    const canvas=document.createElement('canvas');
-    canvas.width=canvas.height=size;
-    const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    if(!ctx)return null;
-    ctx.fillStyle='#35445C';
-    ctx.fillRect(0,0,size,size);
-    let seed=0x5a17c0de;
-    function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
-    const colors=['#FFD8A0','#FFE7BB','#F5F0DC','#B9E8FF'];
-    let total=0, lit=0;
-    for(let y=4;y<64;y+=10){
-      for(let x=4;x<64;x+=10){
-        total++;
-        ctx.fillStyle='#233149';
-        ctx.fillRect(x-1,y-1,7,8);
-        if(random()>0.37)continue;
-        lit++;
-        ctx.fillStyle=colors[Math.floor(random()*colors.length)];
-        ctx.fillRect(x,y,5,6);
-        ctx.fillStyle='rgba(255,255,255,.25)';
-        ctx.fillRect(x,y,5,1);
-      }
-    }
-    container.dataset.cityWindowLitCells=String(lit)+'/'+String(total);
-    return ctx.getImageData(0,0,size,size);
-  }
+  // iPhone screenshot review: the former extrusion texture produced roof dots,
+  // not recognizable lit windows on facades. Do not reuse that failed approach.
+  // Bright navy walls + restrained wall flood lighting keep the city readable.
+  // Actual lit windows require separate facade geometry and remain unimplemented.
+  const ORDINARY_BUILDING_COLOR='#63728E';
   function addNeonCityBuildings(active) {
     const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
     active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
     const paint={
-      'fill-extrusion-color':'#35445C',
+      'fill-extrusion-color':ORDINARY_BUILDING_COLOR,
       'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
       'fill-extrusion-base':['to-number',['get','min_height'],0],
       'fill-extrusion-opacity':1,
-      'fill-extrusion-emissive-strength':0.72,
+      'fill-extrusion-emissive-strength':0.95,
       'fill-extrusion-vertical-gradient':false
     };
-    let mode='brighter-navy-solid-fallback';
+    active.addLayer({
+      id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
+      minzoom:14,filter:['==',['get','extrude'],'true'],paint
+    });
+    // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
-      const texture=createCityWindowTexture();
-      if(texture){
-        const imageId='sug-r7-city-window-lights-64-v2';
-        if(!active.hasImage(imageId))active.addImage(imageId,texture,{pixelRatio:1});
-        paint['fill-extrusion-pattern']=imageId;
-        mode='brighter-navy-contrasting-lit-windows-v2';
-      }
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#D4DBF2');
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.38);
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',9);
+      container.dataset.cityFacadeLighting='soft-cool-wall-flood';
     }catch(err){
-      container.dataset.cityWindowTextureError=String(err.message||err);
+      container.dataset.cityFacadeLighting='emissive-only-fallback';
+      container.dataset.cityFacadeLightingError=String(err.message||err);
     }
-    // Only ordinary Streets buildings get the pattern. Approved facilities,
-    // castle, museum and landmark overlays are drawn independently on top.
-    try{
-      active.addLayer({
-        id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
-        minzoom:14,filter:['==',['get','extrude'],'true'],paint
-      });
-    }catch(err){
-      // A pattern must not break the whole map: retry one time with plain navy.
-      if(!paint['fill-extrusion-pattern'])throw err;
-      delete paint['fill-extrusion-pattern'];
-      active.addLayer({
-        id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
-        minzoom:14,filter:['==',['get','extrude'],'true'],paint
-      });
-      mode='brighter-navy-solid-fallback';
-      container.dataset.cityWindowTextureError=String(err.message||err);
-    }
-    container.dataset.buildingPalette=mode;
-    container.dataset.cityFacadeRevision='brighter-v2-20261123';
-    container.dataset.cityFacadeColor='#35445C';
+    container.dataset.buildingPalette='readable-navy-no-roof-dots';
+    container.dataset.cityFacadeColor=ORDINARY_BUILDING_COLOR;
+    container.dataset.cityWindowStatus='not-implemented-facade-geometry-required';
   }
 
   // Explicit landscape fills: Standard's colorWater/colorGreenspace configuration
@@ -756,9 +712,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       condition.push(['<=',['distance',{type:'Point',coordinates:pt}],0.8],venue.highlightColor);
       matches++;
     }
-    condition.push('#35445C');
+    condition.push(ORDINARY_BUILDING_COLOR);
     try {
-      active.setPaintProperty(layer,'fill-extrusion-color',matches?condition:'#35445C');
+      active.setPaintProperty(layer,'fill-extrusion-color',matches?condition:ORDINARY_BUILDING_COLOR);
       container.dataset.venueStreetsColorRules=String(matches);
       container.dataset.venueStreetsColorError='';
     } catch (err) {

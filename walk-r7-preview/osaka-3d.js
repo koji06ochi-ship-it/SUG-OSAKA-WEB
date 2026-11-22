@@ -32,6 +32,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     lightPreset: 'night',
     theme: 'default',
     show3dObjects: true,
+    colorBuildings: '#bb44cf',
+    colorBuildingHighlight: '#ff3b9a',
+    colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
     showTransitLabels: false,
     showRoadLabels: true,
@@ -223,7 +226,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     if (window.mapboxgl) return Promise.resolve(window.mapboxgl);
     if (sdkPromise) return sdkPromise;
     sdkPromise = new Promise((resolve, reject) => {
-      const root = 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/';
+      const root = 'https://api.mapbox.com/mapbox-gl-js/v3.17.0/';
       const css = document.createElement('link');
       css.rel = 'stylesheet';
       css.href = root + 'mapbox-gl.css';

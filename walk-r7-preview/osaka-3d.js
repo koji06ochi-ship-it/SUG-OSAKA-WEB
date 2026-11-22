@@ -18,6 +18,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#ff9e55',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'}
   ];
   let landmarkGeometryHashes = '';
+  let cachedKanteleLandmark = null; // Keep only a previously verified actual Streets polygon across tile transitions.
   let landmarkColorsReady = false;
   const EMPTY = { type: 'FeatureCollection', features: [] };
   const spots = Array.isArray(ui.spots)
@@ -241,6 +242,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     venueLabels=[];
     verifiedVenueFeatures=[];
     landmarkGeometryHashes='';
+    cachedKanteleLandmark=null;
     if (view) {
       try { view.remove(); } catch (e) {}
     }
@@ -738,12 +740,24 @@ window.createOsaka3D = function createOsaka3D(ui) {
         const distinct=new Map(hits.map(f=>[JSON.stringify(f.geometry),f]));
         if(distinct.size===1) { chosen=[...distinct.values()][0];break; }
       }
-      if(!chosen)continue; // Never color an ambiguous or unrelated structure.
-      const hit=chosen, height=Number(hit.properties?.height);
-      if(!Number.isFinite(height)||height<=0||height>300)continue;
-      features.push({type:'Feature',
-        properties:{name:landmark.name,color:landmark.color,height:height+3},
-        geometry:hit.geometry});
+      // On iPhone the currently loaded vector tiles can change while panning.
+      // Do not drop a previously matched Kantele polygon just because its tile
+      // momentarily disappears; never cache an unverified or nearby building.
+      const isKantele=landmark.name==='関西テレビ（カンテレ）';
+      let verifiedFeature=null;
+      if(chosen){
+        const height=Number(chosen.properties?.height);
+        if(Number.isFinite(height)&&height>0&&height<=300){
+          verifiedFeature={type:'Feature',
+            properties:{name:landmark.name,color:landmark.color,height:height+3},
+            geometry:chosen.geometry};
+          if(isKantele)cachedKanteleLandmark=verifiedFeature;
+        }
+      }
+      if(!verifiedFeature&&isKantele&&cachedKanteleLandmark)
+        verifiedFeature=cachedKanteleLandmark;
+      if(!verifiedFeature)continue;
+      features.push(verifiedFeature);
       matched.push(landmark.name);
     }
     const hash=JSON.stringify(features.map(f=>[f.properties.name,f.geometry]));

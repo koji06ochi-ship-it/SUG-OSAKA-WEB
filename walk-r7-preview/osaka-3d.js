@@ -10,6 +10,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let spotMarkers=[], trace=[], routeCoords=[], bearingAnchor=null, lastFix=null, ready=false;
   container.dataset.state='closed';
   container.dataset.renderedBuildings='unverified';
+  container.dataset.basemap='unverified';
+  container.dataset.camera='waiting';
 
   function notify(message) { if (typeof ui.notice === 'function') ui.notice(message); }
   function isActive() { return !!view && !container.hidden; }
@@ -61,6 +63,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     if(view){try{view.remove();}catch(e){}}
     view=null;container.hidden=true;
     container.dataset.state=message?'fallback-2d':'closed';
+    container.dataset.renderedBuildings='unverified';
+    container.dataset.camera='closed';
     toggle.textContent='3D';toggle.setAttribute('aria-pressed','false');
     if(message)notify(message);
   }
@@ -170,7 +174,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       view=new gl.Map({
         container,accessToken:token,style:'mapbox://styles/mapbox/standard',
         config:{basemap:{lightPreset:'night',show3dObjects:true,showPointOfInterestLabels:false,showTransitLabels:false}},
-        center:ui.center(),zoom:17.2,pitch:65,maxPitch:75,antialias:true
+        // Focus the original 八軒家浜 area rather than inventing a walking position.
+        center:[HUB.lng,HUB.lat],zoom:17.8,pitch:73,maxPitch:80,antialias:true
       });
       const active=view;
       active.on('error',e=>{
@@ -192,7 +197,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addSpotMarkers(gl);
           ready=true;
           if(lastFix)position(lastFix,null,false);pending=false;clearTimeout(timeout);timeout=null;
+          // These diagnostics report configuration and camera only, not proof of drawn buildings.
           container.dataset.state='style-ready';
+          container.dataset.basemap='mapbox-standard-night';
+          container.dataset.camera='hachikenya-eye-level';
+          container.dataset.renderedBuildings='unverified';
           toggle.textContent='2D';toggle.setAttribute('aria-pressed','true');
           resize();
           if(typeof ui.onReady==='function')ui.onReady();

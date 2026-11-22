@@ -15,7 +15,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47',officialAddress:'大阪市北区扇町2-1-7',officialUrl:'https://www.ktv.jp/corp/map/',sharedBuildingAnchor:{lat:34.70453,lng:135.51027}},
     {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65',officialAddress:'大阪市中央区大阪城1-1',officialUrl:'https://www.osakacastle.net/access/'},
     {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff',officialAddress:'大阪市北区中之島1-1-27',officialUrl:'https://osaka-chuokokaido.com/ja/access'},
-    {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#ad503d',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'}
+    {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#b65a43',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'}
   ];
   let landmarkGeometryHashes = '';
   let cachedKanteleLandmark = null; // Keep only a previously verified actual Streets polygon across tile transitions.
@@ -748,11 +748,22 @@ window.createOsaka3D = function createOsaka3D(ui) {
       const isKantele=landmark.name==='関西テレビ（カンテレ）';
       let verifiedFeature=null;
       if(chosen){
-        const height=Number(chosen.properties?.height);
-        if(Number.isFinite(height)&&height>0&&height<=300){
+        const measured=Number(chosen.properties?.height);
+        const isMint=landmark.name==='造幣博物館';
+        // Mint Museum: 1911 red-brick former power station, per Mint Bureau / MOF.
+        // Only use a single building polygon containing the mapped museum point.
+        // If the vector tile lacks height, use an explicitly flagged visual estimate.
+        const heightSource=Number.isFinite(measured)&&measured>0&&measured<=300?'mapbox-height':
+          (isMint?'visual-estimate-not-measured':'missing');
+        const height=heightSource==='mapbox-height'?measured:(isMint?9:NaN);
+        if(Number.isFinite(height)){
           verifiedFeature={type:'Feature',
             properties:{name:landmark.name,color:landmark.color,height:height+3},
             geometry:chosen.geometry};
+          if(isMint){
+            container.dataset.mintMuseumStatus='unique-streets-footprint-matched';
+            container.dataset.mintMuseumHeightSource=heightSource;
+          }
           if(isKantele)cachedKanteleLandmark=verifiedFeature;
         }
       }

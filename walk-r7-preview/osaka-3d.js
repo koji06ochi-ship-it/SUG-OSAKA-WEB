@@ -442,6 +442,76 @@ window.createOsaka3D = function createOsaka3D(ui) {
     })();
   }
 
+  function addVerifiedNakanoshimaPark(active) {
+    const park={name:'中之島公園',wayId:54037338,lat:34.69242,lng:135.50777};
+    const id='sug-r7-nakanoshima-verified';
+    active.addSource(id,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({
+      id:'sug-r7-nakanoshima-park-fill',type:'fill',slot:'middle',source:id,
+      paint:{'fill-color':'#167e4f','fill-opacity':0.96,'fill-emissive-strength':0.9}
+    });
+    active.addLayer({
+      id:'sug-r7-nakanoshima-park-outline',type:'line',slot:'middle',source:id,
+      paint:{'line-color':'#51f4a0','line-width':['interpolate',['linear'],['zoom'],12,0.8,16,2,19,3],
+        'line-opacity':0.97,'line-emissive-strength':1.1}
+    });
+    container.dataset.nakanoshimaParkStatus='loading';
+    const thisView=active;
+    (async()=>{
+      try {
+        const response=await fetch('https://api.openstreetmap.org/api/0.6/way/54037338/full.json',
+          {mode:'cors',credentials:'omit',signal:AbortSignal.timeout(12000)});
+        if(!response.ok)throw Error('OSM HTTP '+response.status);
+        const data=await response.json();
+        const elements=Array.isArray(data.elements)?data.elements:[];
+        const way=elements.find(e=>e.type==='way'&&e.id===park.wayId);
+        if(!way||way.tags?.leisure!=='park'||!Array.isArray(way.nodes)||way.nodes.length<4)
+          throw Error('Expected park way not found');
+        if(!String(way.tags.name||way.tags['name:ja']||'').includes('扇町'))
+          throw Error('Park name does not match');
+        const nodes=new Map(elements.filter(e=>e.type==='node').map(e=>[e.id,e]));
+        const ring=way.nodes.map(n=>nodes.get(n)).map(n=>n?[n.lon,n.lat]:null);
+        if(ring.length>2500||ring.some(p=>!p||!p.every(Number.isFinite)))
+          throw Error('Invalid or oversized park geometry');
+        if(ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])
+          throw Error('Park ring is not closed');
+        const minLat=Math.min(...ring.map(p=>p[1])), maxLat=Math.max(...ring.map(p=>p[1]));
+        const minLng=Math.min(...ring.map(p=>p[0])), maxLng=Math.max(...ring.map(p=>p[0]));
+        if(park.lat<minLat-0.002||park.lat>maxLat+0.002||park.lng<minLng-0.002||park.lng>maxLng+0.002)
+          throw Error('OSM geometry is too far from mapped Nakanoshima Park');
+        // Shoelace area in metric coordinates; refuse polygons inconsistent with
+        // The mapped OSM way can differ from Osaka City's 96,275 m2 administrative area.
+        let area=0;
+        const sx=111320*Math.cos(park.lat*Math.PI/180),sy=111320;
+        for(let i=1;i<ring.length;i++)
+          area+=(ring[i-1][0]*sx)*(ring[i][1]*sy)-(ring[i][0]*sx)*(ring[i-1][1]*sy);
+        area=Math.abs(area)/2;
+        if(!(area>5000&&area<200000))throw Error('Park polygon area outside plausible range: '+Math.round(area));
+        if(view!==thisView)return;
+        const source=active.getSource(id);
+        if(!source)return;
+        source.setData({type:'FeatureCollection',features:[{type:'Feature',
+          properties:{name:park.name,wayId:park.wayId},
+          geometry:{type:'Polygon',coordinates:[ring]}}]});
+        container.dataset.nakanoshimaParkStatus='geometry-loaded';
+        container.dataset.nakanoshimaParkAreaM2=String(Math.round(area));
+        active.once('idle',()=>{
+          if(view!==thisView)return;
+          try{
+            const count=active.queryRenderedFeatures({layers:['sug-r7-nakanoshima-park-fill']}).length;
+            container.dataset.nakanoshimaParkRendered=String(count);
+            container.dataset.nakanoshimaParkStatus=count>0?'rendered-in-current-view':'geometry-loaded-outside-view';
+          }catch(error){container.dataset.nakanoshimaParkError=String(error.message||error);}
+        });
+      }catch(error){
+        if(view===thisView){
+          container.dataset.nakanoshimaParkStatus='not-verified';
+          container.dataset.nakanoshimaParkError=String(error.message||error);
+        }
+      }
+    })();
+  }
+
   function distanceMetres(lat1,lng1,lat2,lng2) {
     const r=Math.PI/180, dy=(lat2-lat1)*111320, dx=(lng2-lng1)*111320*Math.cos(((lat1+lat2)/2)*r);
     return Math.hypot(dx,dy);
@@ -891,6 +961,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addNeonCityBuildings(active);
           addOsakaLandscapeLayers(active);
           addVerifiedOgimachiPark(active);
+          addVerifiedNakanoshimaPark(active);
           addGeoLayers(active);
           addExactVenueLayers(active);
           addLandmarkBuildingLayers(active);

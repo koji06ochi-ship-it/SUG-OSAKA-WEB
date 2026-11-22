@@ -38,7 +38,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     if(document.getElementById('sug-r7-mapbox-marker-style'))return;
     const css=document.createElement('style');
     css.id='sug-r7-mapbox-marker-style';
-    css.textContent='.sug-r7-spot{padding:6px 9px;border:1px solid #ff3b9a;border-radius:12px;background:rgba(6,4,15,.82);color:#fff;box-shadow:0 0 15px #ff3b9a80;backdrop-filter:blur(9px);font:600 11px -apple-system,sans-serif;white-space:nowrap;cursor:pointer}.sug-r7-spot:focus-visible{outline:2px solid #fff}';
+    css.textContent='.sug-r7-spot{padding:6px 9px;border:1px solid #ff3b9a;border-radius:12px;background:rgba(6,4,15,.82);color:#fff;box-shadow:0 0 15px #ff3b9a80;backdrop-filter:blur(9px);font:600 11px -apple-system,sans-serif;white-space:nowrap;cursor:pointer}.sug-r7-spot:focus-visible{outline:2px solid #fff}.sug-r7-gps-pulse{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#ff3b9a;box-shadow:0 0 12px #ff3b9a;animation:sug-r7-gps-pulse 1.8s ease-in-out infinite}@keyframes sug-r7-gps-pulse{0%,100%{box-shadow:0 0 7px 3px #ff3b9a77}50%{box-shadow:0 0 22px 13px #ff3b9a99}}';
     document.head.appendChild(css);
   }
   function clearMarkers() {
@@ -119,6 +119,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
       if(trace.length>500)trace.shift();
     }
     lastFix=current;
+    if(view && ready){
+      if(!currentMarker){
+        styleMarkers();
+        const el=document.createElement('div');el.className='sug-r7-gps-pulse';
+        currentMarker=new window.mapboxgl.Marker({element:el}).setLngLat(coords).addTo(view);
+      }else currentMarker.setLngLat(coords);
+    }
     updateSource('sug-r7-user',featurePoint(current));
     updateSource('sug-r7-walk-trace',featureLine(trace));
     if(!view || !ready || !follow)return;
@@ -183,7 +190,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
           }
           addGeoLayers(active);
           addSpotMarkers(gl);
-          ready=true;pending=false;clearTimeout(timeout);timeout=null;
+          ready=true;
+          if(lastFix)position(lastFix,null,false);pending=false;clearTimeout(timeout);timeout=null;
           container.dataset.state='style-ready';
           toggle.textContent='2D';toggle.setAttribute('aria-pressed','true');
           resize();
@@ -195,7 +203,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   toggle.onclick=()=>view||pending?close():open();
   window.addEventListener('orientationchange',resize);
   return {position,destination,route,resize,close,
-    clearPosition(){lastFix=null;bearingAnchor=null;trace=[];updateSource('sug-r7-user',EMPTY);updateSource('sug-r7-walk-trace',EMPTY);},
+    clearPosition(){if(currentMarker){currentMarker.remove();currentMarker=null;}lastFix=null;bearingAnchor=null;trace=[];updateSource('sug-r7-user',EMPTY);updateSource('sug-r7-walk-trace',EMPTY);},
     focus(center,zoom=17.2){if(!view)return false;view.easeTo({center,zoom});return true;},
     zoom(delta){if(!view)return false;view.zoomTo(view.getZoom()+delta);return true;},
     isActive};

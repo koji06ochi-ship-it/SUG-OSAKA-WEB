@@ -1,7 +1,13 @@
+-- Supabase Free hardening: all ledger tables are in a PRIVATE schema.
+-- This schema must NOT be added to Supabase exposed schemas.
+CREATE SCHEMA IF NOT EXISTS r7_private;
+REVOKE ALL ON SCHEMA r7_private FROM PUBLIC;
+REVOKE ALL ON SCHEMA r7_private FROM anon, authenticated;
+
 -- S.u.G WALK R7 — shared JPY budget ledger (PostgreSQL 14+)
 -- DATA DEFINITION ONLY. Do not deploy or grant access until owner approval.
 -- Database role used by the public app must have NO direct table privileges.
-CREATE TABLE IF NOT EXISTS r7_budget_month (
+CREATE TABLE IF NOT EXISTS r7_private.r7_budget_month (
  month_key text PRIMARY KEY CHECK (month_key ~ '^[0-9]{4}-[0-9]{2}$'),
  ai_text_held bigint NOT NULL DEFAULT 0 CHECK (ai_text_held >= 0),
  ai_text_spent bigint NOT NULL DEFAULT 0 CHECK (ai_text_spent >= 0),
@@ -18,9 +24,9 @@ CREATE TABLE IF NOT EXISTS r7_budget_month (
  CONSTRAINT r7_budget_month_live CHECK(live_held+live_spent <= 5000)
 );
 -- 1,000 yen contingency is intentionally NOT spendable.
-CREATE TABLE IF NOT EXISTS r7_budget_operation (
+CREATE TABLE IF NOT EXISTS r7_private.r7_budget_operation (
  operation_id text PRIMARY KEY CHECK(length(operation_id) BETWEEN 16 AND 128),
- month_key text NOT NULL REFERENCES r7_budget_month(month_key),
+ month_key text NOT NULL REFERENCES r7_private.r7_budget_month(month_key),
  category text NOT NULL CHECK(category IN ('ai_text','ai_voice','live')),
  reserved_yen bigint NOT NULL CHECK(reserved_yen BETWEEN 1 AND 9000),
  actual_yen bigint CHECK(actual_yen IS NULL OR actual_yen >= 0),
@@ -34,6 +40,15 @@ CREATE TABLE IF NOT EXISTS r7_budget_operation (
  )
 );
 CREATE INDEX IF NOT EXISTS r7_budget_operation_month_category
- ON r7_budget_operation(month_key,category,status);
-COMMENT ON TABLE r7_budget_operation IS
+ ON r7_private.r7_budget_operation(month_key,category,status);
+COMMENT ON TABLE r7_private.r7_budget_operation IS
  'Server-side ledger. Operation IDs are randomly generated, not personal IDs. No GPS, transcripts or secrets.';
+
+-- Defense in depth. Only private database connection role should access ledger.
+ALTER TABLE r7_private.r7_budget_month ENABLE ROW LEVEL SECURITY;
+ALTER TABLE r7_private.r7_budget_operation ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON ALL TABLES IN SCHEMA r7_private FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA r7_private FROM PUBLIC, anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA r7_private REVOKE ALL ON TABLES FROM PUBLIC, anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA r7_private REVOKE ALL ON SEQUENCES FROM PUBLIC, anon, authenticated;
+-- DO NOT create public SECURITY DEFINER functions for ledger access.

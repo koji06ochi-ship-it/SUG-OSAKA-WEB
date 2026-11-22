@@ -107,8 +107,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       '#osaka-3d::before{content:"";position:absolute;inset:0 0 auto 0;height:96px;pointer-events:none;z-index:2;background:linear-gradient(180deg,rgba(4,4,12,.72) 0%,rgba(4,4,12,0) 100%);}',
       '#osaka-3d::after{content:"";position:absolute;inset:auto 0 0 0;height:120px;pointer-events:none;z-index:2;background:linear-gradient(0deg,rgba(4,4,12,.78) 0%,rgba(4,4,12,0) 100%);}',
       '.sug-r7-spot{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0;border:0;background:transparent;cursor:pointer;}',
-      '.sug-r7-spot-pill{padding:5px 12px;border:1.3px solid rgba(255,79,166,.92);border-radius:999px;background:rgba(12,6,22,.84);color:#fff;box-shadow:0 0 16px rgba(255,59,154,.48),inset 0 0 8px rgba(255,59,154,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:700 11.5px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.03em;white-space:nowrap;}',
-      '.sug-r7-spot-drop{width:16px;height:20px;filter:drop-shadow(0 0 7px rgba(255,59,154,.95));}',
+      '.sug-r7-spot-pill{padding:5px 12px;border:1.3px solid var(--sug-spot-color,#ff4fa6);border-radius:999px;background:rgba(12,6,22,.84);color:#fff;box-shadow:0 0 14px var(--sug-spot-color,#ff4fa6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font:700 11.5px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.03em;white-space:nowrap;}',
+      '.sug-r7-spot-drop{width:16px;height:20px;color:var(--sug-spot-color,#ff4fa6);filter:drop-shadow(0 0 7px var(--sug-spot-color,#ff4fa6));}',
       '.sug-r7-selected-shop{padding:7px 12px;border:1.5px solid var(--sug-store-color);border-radius:999px;background:rgba(5,5,13,.94);color:var(--sug-store-color);font:700 12px -apple-system,sans-serif;white-space:nowrap;box-shadow:0 0 12px var(--sug-store-color);}',
       '.sug-r7-spot:focus-visible .sug-r7-spot-pill{outline:2px solid #fff;outline-offset:2px;}',
       '.sug-r7-gps-pulse{position:relative;width:22px;height:22px;border:2.5px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0%,#ff80c2 55%,#ff2a8d 100%);box-shadow:0 0 16px #ff3b9a,0 0 28px rgba(255,59,154,.85);animation:sug-r7-gps-pulse 1.9s ease-in-out infinite;}',
@@ -136,6 +136,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'sug-r7-spot';
+      const colors={landmark:'#ffcb63',sightseeing:'#ffcb63',station:'#80b9ff',port:'#64e8da',park:'#65d896',waterfront:'#64e8da'};
+      el.style.setProperty('--sug-spot-color',colors[place.category]||'#ff4fa6');
       const pill = document.createElement('span');
       pill.className = 'sug-r7-spot-pill';
       pill.textContent = place.name;
@@ -143,8 +145,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       el.insertAdjacentHTML(
         'beforeend',
         '<svg class="sug-r7-spot-drop" viewBox="0 0 24 30" fill="none" aria-hidden="true">' +
-          '<path d="M12 2C6.48 2 2 6.48 2 12c0 6.8 10 16 10 16s10-9.2 10-16c0-5.52-4.48-10-10-10z" fill="#fff" stroke="#ff3b9a" stroke-width="2"/>' +
-          '<circle cx="12" cy="11.5" r="3.5" fill="#ff3b9a"/>' +
+          '<path d="M12 2C6.48 2 2 6.48 2 12c0 6.8 10 16 10 16s10-9.2 10-16c0-5.52-4.48-10-10-10z" fill="#fff" stroke="currentColor" stroke-width="2"/>' +
+          '<circle cx="12" cy="11.5" r="3.5" fill="currentColor"/>' +
         '</svg>'
       );
       el.addEventListener('click', e => {

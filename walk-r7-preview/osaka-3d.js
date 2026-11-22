@@ -52,7 +52,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     showTransitLabels: false,
     showRoadLabels: true,
     colorLand: '#070712',
-    colorWater: '#096fb8',
+    colorWater: '#071b3d',
     colorGreenspace: '#0b1e22',
     colorMotorways: '#ff3b9a',
     colorTrunks: '#d92b82',
@@ -320,23 +320,23 @@ window.createOsaka3D = function createOsaka3D(ui) {
   function addOsakaLandscapeLayers(active) {
     const sourceId='sug-r7-neon-streets-buildings'; // existing Streets v8 source
     active.addLayer({
-      id:'sug-r7-water-surface',type:'fill',slot:'top',
+      id:'sug-r7-water-surface',type:'fill',slot:'bottom',
       source:sourceId,'source-layer':'water',
       paint:{
-        'fill-color':'#096fb8',
-        'fill-opacity':1,
-        'fill-emissive-strength':1.4
+        'fill-color':'#0a3566',
+        'fill-opacity':0.96,
+        'fill-emissive-strength':0.82
       }
     });
     active.addLayer({
-      id:'sug-r7-water-bank',type:'line',slot:'top',
+      id:'sug-r7-water-bank',type:'line',slot:'bottom',
       source:sourceId,'source-layer':'water',
       paint:{
-        'line-color':'#35c4ff',
+        'line-color':'#2188c0',
         'line-width':['interpolate',['linear'],['zoom'],12,0.5,16,1.7,19,3],
         'line-opacity':0.88,
         'line-blur':0.65,
-        'line-emissive-strength':1.2
+        'line-emissive-strength':0.85
       }
     });
     active.addLayer({

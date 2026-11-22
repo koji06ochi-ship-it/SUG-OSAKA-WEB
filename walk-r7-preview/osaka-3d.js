@@ -148,7 +148,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'sug-r7-spot';
-      const colors={landmark:'#ffcb63',sightseeing:'#ffcb63',station:'#80b9ff',port:'#64e8da',park:'#65d896',waterfront:'#64e8da'};
+      const colors={landmark:'#ffcb63',sightseeing:'#ffcb63',station:'#80b9ff',port:'#64e8da',park:'#65d896',waterfront:'#b77cff'};
       const pinColor=colors[place.category]||'#ff4fa6';
       el.style.setProperty('--sug-spot-color',pinColor);
       el.style.color=pinColor; // SVG currentColor previously inherited dark text and lost its mark.

@@ -1239,7 +1239,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       type: 'line',
       source: 'sug-r7-arrival-ring',
       paint: {
-        'line-color': '#ff4fa6',
+        'line-color': '#ff007f',
         'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.2, 17, 2.2, 19, 3.2],
         'line-blur': 1.2,
         'line-dasharray': [2, 2],
@@ -1250,7 +1250,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
     // Zoom-interpolated Neon Pink Walked Trace & Active Walking Route (prevents thick pink bands)
     for (const [id, source, colorCore] of [
-      ['trace', 'sug-r7-walk-trace', '#ffd6ee'],
+      ['trace', 'sug-r7-walk-trace', '#ff007f'],
       ['route', 'sug-r7-route', '#FFE0F0']
     ]) {
       layer({
@@ -1259,9 +1259,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
         source,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': id === 'route' ? '#FF4CA0' : '#ff3b9a',
+          'line-color': id === 'route' ? '#FF4CA0' : '#ff007f',
           'line-width': ['interpolate', ['exponential', 1.6], ['zoom'], 14, 4, 17, 9, 19, 14],
-          'line-blur': 5,
+          'line-blur': 3.5,
           'line-opacity': 0.55,
           'line-emissive-strength': 1
         }

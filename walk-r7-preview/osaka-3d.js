@@ -919,78 +919,6 @@ window.createOsaka3D = function createOsaka3D(ui) {
     })();
   }
 
-  // Osaka Castle TOWER only, not the surrounding Osaka Castle Park.
-  // Official: Osaka Castle Tower, Chuo-ku Osaka-jo 1-1 (osakacastle.net).
-  // OSM/Mapcarta: building=yes, historic=castle, Way 34619038, mapped height 58m.
-  // Use the live OSM footprint only after identity, geometry and location checks.
-  function addVerifiedOsakaCastleTower(active) {
-    const wayId=34619038,lat=34.68737,lng=135.52586;
-    const sourceId='sug-r7-osakajo-tower-exact';
-    active.addSource(sourceId,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-    active.addLayer({
-      id:'sug-r7-osakajo-tower-extrusion',type:'fill-extrusion',
-      slot:'top',source:sourceId,
-      paint:{
-        'fill-extrusion-color':'#ffce65',
-        'fill-extrusion-height':['get','height'],
-        'fill-extrusion-base':0,
-        'fill-extrusion-opacity':1,
-        'fill-extrusion-emissive-strength':0.8,
-        'fill-extrusion-vertical-gradient':false
-      }
-    });
-    container.dataset.osakaCastleTowerStatus='loading';
-    (async()=>{
-      try{
-        const response=await fetch('https://api.openstreetmap.org/api/0.6/way/34619038/full.json',
-          {mode:'cors',credentials:'omit',signal:AbortSignal.timeout(12000)});
-        if(!response.ok)throw Error('OSM HTTP '+response.status);
-        const data=await response.json(),elements=Array.isArray(data.elements)?data.elements:[];
-        const way=elements.find(e=>e.type==='way'&&e.id===wayId);
-        if(!way||!way.tags?.building||way.tags?.historic!=='castle'||
-          !Array.isArray(way.nodes)||way.nodes.length<4||way.nodes.length>1500)
-          throw Error('Way is not the expected castle building');
-        const nodeMap=new Map(elements.filter(e=>e.type==='node').map(e=>[e.id,e]));
-        const ring=way.nodes.map(id=>nodeMap.get(id)).map(n=>n?[n.lon,n.lat]:null);
-        if(ring.some(p=>!p||!p.every(Number.isFinite)))throw Error('Incomplete castle footprint');
-        if(ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])
-          throw Error('Unclosed castle building polygon');
-        if(!pointInRing(lng,lat,ring)&&distanceToRing(lat,lng,ring)>30)
-          throw Error('Castle footprint is too far from mapped tower');
-        let height=Number(way.tags.height);
-        let heightSource='osm-tag';
-        if(!Number.isFinite(height)||height<20||height>100){
-          // 58m is the OSM-derived mapped height reported for this exact Way.
-          // It is not presented as a separately verified official measurement.
-          height=58;
-          heightSource='osm-mapped-fallback';
-        }
-        if(view!==active)return;
-        const source=active.getSource(sourceId);
-        if(!source)return;
-        source.setData({type:'FeatureCollection',features:[{
-          type:'Feature',properties:{name:'大阪城天守閣',wayId,height,heightSource},
-          geometry:{type:'Polygon',coordinates:[ring]}
-        }]});
-        container.dataset.osakaCastleTowerStatus='geometry-loaded';
-        container.dataset.osakaCastleTowerHeightSource=heightSource;
-        active.once('idle',()=>{
-          if(view!==active)return;
-          try{
-            const count=active.queryRenderedFeatures({layers:['sug-r7-osakajo-tower-extrusion']}).length;
-            container.dataset.osakaCastleTowerRendered=String(count);
-            container.dataset.osakaCastleTowerStatus=count?'rendered-in-view':'loaded-outside-view';
-          }catch(error){container.dataset.osakaCastleTowerError=String(error.message||error);}
-        });
-      }catch(error){
-        if(view===active){
-          container.dataset.osakaCastleTowerStatus='not-verified';
-          container.dataset.osakaCastleTowerError=String(error.message||error);
-        }
-      }
-    })();
-  }
-
   function addLandmarkBuildingLayers(active) {
     active.addSource('sug-r7-landmark-building-overlays',{
       type:'geojson',data:{type:'FeatureCollection',features:[]}});
@@ -1280,7 +1208,6 @@ window.createOsaka3D = function createOsaka3D(ui) {
           addLandmarkBuildingLayers(active);
           addVerifiedOsakaCastleTower(active);
           tryVerifiedKanteleFootprint(active);
-          addVerifiedOsakaCastleTower(active);
           addSpotMarkers(gl);
           ready = true;
           drawHighlightedStores(gl);

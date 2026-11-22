@@ -235,6 +235,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     clearTimeout(timeout);
     timeout = null;
     clearMarkers();
+    const waterDiagnostic=document.getElementById('sug-r7-water-diagnostic');
+    if(waterDiagnostic)waterDiagnostic.remove();
     ++venueLoadGeneration;
     for(const marker of venueLabels) marker.remove();
     venueLabels=[];
@@ -369,6 +371,54 @@ window.createOsaka3D = function createOsaka3D(ui) {
         container.dataset.parkPolygonCount=String(active.queryRenderedFeatures({layers:['sug-r7-green-parks']}).length);
       }catch(err){container.dataset.landscapeQueryError=String(err.message||err);}
     });
+  }
+
+  // Water-only runtime diagnostic. This intentionally changes no map paint, order or data.
+  function addWaterDiagnostic(active) {
+    const panel=document.createElement('div');
+    panel.id='sug-r7-water-diagnostic';
+    panel.setAttribute('role','status');
+    panel.setAttribute('aria-label','大川水面描画診断');
+    panel.style.cssText='position:absolute;right:8px;bottom:225px;z-index:15;max-width:235px;padding:8px 10px;border:1px solid #48beff;border-radius:9px;background:rgba(4,12,26,.94);color:#d6efff;font:10px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;white-space:pre-line;pointer-events:none;box-shadow:0 0 10px rgba(34,120,190,.3)';
+    panel.textContent='大川診断: 地図読込中…';
+    container.appendChild(panel);
+    const format=e=>String((e&&e.message)||e||'unknown').slice(0,90);
+    let lastError='';
+    const onError=e=>{
+      const message=format(e&&e.error);
+      if(/water|sug-r7|source|tile|layer/i.test(message))lastError=message;
+    };
+    active.on('error',onError);
+    const refresh=()=>{
+      if(active!==view||!active.getLayer('sug-r7-water-surface'))return;
+      const layer='sug-r7-water-surface',source='sug-r7-neon-streets-buildings';
+      const result={};
+      try{result.sourceLoaded=active.isSourceLoaded(source);}catch(e){result.sourceLoaded='ERROR '+format(e);}
+      try{result.sourceFeatures=active.querySourceFeatures(source,{sourceLayer:'water'}).length;}catch(e){result.sourceFeatures='ERROR '+format(e);}
+      try{result.renderedFeatures=active.queryRenderedFeatures({layers:[layer]}).length;}catch(e){result.renderedFeatures='ERROR '+format(e);}
+      try{result.paintColor=JSON.stringify(active.getPaintProperty(layer,'fill-color'));}catch(e){result.paintColor='ERROR '+format(e);}
+      try{result.paintOpacity=JSON.stringify(active.getPaintProperty(layer,'fill-opacity'));}catch(e){result.paintOpacity='ERROR '+format(e);}
+      try{result.visibility=active.getLayoutProperty(layer,'visibility')||'visible (default)';}catch(e){result.visibility='ERROR '+format(e);}
+      try{
+        const layers=active.getStyle().layers||[];
+        const pos=layers.findIndex(item=>item.id===layer);
+        const next=pos>=0&&layers[pos+1]?layers[pos+1].id:'(last)';
+        result.layerPosition=pos+' / above: '+next;
+      }catch(e){result.layerPosition='ERROR '+format(e);}
+      container.dataset.waterDiagnostic=JSON.stringify({...result,lastError});
+      panel.textContent='大川・水面診断 (色変更なし)\n'
+        +'source loaded: '+result.sourceLoaded+'\n'
+        +'source water: '+result.sourceFeatures+'\n'
+        +'rendered water: '+result.renderedFeatures+'\n'
+        +'visible: '+result.visibility+'\n'
+        +'color: '+result.paintColor+'\n'
+        +'opacity: '+result.paintOpacity+'\n'
+        +'layer: '+result.layerPosition+'\n'
+        +'error: '+(lastError||'none');
+    };
+    active.on('idle',refresh);
+    active.on('moveend',refresh);
+    refresh();
   }
 
   function distanceMetres(lat1,lng1,lat2,lng2) {
@@ -819,6 +869,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           applyNightAtmosphere(active);
           addNeonCityBuildings(active);
           addOsakaLandscapeLayers(active);
+          addWaterDiagnostic(active);
           addGeoLayers(active);
           addExactVenueLayers(active);
           addLandmarkBuildingLayers(active);

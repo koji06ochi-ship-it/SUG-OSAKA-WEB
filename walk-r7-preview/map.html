@@ -1551,7 +1551,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js?v=r7-gemini-neon-20261123a"></script></head>
+</script><script src="osaka-3d.js?v=r7-spots-20261123c"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -1606,7 +1606,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         <!-- Compact Left Map Action Controls -->
         <div class="map-tools-left">
           <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn" id="sug-r7-token-settings">3D設定</button>
-          <button type="button" class="tool-btn" id="btn-search-open">検索</button>
+          <button type="button" class="tool-btn" id="btn-search-open">スポット検索</button>
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
           <button type="button" class="tool-btn" id="btn-ai-guide">AI観光案内</button>
           <button type="button" class="tool-btn pink" id="btn-hachikenya-hub">はちけんや・水上バス</button>
@@ -1720,6 +1720,57 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         {name:'JR天満駅',lat:34.7049333,lng:135.5121361},
         {name:'中之島公園（中央公会堂前）',lat:34.693213,lng:135.504950}
       ];
+      // User-selected R7 directory. Locations are set only when independently verified.
+      // No dummy 0,0 coordinates; unlocated entries open an exact-name map search instead.
+      const designatedPlaces = [
+        {"name":"大阪茶会","category":"shop"},
+        {"name":"暸","category":"shop"},
+        {"name":"S.u.G大阪","category":"shop"},
+        {"name":"川の駅はちけんや","category":"shop"},
+        {"name":"大阪城","category":"sightseeing","lat":34.68734,"lng":135.526},
+        {"name":"大阪市中央公会堂","category":"sightseeing","lat":34.69361,"lng":135.50389},
+        {"name":"造幣局","category":"sightseeing"},
+        {"name":"JR天満駅","category":"station","lat":34.7049333,"lng":135.5121361},
+        {"name":"南森町駅","category":"station"},
+        {"name":"大阪天満宮駅","category":"station","lat":34.6974056,"lng":135.5134417},
+        {"name":"天満橋駅","category":"station"},
+        {"name":"本町橋船着場","category":"port"},
+        {"name":"八軒家船着場","category":"port","lat":34.690739,"lng":135.51619},
+        {"name":"ローズポート","category":"port"},
+        {"name":"若松浜船着場","category":"port"},
+        {"name":"堂島浜船着場","category":"port"},
+        {"name":"淀屋橋船着場","category":"port"},
+        {"name":"福島港","category":"port"},
+        {"name":"大阪国際会議場前港","category":"port"},
+        {"name":"ぽんぽん船船着場","category":"port"},
+        {"name":"大阪市中央卸売市場前港","category":"port"},
+        {"name":"中之島GATEターミナル","category":"port"},
+        {"name":"天満橋港","category":"port"},
+        {"name":"桜ノ宮桟橋","category":"port"},
+        {"name":"OAP港","category":"port"},
+        {"name":"大阪城御座船乗り場","category":"port"},
+        {"name":"大阪城港","category":"port","lat":34.6895772,"lng":135.5329541},
+        {"name":"ほたるまち","category":"waterfront"},
+        {"name":"中之島バンクス","category":"waterfront"},
+        {"name":"とんぼりリバーパーク","category":"waterfront"},
+        {"name":"キャナルテラス堀江","category":"waterfront"},
+        {"name":"TUGBOAT TAISHO","category":"waterfront"}
+      ];
+      const locatedDesignated = designatedPlaces.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng));
+      const directoryCoords = p => Number.isFinite(p.lat)&&Number.isFinite(p.lng);
+      const searchOnAppleMaps = p => {
+        const url=new URL('https://maps.apple.com/');
+        url.searchParams.set('q',p.name+' 大阪');
+        return url.href;
+      };
+      // Add only verified, unduplicated geographic points to the existing 2D/3D map.
+      // For the remaining entries, the directory offers map search without invented pins.
+      for(const p of locatedDesignated) {
+        if(!places.some(existing=>existing.name===p.name ||
+             (Math.abs(existing.lat-p.lat)<0.000012 && Math.abs(existing.lng-p.lng)<0.000012))) {
+          places.push({name:p.name,lat:p.lat,lng:p.lng,category:p.category});
+        }
+      }
       let destination=null, follow=true, anchor=null, walked=0, destinationReached=false;
       var map = L.map('sug-real-map', {
         center: [34.6935, 135.5105],
@@ -1959,12 +2010,20 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           if (!Array.isArray(spots)) return;
           state.spots = spots.filter(p => p && point(p) && p.approved===true);
           window.SUG_WALK_VERIFIED_PLACES = state.spots;
+          // Only a store explicitly opted in for 3D highlighting can change its color.
+          osaka3D.setHighlightedStores(state.spots.filter(p => p.category === 'shop' && p.highlight3D === true));
           spots = rows().find(row=>row.type==='shops').items;
           spotsLayer.clearLayers();
           spots.forEach(function (spot) {
             if (typeof spot.lat !== 'number' || typeof spot.lng !== 'number') return;
+            const selected = spot.approved === true && spot.category === 'shop' && spot.highlight3D === true;
+            const requestedColor = typeof spot.highlightColor === 'string' && /^#[0-9a-f]{6}$/i.test(spot.highlightColor)
+              ? spot.highlightColor : '#ff3b9a';
             var marker = L.circleMarker([spot.lat, spot.lng], {
-              radius: 8, color: '#ff2e93', fillColor: '#ffe59e', fillOpacity: 0.9, weight: 2
+              radius: 8,
+              color: selected ? requestedColor : '#8d8d9c',
+              fillColor: selected ? requestedColor : '#111322',
+              fillOpacity: selected ? 0.9 : 0.5, weight: 2
             });
             marker.on('click', function () {
               openModal({
@@ -2045,17 +2104,40 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         document.getElementById('modal-body').append(link);
       }
       function choosePlace(){
-        openModal({title:'徒歩の目的地を選ぶ',badge:'大阪',html:'<input type="search" id="place-query" placeholder="天満・八軒家浜など" aria-label="目的地名"><div id="place-choices"></div>'});
-        const input=document.getElementById('place-query'), result=document.getElementById('place-choices');
+        openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<input type="search" id="place-query" placeholder="店舗・観光・駅・船着場を検索" aria-label="目的地名"><div id="place-choices"></div>'});
+        const input=document.getElementById('place-query'),result=document.getElementById('place-choices');
+        const kind={shop:'色変更対象',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺'};
         function renderChoices(){
           result.replaceChildren();
-          for(const place of places.filter(p=>p.name.includes(input.value.trim()))){
-            const b=document.createElement('button'); b.className='drawer-btn';b.textContent=place.name;
-            b.onclick=()=>selectPlace(place); result.append(b);
+          const q=input.value.trim().toLocaleLowerCase('ja');
+          const listed=designatedPlaces.filter(p=>p.name.toLocaleLowerCase('ja').includes(q));
+          for(const place of listed){
+            const row=document.createElement('div');
+            row.style.cssText='padding:6px 0;border-bottom:1px solid rgba(255,59,154,.14)';
+            const b=document.createElement('button');
+            b.type='button';b.className='drawer-btn';
+            const located=directoryCoords(place);
+            b.textContent=(kind[place.category]||'スポット')+'｜'+place.name+(located?'':'　位置照合中');
+            if(located){
+              b.onclick=()=>selectPlace(place);
+            } else {
+              b.onclick=()=>{
+                openModal({title:place.name,badge:'地図位置を照合中',html:''});
+                const note=document.createElement('p');
+                note.textContent='正確な座標が未確認のため、仮のピンは置いていません。名称で外部地図を検索できます。';
+                document.getElementById('modal-body').append(note);
+                const link=document.createElement('a');
+                link.href=searchOnAppleMaps(place);link.className='drawer-btn';
+                link.target='_blank';link.rel='noopener noreferrer';
+                link.textContent='Appleマップで場所を探す';
+                document.getElementById('modal-body').append(link);
+              };
+            }
+            row.append(b);result.append(row);
           }
-          if(!result.childElementCount) result.textContent='一致する登録地点がありません。地図上をタップして目的地を選べます。';
+          if(!listed.length)result.textContent='一致する指定スポットはありません。';
         }
-        input.oninput=renderChoices; renderChoices();
+        input.oninput=renderChoices;renderChoices();
       }
       for(const place of places){
         L.circleMarker([place.lat,place.lng],{radius:7,color:'#ae005b',fillColor:'#ff479e',fillOpacity:1,weight:2,bubblingMouseEvents:false})

@@ -1551,7 +1551,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js?v=r7-base-neon-20261123d"></script></head>
+</script><script src="osaka-3d.js?v=r7-base-neon-20261123d"></script><script src="tour-guide.js?v=r7-trilingual-20261123a"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -2182,19 +2182,20 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 
       document.getElementById('btn-ai-guide').addEventListener('click', function () {
         openModal({
-          title: 'AI観光案内・AI通訳',
-          badge: '未接続（専用入口・接続仕様）',
-          unconnected: true,
-          html:
-            '<p style="font-size:12px;color:#d7d0e6;line-height:1.6;">旅行者と地域の人が交流できるAI案内・翻訳ハブです（実AI未接続）。</p>' +
-            '<div class="spatial-grid">' +
-              '<div class="spatial-card"><strong>AI観光案内</strong><span>周辺スポット解説</span></div>' +
-              '<div class="spatial-card"><strong>会話の翻訳</strong><span>日本語 / EN / 中文</span></div>' +
-              '<div class="spatial-card"><strong>交通案内</strong><span>駅・乗換ルート補助</span></div>' +
-              '<div class="spatial-card"><strong>交流補助</strong><span>外国人旅行者サポート</span></div>' +
-            '</div>' +
-            '<div class="spec-box">Hook: SUGR7MapBridge.dispatch("onOpenAIGuide", { lang: "' + state.lang + '" })</div>'
+          title:'観光案内・通訳',
+          badge:'3言語案内・定型文通訳（実AI未接続）',
+          unconnected:false,
+          html:'<div id="sug-tour-guide-root"></div>'
         });
+        if(window.SUGR7TourGuide){
+          window.SUGR7TourGuide.open({
+            root:document.getElementById('sug-tour-guide-root'),
+            lang:state.lang,
+            nearestName:destination&&destination.name || '八軒家浜'
+          });
+        } else {
+          document.getElementById('sug-tour-guide-root').textContent='案内機能を読み込めませんでした。再読み込みしてください。';
+        }
       });
 
       var cameraPhotobomb = { enabled: false, cast: 'rivalry', pos: 'bottom-right', scale: 1.0, timing: 'natural' };

@@ -362,31 +362,40 @@ window.createOsaka3D = function createOsaka3D(ui) {
       id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
       minzoom:14,filter:['==',['get','extrude'],'true'],paint
     });
-    // Subtle actual building-footprint outlines, not luminous building bodies.
-    // Streets building polygons are real geometry; this line traces footprints
-    // (ground perimeter), not vertical wall edges or rooflines.
+    // Neon = diffuse outer halo + brighter inner line. Uses true Streets
+    // building footprints; this does not fake roof or vertical 3D edges.
+    // Keep short range and moderate opacity to avoid distracting from spots.
     try {
-      active.addLayer({
-        id:'sug-r7-building-outline',type:'line',slot:'top',
-        source:sourceId,'source-layer':'building',minzoom:15,
-        filter:['==',['get','extrude'],'true'],
+      const base={type:'line',slot:'top',source:sourceId,
+        'source-layer':'building',minzoom:15,
+        filter:['==',['get','extrude'],'true']};
+      active.addLayer({...base,id:'sug-r7-building-outline-glow',
         paint:{
-          'line-color':'#D9B86C',
-          'line-width':['interpolate',['linear'],['zoom'],15,0.35,17,0.75,19,1.3],
-          'line-opacity':0.40,
-          'line-blur':0.35,
-          'line-emissive-strength':0.55
+          'line-color':'#EFC86F',
+          'line-width':['interpolate',['linear'],['zoom'],15,1.5,17,3.5,19,6],
+          'line-opacity':0.50,
+          'line-blur':1.8,
+          'line-emissive-strength':1
         }
       });
-      container.dataset.cityOutline='real-building-footprints';
+      active.addLayer({...base,id:'sug-r7-building-outline',
+        paint:{
+          'line-color':'#FFE8A3',
+          'line-width':['interpolate',['linear'],['zoom'],15,0.6,17,1.25,19,2.1],
+          'line-opacity':0.90,
+          'line-blur':0.05,
+          'line-emissive-strength':1
+        }
+      });
+      container.dataset.cityOutline='champagne-neon-footprint-halo-and-core';
     }catch(err){
       container.dataset.cityOutline='unavailable';
       container.dataset.cityOutlineError=String(err.message||err);
     }
     // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#D4DBF2');
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.38);
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#F1CA7A');
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.48);
       active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',9);
       container.dataset.cityFacadeLighting='soft-cool-wall-flood';
     }catch(err){
@@ -419,7 +428,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       paint:{
         'line-color':'#279DDE',
         'line-width':['interpolate',['linear'],['zoom'],12,1.3,16,3.2,19,5.5],
-        'line-opacity':0.32,
+        'line-opacity':0.55,
         'line-blur':2.0,
         'line-emissive-strength':0.80
       }
@@ -430,8 +439,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       paint:{
         'line-color':'#51C3F5',
         'line-width':['interpolate',['linear'],['zoom'],12,0.5,16,1.25,19,2.1],
-        'line-opacity':0.80,
-        'line-blur':0.25,
+        'line-opacity':0.96,
+        'line-blur':0.18,
         'line-emissive-strength':0.85
       }
     });

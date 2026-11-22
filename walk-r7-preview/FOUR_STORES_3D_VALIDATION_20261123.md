@@ -44,3 +44,13 @@
 2. 4件にならない場合はOSM API応答・CORS・建物と施設座標の一致を検証。色や座標を当てずっぽうで変えない。
 3. PCおよび393×852のiPhoneサイズで、建物色/名前/位置とGPS/検索/ナビ/5画面を操作確認。
 4. スクリーンショットと実操作ログを保存し、差分をレビューしたうえで初めてmaster反映を判断。
+
+## 追加修正：暗色3D建物による施設カラー遮蔽（同日）
+- ユーザーiPhoneスクリーンショット3枚では、暗色建物とシアンの「S.u.G大阪」ラベルが確認できたが、建物本体のシアン着色は確認できなかった。
+- 原因候補：Mapbox Streets v8の暗色fill-extrusionとOSM GeoJSONの色付きfill-extrusionを別レイヤーで重ねるため、深度競合・形状差異で着色が見えない可能性。
+- 改善：OSM Wayと対象座標の照合が合格した施設だけ、Way内側の地点を算出し、Mapbox GL JS公式 `distance` 式によって**元のStreets v8建物レイヤー自体**を指定色にする。これにより別レイヤー同士の深度競合への依存を軽減。
+- OSM建物色付き別レイヤーは表示高さを+3mにし、より見えやすくした。ランダム着色の再導入なし。
+- `data-venue-streets-color-rules` と `data-venue-streets-color-error` で適用規則数・エラーを記録。
+- Mapbox式の根拠：https://docs.mapbox.com/style-spec/reference/expressions/#distance （Mapbox GL JS 3.0以降）。
+- ブランチ：`walk-r7-4stores-exact-3d-20261123`。キャッシュキー `r7-exact-overlay-fix-20261123i`。
+- JavaScript構文解析は成功。ただし**iPhoneで建物色が表示されるか、Mapboxの実際のfeature形状とOSM Wayが一致するかは未検証**。スクリーンショットによる再確認までmasterへのマージ禁止。

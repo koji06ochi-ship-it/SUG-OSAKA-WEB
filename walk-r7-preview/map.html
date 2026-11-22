@@ -1959,12 +1959,20 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           if (!Array.isArray(spots)) return;
           state.spots = spots.filter(p => p && point(p) && p.approved===true);
           window.SUG_WALK_VERIFIED_PLACES = state.spots;
+          // Only a store explicitly opted in for 3D highlighting can change its color.
+          osaka3D.setHighlightedStores(state.spots.filter(p => p.category === 'shop' && p.highlight3D === true));
           spots = rows().find(row=>row.type==='shops').items;
           spotsLayer.clearLayers();
           spots.forEach(function (spot) {
             if (typeof spot.lat !== 'number' || typeof spot.lng !== 'number') return;
+            const selected = spot.approved === true && spot.category === 'shop' && spot.highlight3D === true;
+            const requestedColor = typeof spot.highlightColor === 'string' && /^#[0-9a-f]{6}$/i.test(spot.highlightColor)
+              ? spot.highlightColor : '#ff3b9a';
             var marker = L.circleMarker([spot.lat, spot.lng], {
-              radius: 8, color: '#ff2e93', fillColor: '#ffe59e', fillOpacity: 0.9, weight: 2
+              radius: 8,
+              color: selected ? requestedColor : '#8d8d9c',
+              fillColor: selected ? requestedColor : '#111322',
+              fillOpacity: selected ? 0.9 : 0.5, weight: 2
             });
             marker.on('click', function () {
               openModal({

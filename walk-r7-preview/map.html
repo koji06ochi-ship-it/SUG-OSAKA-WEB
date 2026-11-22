@@ -1760,7 +1760,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         {"name":"大阪城港","category":"port","lat":34.6895772,"lng":135.5329541},
         {"name":"桜之宮公園","category":"park"},
         {"name":"中之島公園","category":"park","lat":34.693213,"lng":135.504950},
-        {"name":"ほたるまち","category":"waterfront","address":"大阪府大阪市福島区福島1丁目","officialUrl":"https://www.city.osaka.lg.jp/toshikeikaku/page/0000162394.html"},
+        {"name":"ほたるまち","category":"waterfront","address":"大阪府大阪市福島区福島1丁目","officialUrl":"https://www.city.osaka.lg.jp/toshikeikaku/page/0000162394.html","lat":34.693605,"lng":135.489531,"coordinateSource":"https://nightview.useless-landscape.com/details/red-blue-street/","coordinateNote":"ほたるまち南側の福島浜緑道上の案内点であり、地区中心点ではない"},
         {"name":"中之島バンクス","category":"waterfront","address":"大阪府大阪市北区中之島5-3-60","officialUrl":"https://nakanoshima-banks.com/access/"},
         {"name":"とんぼりリバーパーク","category":"waterfront","officialUrl":"https://www.tonbori.jp/"},
         {"name":"キャナルテラス堀江","category":"waterfront","officialUrl":"https://www.sumitomo-soko.co.jp/news/detail/1348756367.html"},
@@ -2157,7 +2157,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         input.oninput=renderChoices;renderChoices();
       }
       for(const place of places){
-        L.circleMarker([place.lat,place.lng],{radius:7,color:place.category==='port'?PIER_COLOR:'#ae005b',fillColor:place.category==='port'?PIER_COLOR:'#ff479e',fillOpacity:1,weight:2,bubblingMouseEvents:false})
+        L.circleMarker([place.lat,place.lng],{radius:7,color:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#ae005b',fillColor:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#ff479e',fillOpacity:1,weight:2,bubblingMouseEvents:false})
           .addTo(map).bindTooltip(place.name).on('click',()=>selectPlace(place));
       }
       map.on('click',e=>selectPlace({name:'選んだ地点',lat:e.latlng.lat,lng:e.latlng.lng}));

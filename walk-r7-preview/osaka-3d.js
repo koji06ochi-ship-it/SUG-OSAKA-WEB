@@ -7,6 +7,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const container = document.getElementById('osaka-3d');
   const toggle = document.getElementById('osaka-toggle');
   const HUB = ui.hub || { lat: 34.690616, lng: 135.514183 };
+  const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
+  let verifiedVenueFeatures = [];
+  let venueLabels = [];
+  let venueLoadGeneration = 0;
   const EMPTY = { type: 'FeatureCollection', features: [] };
   const spots = Array.isArray(ui.spots)
     ? ui.spots.filter(p => p && Number.isFinite(p.lat) && Number.isFinite(p.lng) && typeof p.name === 'string')
@@ -34,18 +38,18 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dObjects: false,
     show3dFacades: false,
     show3dLandmarks: false,
-    colorBuildings: '#ff4fa6',
+    colorBuildings: '#202538',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
     showTransitLabels: false,
     showRoadLabels: true,
     colorLand: '#070712',
-    colorWater: '#071633',
+    colorWater: '#071b3d',
     colorGreenspace: '#0b1e22',
     colorMotorways: '#ff3b9a',
     colorTrunks: '#d92b82',
-    colorRoads: '#262b4f'
+    colorRoads: '#ff3b9a'
   };
 
   container.dataset.state = 'closed';
@@ -211,6 +215,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
     clearTimeout(timeout);
     timeout = null;
     clearMarkers();
+    ++venueLoadGeneration;
+    for(const marker of venueLabels) marker.remove();
+    venueLabels=[];
+    verifiedVenueFeatures=[];
     if (view) {
       try { view.remove(); } catch (e) {}
     }
@@ -265,43 +273,109 @@ window.createOsaka3D = function createOsaka3D(ui) {
     }
   }
 
-  // Mapbox Standard colorBuildings was rendered nearly black on iPhone.
-  // Use the documented Streets v8 building source with luminous extrusions instead.
-  // Building palette is visual decoration, NOT a verified store-to-building match.
+  // Streets v8 is retained only for dark background building geometry.
+  // Random building colors are prohibited: verified OSM ways own the accents.
   function addNeonCityBuildings(active) {
-    const sourceId = 'sug-r7-neon-streets-buildings';
-    const layerId = 'sug-r7-neon-building-extrusions';
-    active.addSource(sourceId, {type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
-    // Streets v8 features may not have a feature id. Never coalesce a missing id to zero
-    // before palette selection: doing so painted all buildings the same pink.
-    // Seed Mapbox's supported deterministic random expression from available feature
-    // attributes. The colors are decorative; they do not identify approved stores.
-    const featureSeed = ['concat',
-      ['to-string',['coalesce',['get','building_id'],['id'],['get','height'],0]],
-      ':',
-      ['to-string',['coalesce',['get','type'],'building']]
-    ];
-    const variety = ['floor',['random',0,5,featureSeed]];
+    const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
+    active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
     active.addLayer({
-      id:layerId, type:'fill-extrusion', slot:'top',
-      source:sourceId, 'source-layer':'building',
-      minzoom:14, filter:['==',['get','extrude'],'true'],
+      id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
+      minzoom:14,filter:['==',['get','extrude'],'true'],
       paint:{
-        'fill-extrusion-color':['match',variety,
-          0,'#ff4fa6',1,'#04e6ff',2,'#b76aff',3,'#ffd065','#32e8a5'],
+        'fill-extrusion-color':'#202538',
         'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
         'fill-extrusion-base':['to-number',['get','min_height'],0],
-        'fill-extrusion-opacity':0.96,
-        'fill-extrusion-emissive-strength':0.95,
+        'fill-extrusion-opacity':0.94,
+        'fill-extrusion-emissive-strength':0.12,
         'fill-extrusion-vertical-gradient':false
       }
     });
-    container.dataset.buildingPalette = 'pink-cyan-violet-gold-mint';
-    active.on('idle', () => {
-      if (view !== active || !active.getLayer(layerId)) return;
-      const count = active.queryRenderedFeatures({layers:[layerId]}).length;
-      container.dataset.renderedNeonBuildings = String(count);
-    });
+    container.dataset.buildingPalette='dark-only-with-verified-osm-overlays';
+  }
+
+  function distanceMetres(lat1,lng1,lat2,lng2) {
+    const r=Math.PI/180, dy=(lat2-lat1)*111320, dx=(lng2-lng1)*111320*Math.cos(((lat1+lat2)/2)*r);
+    return Math.hypot(dx,dy);
+  }
+  function pointInRing(lng,lat,ring) {
+    let inside=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++) {
+      const a=ring[i],b=ring[j];
+      if(((a[1]>lat)!==(b[1]>lat)) &&
+         lng<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0]) inside=!inside;
+    }
+    return inside;
+  }
+  function distanceToRing(lat,lng,ring) {
+    return Math.min(...ring.map(c=>distanceMetres(lat,lng,c[1],c[0])));
+  }
+  async function fetchOSMFootprint(venue) {
+    const url='https://api.openstreetmap.org/api/0.6/way/'+encodeURIComponent(venue.osmWayId)+'/full.json';
+    const response=await fetch(url,{mode:'cors',credentials:'omit',signal:AbortSignal.timeout(12000)});
+    if(!response.ok)throw Error('OSM HTTP '+response.status);
+    const data=await response.json();
+    const way=(data.elements||[]).find(e=>e.type==='way'&&e.id===venue.osmWayId);
+    if(!way||!Array.isArray(way.nodes)||way.nodes.length<4)throw Error('OSM way missing');
+    if(!(way.tags&&(way.tags.building||way.tags['building:part'])))throw Error('Way is not tagged as building');
+    const nodes=new Map((data.elements||[]).filter(e=>e.type==='node').map(e=>[e.id,e]));
+    const ring=way.nodes.map(id=>nodes.get(id)).map(n=>n?[n.lon,n.lat]:null);
+    if(ring.some(p=>!p||!p.every(Number.isFinite)))throw Error('Way nodes incomplete');
+    if(ring[0][0]!==ring[ring.length-1][0]||ring[0][1]!==ring[ring.length-1][1])throw Error('Way polygon not closed');
+    if(ring.length>800)throw Error('Way geometry too large');
+    // Check POI coordinate against actual way polygon, with a modest 15m entrance tolerance.
+    if(!pointInRing(venue.lng,venue.lat,ring) && distanceToRing(venue.lat,venue.lng,ring)>15)
+      throw Error('POI and building polygon do not match');
+    let height=Number(way.tags.height);
+    if(!Number.isFinite(height)||height<=0)height=Number(venue.heightMetres);
+    if(!Number.isFinite(height)||height<=0)height=Number(way.tags['building:levels']||venue.levels)*3;
+    if(!Number.isFinite(height)||height<=0||height>300)throw Error('No verified building height');
+    return {type:'Feature',
+      properties:{name:venue.name,color:venue.highlightColor,height,wayId:venue.osmWayId},
+      geometry:{type:'Polygon',coordinates:[ring]}};
+  }
+  async function loadOfficialVenueWays(active) {
+    const current=++venueLoadGeneration;
+    container.dataset.venueFootprints='loading';
+    // The API result must be checked against the supplied coordinates before drawing.
+    const answers=await Promise.all(venueRecords.map(async venue=>{
+      try{return {venue,feature:await fetchOSMFootprint(venue)};}
+      catch(e){return {venue,error:String(e.message||e)};}
+    }));
+    if(current!==venueLoadGeneration||view!==active)return;
+    verifiedVenueFeatures=answers.filter(x=>x.feature).map(x=>x.feature);
+    const source=active.getSource('sug-r7-exact-venue-buildings');
+    if(source)source.setData({type:'FeatureCollection',features:verifiedVenueFeatures});
+    for(const marker of venueLabels)marker.remove();
+    venueLabels=[];
+    styleMarkers();
+    for(const {venue,feature} of answers) {
+      if(!feature)continue; // Never show an approved-colored building without the verified way.
+      const el=document.createElement('button');
+      el.type='button';el.className='sug-r7-spot sug-r7-selected-shop';
+      el.style.setProperty('--sug-store-color',venue.highlightColor);
+      el.textContent=venue.name;
+      el.title=venue.name+' (OSM Way '+venue.osmWayId+')';
+      el.addEventListener('click',event=>{event.stopPropagation();ui.select(venue);});
+      venueLabels.push(new window.mapboxgl.Marker({element:el,anchor:'bottom'})
+        .setLngLat([venue.lng,venue.lat]).addTo(active));
+    }
+    container.dataset.venueFootprints=verifiedVenueFeatures.length+'/4';
+    container.dataset.venueErrors=answers.filter(x=>x.error).map(x=>x.venue.osmWayId+':'+x.error).join('; ');
+  }
+  function addExactVenueLayers(active) {
+    active.addSource('sug-r7-exact-venue-buildings',{
+      type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addLayer({id:'sug-r7-exact-venue-extrusions',
+      type:'fill-extrusion',slot:'top',source:'sug-r7-exact-venue-buildings',
+      paint:{
+        'fill-extrusion-color':['get','color'],
+        'fill-extrusion-height':['get','height'],
+        'fill-extrusion-base':0,
+        'fill-extrusion-opacity':0.98,
+        'fill-extrusion-emissive-strength':0.95,
+        'fill-extrusion-vertical-gradient':false
+      }});
+    loadOfficialVenueWays(active);
   }
 
   function addGeoLayers(active) {
@@ -566,10 +640,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
           }
           // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
           active.setConfigProperty('basemap','show3dObjects',false);
-          container.dataset.buildingColorRequested = 'five-color-vector-extrusions';
+          container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
           applyNightAtmosphere(active);
           addNeonCityBuildings(active);
           addGeoLayers(active);
+          addExactVenueLayers(active);
           addSpotMarkers(gl);
           ready = true;
           drawHighlightedStores(gl);

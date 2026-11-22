@@ -362,6 +362,27 @@ window.createOsaka3D = function createOsaka3D(ui) {
       id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
       minzoom:14,filter:['==',['get','extrude'],'true'],paint
     });
+    // Subtle actual building-footprint outlines, not luminous building bodies.
+    // Streets building polygons are real geometry; this line traces footprints
+    // (ground perimeter), not vertical wall edges or rooflines.
+    try {
+      active.addLayer({
+        id:'sug-r7-building-outline',type:'line',slot:'top',
+        source:sourceId,'source-layer':'building',minzoom:15,
+        filter:['==',['get','extrude'],'true'],
+        paint:{
+          'line-color':'#8D9ED0',
+          'line-width':['interpolate',['linear'],['zoom'],15,0.35,17,0.75,19,1.3],
+          'line-opacity':0.40,
+          'line-blur':0.35,
+          'line-emissive-strength':0.55
+        }
+      });
+      container.dataset.cityOutline='real-building-footprints';
+    }catch(err){
+      container.dataset.cityOutline='unavailable';
+      container.dataset.cityOutlineError=String(err.message||err);
+    }
     // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
       active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#D4DBF2');
@@ -391,14 +412,26 @@ window.createOsaka3D = function createOsaka3D(ui) {
         'fill-emissive-strength':0.82
       }
     });
+    // Wide, soft outer glow follows actual water polygon boundaries.
+    active.addLayer({
+      id:'sug-r7-water-bank-glow',type:'line',slot:'bottom',
+      source:sourceId,'source-layer':'water',
+      paint:{
+        'line-color':'#279DDE',
+        'line-width':['interpolate',['linear'],['zoom'],12,1.3,16,3.2,19,5.5],
+        'line-opacity':0.32,
+        'line-blur':2.0,
+        'line-emissive-strength':0.80
+      }
+    });
     active.addLayer({
       id:'sug-r7-water-bank',type:'line',slot:'bottom',
       source:sourceId,'source-layer':'water',
       paint:{
-        'line-color':'#2188c0',
-        'line-width':['interpolate',['linear'],['zoom'],12,0.5,16,1.7,19,3],
-        'line-opacity':0.88,
-        'line-blur':0.65,
+        'line-color':'#51C3F5',
+        'line-width':['interpolate',['linear'],['zoom'],12,0.5,16,1.25,19,2.1],
+        'line-opacity':0.80,
+        'line-blur':0.25,
         'line-emissive-strength':0.85
       }
     });

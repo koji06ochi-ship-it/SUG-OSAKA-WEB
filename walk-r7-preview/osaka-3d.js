@@ -15,7 +15,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     {name:'関西テレビ（カンテレ）',lat:34.7046972,lng:135.5102667,color:'#ffbf47',officialAddress:'大阪市北区扇町2-1-7',officialUrl:'https://www.ktv.jp/corp/map/',sharedBuildingAnchor:{lat:34.70453,lng:135.51027}},
     {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65',officialAddress:'大阪市中央区大阪城1-1',officialUrl:'https://www.osakacastle.net/access/'},
     {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff',officialAddress:'大阪市北区中之島1-1-27',officialUrl:'https://osaka-chuokokaido.com/ja/access'},
-    {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#ff9e55',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'}
+    {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#ad503d',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'}
   ];
   let landmarkGeometryHashes = '';
   let cachedKanteleLandmark = null; // Keep only a previously verified actual Streets polygon across tile transitions.

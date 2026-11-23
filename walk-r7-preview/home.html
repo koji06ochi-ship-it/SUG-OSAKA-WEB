@@ -929,6 +929,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <script src="tourism-media.js"></script>
   <script>
     (function () {
       'use strict';
@@ -1451,7 +1452,11 @@
       function openTourismVideoPlayer() {
         var ch = TOURISM_CHAPTERS.find(function (c) { return c.id === tourismMediaState.chapter; }) || TOURISM_CHAPTERS[0];
         var chTitle = ch[tourismMediaState.lang] || ch.ja;
-        var transWarn = tourismMediaState.lang === 'ja' ? '日本語版スロット（実動画差し替え待ち）' : '翻訳・字幕未完成（翻訳済み扱い不可）';
+        var media = window.SUGR7TourismMedia && window.SUGR7TourismMedia.get(ch.id);
+        var captionsReady = !!(media && media.captionsReady[tourismMediaState.lang]);
+        var transWarn = media
+          ? (captionsReady ? '実素材登録済み・字幕の内容は要実機確認' : '実動画登録済み・この言語の字幕は未登録')
+          : '実動画未登録｜素材・使用権限確認後に追加';
 
         var bodyEl = document.getElementById('sheet-body');
         var specEl = document.getElementById('sheet-spec');
@@ -1470,11 +1475,14 @@
             '<div style="font-size:10px;color:#ffe59e;font-weight:700;margin-bottom:4px;">' + ch.num + ' ' + ch.dur + (ch.pr ? ' ｜ 【広告・PR】' : '') + '</div>' +
             '<div style="font-size:12.5px;font-weight:800;color:#fff;margin-bottom:6px;">' + chTitle + '</div>' +
             '<div style="font-size:10px;color:#9b92b2;">' + transWarn + '</div>' +
+            (media
+              ? '<video id="r7-tour-video" controls playsinline preload="none" src="' + media.src + '" style="display:block;width:100%;max-height:210px;margin:9px auto 0;border-radius:10px;background:#000" aria-label="観光動画"></video>'
+              : '<div role="status" style="padding:18px 8px;margin-top:8px;border:1px dashed #805a7e;border-radius:10px;font-size:12px;color:#e5cadd;">動画素材はまだ登録されていません</div>') +
             (tourismMediaState.rivalryMode !== 'none' && ch.id !== 'ch5'
               ? '<div style="position:absolute;right:6px;top:6px;padding:3px 6px;border-radius:7px;border:1px dashed rgba(255,229,158,0.55);background:rgba(255,46,147,0.18);font-size:8.5px;color:#ffe59e;pointer-events:none;opacity:0.88;">遠景背景枠: ' + (RIVALRY_PATTERNS[tourismMediaState.rivalryMode] ? RIVALRY_PATTERNS[tourismMediaState.rivalryMode].label : '') + '</div>'
               : '') +
             '<div style="margin-top:8px;display:flex;justify-content:center;gap:5px;flex-wrap:wrap;">' +
-              '<button type="button" class="sheet-close" id="btn-tv-play" style="border-color:#ff2e93;color:#fff;">再生スロット確認</button>' +
+              '<button type="button" class="sheet-close" id="btn-tv-play" style="border-color:#ff2e93;color:#fff;">' + (media ? '動画を再生' : '動画未登録') + '</button>' +
               '<button type="button" class="sheet-close" id="btn-tv-sub">字幕: ' + (tourismMediaState.subtitles ? 'ON' : 'OFF') + '</button>' +
               '<button type="button" class="sheet-close" id="btn-tv-rivalry" style="border-color:#e8be63;color:#ffe59e;">遠景演出: ' + (ch.id === 'ch5' ? '感動映像につき非登場' : (RIVALRY_PATTERNS[tourismMediaState.rivalryMode] ? RIVALRY_PATTERNS[tourismMediaState.rivalryMode].label : 'OFF')) + '</button>' +
             '</div>' +
@@ -1532,8 +1540,12 @@
             showToast('船内モニター配信は船舶運営者の承認後に有効化されます');
             return;
           }
-          dispatchBridge('onPlayTourismVideo', {chapter:ch.id,lang:tourismMediaState.lang});
-          showToast('実動画は準備中です');
+          if (!media) { showToast('この章の動画素材は未登録です'); return; }
+          var player = document.getElementById('r7-tour-video');
+          if (!player) { showToast('再生画面を開けません'); return; }
+          player.play().then(function () {
+            dispatchBridge('onPlayTourismVideo', {chapter:ch.id,lang:tourismMediaState.lang});
+          }).catch(function () { showToast('再生できません。動画ファイルを確認してください'); });
         });
       }
 

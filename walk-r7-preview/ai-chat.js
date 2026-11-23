@@ -47,7 +47,6 @@ function mount(root,language,config){
   if(send.disabled)return;
   const token=window.SUGR7Auth.getAccessToken();
   if(!token){output.textContent=t.auth;return;}
-  if(!enabled){output.textContent=t.off;return;}
   const question=prompt.value.trim();
   if(!question||question.length>maxChars){output.textContent=t.invalid;return;}
   const payload={task:task.value,question,language:source.value};
@@ -60,8 +59,20 @@ function mount(root,language,config){
     body:JSON.stringify(payload)
    });
    if(response.status===401){output.textContent=t.auth;return;}
-   if(response.status===503){output.textContent=t.off;return;}
-   if(!response.ok)throw new Error('AI_REQUEST_FAILED');
+   if(!response.ok){
+    const problem=await response.json().catch(()=>({}));
+    const code=String(problem.error||problem.code||'');
+    if(response.status===503){
+     output.textContent=language==='en'?'AI is not enabled on this Preview yet.':language==='zh'?'此预览环境尚未启用 AI。':'このPreviewではAI生成がまだ許可されていません。';
+     return;
+    }
+    if(response.status===429||response.status===402){
+     output.textContent=language==='en'?'AI usage limit reached.':language==='zh'?'已达到 AI 使用限制。':'AIの利用上限に達しています。';
+     return;
+    }
+    if(response.status===403){output.textContent=language==='en'?'Request blocked by access policy.':language==='zh'?'访问策略阻止了请求。':'アクセス制限により送信できません。';return;}
+    throw new Error('AI_REQUEST_FAILED:'+code);
+   }
    const result=await response.json();
    if(typeof result.answer!=='string'||!result.answer.trim()||result.answer.length>3000)
     throw new Error('INVALID_ANSWER');

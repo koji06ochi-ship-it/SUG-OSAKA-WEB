@@ -5,14 +5,15 @@
 (function(){
 'use strict';
 const origin='https://nnqzxcgkqjnmtzcvorha.supabase.co',apikey='sb_publishable_zcn7r2YSKDZa1lXJvmk3sg_GulOJXwI';
-let session=null,expiresAt=0;
-function clear(){session=null;expiresAt=0}
+let session=null,expiresAt=0,authGeneration=0;
+function clear(){authGeneration++;session=null;expiresAt=0}
 function token(){if(!session||Date.now()>=expiresAt){clear();return null}return session}
 async function signIn(email,password,fetchImpl=fetch){
  if(typeof email!=='string'||!/^\S+@\S+\.\S+$/.test(email.trim())||email.length>254||typeof password!=='string'||password.length<1||password.length>1024)
    throw Error('INVALID_CREDENTIAL_INPUT');
  // Never retry automatically or send a request without an explicit user action.
  clear();
+ const requestGeneration=authGeneration;
  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);
  try{
   const response=await fetchImpl(origin+'/auth/v1/token?grant_type=password',{
@@ -30,6 +31,7 @@ async function signIn(email,password,fetchImpl=fetch){
   if(!verify.ok)throw Error('SESSION_REJECTED');
   const user=await verify.json();
   if(!user||typeof user.id!=='string'||user.is_anonymous===true)throw Error('SESSION_REJECTED');
+  if(requestGeneration!==authGeneration)throw Error('SESSION_CANCELLED');
   session=data.access_token;
   // No refresh token retained. Expire early; sign-in required after refresh/navigation.
   expiresAt=Date.now()+Math.min(Number(data.expires_in),3600)*1000-15000;

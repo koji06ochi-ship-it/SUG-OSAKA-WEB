@@ -332,10 +332,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
   function applyNightAtmosphere(active) {
     try {
       active.setFog({
-        range: [0.8, 7.5],
-        'horizon-blend': 0.28,
-        color: '#2a0f2e',
-        'high-color': '#0b0a1c',
+        range: [2.0, 12.0],
+        'horizon-blend': 0.18,
+        color: '#1b1c32',
+        'high-color': '#10142a',
         'space-color': '#04040a',
         'star-intensity': 0.15
       });
@@ -350,7 +350,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // not recognizable lit windows on facades. Do not reuse that failed approach.
   // Bright navy walls + restrained wall flood lighting keep the city readable.
   // Actual lit windows require separate facade geometry and remain unimplemented.
-  const ORDINARY_BUILDING_COLOR='#3B465D';
+  const ORDINARY_BUILDING_COLOR='#596780';
   function addNeonCityBuildings(active) {
     const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
     active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
@@ -359,7 +359,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
       'fill-extrusion-base':['to-number',['get','min_height'],0],
       'fill-extrusion-opacity':1,
-      'fill-extrusion-emissive-strength':0.40,
+      'fill-extrusion-emissive-strength':0.78,
       'fill-extrusion-vertical-gradient':false
     };
     active.addLayer({
@@ -371,15 +371,15 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.cityOutline='roof-footprint-lines-disabled';
     // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#F1CA7A');
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.25);
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',9);
-      container.dataset.cityFacadeLighting='subtle-warm-dusk-flood';
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#BFCFFF');
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.68);
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',16);
+      container.dataset.cityFacadeLighting='strong-cool-facade-flood';
     }catch(err){
       container.dataset.cityFacadeLighting='emissive-only-fallback';
       container.dataset.cityFacadeLightingError=String(err.message||err);
     }
-    container.dataset.buildingPalette='readable-navy-no-roof-dots';
+    container.dataset.buildingPalette='bright-navy-no-roof-dots';
     container.dataset.cityFacadeColor=ORDINARY_BUILDING_COLOR;
     container.dataset.cityWindowStatus='not-implemented-facade-geometry-required';
   }

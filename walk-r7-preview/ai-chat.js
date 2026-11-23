@@ -33,9 +33,10 @@ function mount(root,language,config){
   if(target.selectedOptions[0]?.disabled)target.value=Object.keys(languageNames).find(key=>key!==source.value);
  }
  task.addEventListener('change',updateTarget);source.addEventListener('change',updateTarget);updateTarget();
- for(const control of [task,source,target,prompt,send])control.disabled=disabled;
+ // Keep the form operable for future activation; server-side budget gates own the decision.
+ // UI never claims an AI answer was generated when budget is disabled.
  send.addEventListener('click',async()=>{
-  if(disabled||send.disabled)return;
+  if(send.disabled)return;
   const token=window.SUGR7Auth.getAccessToken();
   if(!token){output.textContent=t.auth;return;}
   const question=prompt.value.trim();
@@ -50,6 +51,7 @@ function mount(root,language,config){
     body:JSON.stringify(payload)
    });
    if(response.status===401){output.textContent=t.auth;return;}
+   if(response.status===503){output.textContent=t.off;return;}
    if(!response.ok)throw new Error('AI_REQUEST_FAILED');
    const result=await response.json();
    if(typeof result.answer!=='string'||!result.answer.trim()||result.answer.length>3000)

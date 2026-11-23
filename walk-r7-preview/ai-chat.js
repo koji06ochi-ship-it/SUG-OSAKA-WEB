@@ -2,6 +2,7 @@
 (function(){
 'use strict';
 const maxChars=500;
+const speechLocales={ja:'ja-JP',en:'en-US',zh:'zh-CN'};
 const languageNames={ja:'日本語',en:'English',zh:'中文'};
 const labels={
  ja:{title:'Gemini AI観光案内・通訳',task:'機能',guide:'観光案内',translate:'自由文の翻訳',source:'入力言語',target:'翻訳先',input:'質問または翻訳する文章',send:'送信',off:'登録済みスポット・定型文はこの入力欄から使えます（AI生成は停止中）。',auth:'AIを利用するにはログインしてください。',invalid:'500文字以内で入力してください。',failed:'AIの応答を受け取れませんでした。'},
@@ -26,6 +27,28 @@ function mount(root,language,config){
  prompt.setAttribute('aria-label',t.input);prompt.placeholder=t.input;prompt.style.cssText=controlStyle;
  const send=document.createElement('button');send.type='button';send.textContent=t.send;send.style.cssText=controlStyle;
  const output=document.createElement('p');output.style.cssText='white-space:pre-wrap;line-height:1.5;font-size:12px';
+ const speak=document.createElement('button');speak.type='button';
+ speak.textContent=language==='en'?'Read answer':language==='zh'?'朗读回答':'回答を読み上げる';
+ speak.style.cssText=controlStyle;
+ const stop=document.createElement('button');stop.type='button';
+ stop.textContent=language==='en'?'Stop reading':language==='zh'?'停止朗读':'読み上げ停止';
+ stop.style.cssText=controlStyle;
+ function canSpeak(){return 'speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined';}
+ speak.addEventListener('click',()=>{
+  if(!canSpeak()||!output.dataset.answer)return;
+  speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(output.dataset.answer);
+  utterance.lang=speechLocales[output.dataset.language]||speechLocales.ja;
+  utterance.rate=0.94;speechSynthesis.speak(utterance);
+ });
+ stop.addEventListener('click',()=>{if(canSpeak())speechSynthesis.cancel();});
+ function showAnswer(text,answerLanguage){
+  if(canSpeak())speechSynthesis.cancel();
+  output.textContent=text;
+  output.dataset.answer=text;
+  output.dataset.language=answerLanguage;
+  speak.hidden=!canSpeak();
+ }
  output.setAttribute('aria-live','polite');if(!enabled)output.textContent=t.off;
  function updateTarget(){
   target.hidden=task.value!=='translation';
@@ -58,7 +81,8 @@ function mount(root,language,config){
     const missing=language==='en'?'No matching saved place or phrase. Arbitrary text translation requires AI.':
       language==='zh'?'没有匹配的已收录景点或短句。任意文本翻译需要AI。':
       '登録済みスポット・定型文に一致しません。自由文翻訳にはAI接続が必要です。';
-    output.textContent=reply?prefix+reply.text:missing;
+    if(reply)showAnswer(prefix+reply.text,task.value==='translation'?target.value:source.value);
+   else {output.textContent=missing;delete output.dataset.answer;}
     return;
   }
   const payload={task:task.value,question,language:source.value};
@@ -88,11 +112,13 @@ function mount(root,language,config){
    const result=await response.json();
    if(typeof result.answer!=='string'||!result.answer.trim()||result.answer.length>3000)
     throw new Error('INVALID_ANSWER');
-   output.textContent=result.answer;
+   showAnswer(result.answer,task.value==='translation'?target.value:source.value);
   }catch{output.textContent=t.failed;}
   finally{send.disabled=false;}
  });
- panel.append(task,source,target,prompt,send,output);
+ panel.append(task,source,target,prompt,send,output,speak,stop);
+ speak.hidden=!canSpeak();
+ stop.hidden=!canSpeak();
  root.append(panel);
 }
 window.SUGR7AIChat={mount};

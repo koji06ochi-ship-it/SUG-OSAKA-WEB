@@ -983,22 +983,20 @@
           hook: 'onOpenMap'
         },
         'ai-guide': {
-          title: 'AI観光案内',
-          badge: '未接続（準備中）',
-          unconnected: true,
-          body: '現在地周辺の観光スポットやルートを案内する専用ページ入口です。AI観光エンジンは未接続のため、ダミー店舗情報は表示しません。',
-          spec: 'Status: UNCONNECTED (Requires AI Sightseeing API)',
-          action: '接続状態を確認',
-          hook: 'onOpenAIGuide'
+          title: '観光案内',
+          badge: '3言語・登録済み6スポット（自由AI未接続）',
+          unconnected: false,
+          body: '大阪6スポットの日本語・英語・中国語の説明と端末読み上げを開きます。実AIによる自由会話は未接続です。',
+          spec: 'MAPの観光案内へ接続。運行情報や料金は最新データ未接続。',
+          action: 'MAPで観光案内を開く'
         },
         'ai-translate': {
-          title: 'AI通訳',
-          badge: '未接続（準備中）',
-          unconnected: true,
-          body: '街歩きや店舗でのリアルタイム音声翻訳専用ページの入口です。音声認識・翻訳APIは未接続です。',
-          spec: 'Status: UNCONNECTED (Requires Realtime Translation API)',
-          action: '接続状態を確認',
-          hook: 'onOpenAITranslate'
+          title: '3言語通訳',
+          badge: '8つの事前翻訳定型文（自由翻訳未接続）',
+          unconnected: false,
+          body: '日本語・英語・中国語の定型文通訳と端末読み上げを開きます。リアルタイムの自由文・音声翻訳は未接続です。',
+          spec: 'MAPの定型文通訳へ接続。翻訳AI・音声認識は未起動。',
+          action: 'MAPで通訳を開く'
         },
         live: {
           title: 'ライブ配信',
@@ -1231,6 +1229,37 @@
           var key = el.getAttribute('data-feature');
           var f = FEATURES[key];
           if (!f) return;
+          // Offline sightseeing / fixed-phrase translator / LIVE status already exist in MAP.
+          // Route only these three keys; preserve every other HOME card.
+          if (key === 'ai-guide' || key === 'ai-translate' || key === 'live') {
+            try {
+              var shell = window.parent.SUGR7UnifiedBridge;
+              var mapFrame = window.parent.document.getElementById('frame-map');
+              if (!shell || !mapFrame) throw new Error('MAP frame unavailable');
+              var targetId = key === 'ai-guide' ? 'btn-ai-guide' :
+                             key === 'ai-translate' ? 'btn-r7-translate' : 'btn-r7-live';
+              shell.switchTab('map');
+              var launchMapEntry = function () {
+                if (shell.getActiveTab() !== 'map') return false;
+                try {
+                  var target = mapFrame.contentDocument && mapFrame.contentDocument.getElementById(targetId);
+                  if (!target) return false;
+                  target.click();
+                  return true;
+                } catch (_) { return false; }
+              };
+              requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                  if (launchMapEntry()) return;
+                  mapFrame.addEventListener('load', function onMapLoaded() {
+                    mapFrame.removeEventListener('load', onMapLoaded);
+                    requestAnimationFrame(launchMapEntry);
+                  });
+                });
+              });
+              return;
+            } catch (_) { /* Keep original feature sheet as a fallback. */ }
+          }
           openSheet({
             title: f.title,
             badge: f.badge,

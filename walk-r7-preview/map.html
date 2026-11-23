@@ -1665,7 +1665,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn" id="sug-r7-token-settings">3D設定</button>
           <button type="button" class="tool-btn" id="btn-search-open">スポット検索</button>
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
-          <button type="button" class="tool-btn" id="btn-ai-guide">AI観光案内</button>
+          <button type="button" class="tool-btn" id="btn-ai-guide">観光案内</button>
+          <button type="button" class="tool-btn pink" id="btn-r7-translate">3言語通訳</button>
+          <button type="button" class="tool-btn" id="btn-r7-live">LIVE配信</button>
+          <button type="button" class="tool-btn" id="btn-r7-video">観光動画</button>
+          <button type="button" class="tool-btn" id="btn-r7-shops">店舗紹介</button>
           <button type="button" class="tool-btn pink" id="btn-hachikenya-hub">はちけんや・水上バス</button>
           <button type="button" class="tool-btn" id="btn-store-menu-demo">店舗メニュー映り込み</button>
         </div>
@@ -2282,6 +2286,26 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         }
       });
 
+      // Direct links to the existing guide, fixed-phrase translation, HOME video and verified shop listing.
+      // LIVE remains a status screen until an approved authenticated streaming backend is connected.
+      document.getElementById('btn-r7-translate').addEventListener('click', function () {
+        document.getElementById('btn-ai-guide').click();
+        var root=document.getElementById('sug-tour-guide-root');
+        if (!root) return;
+        var select=root.querySelector('select[aria-label="通訳する定型文"]');
+        if (select) { select.focus({preventScroll:true}); select.scrollIntoView({block:'center',behavior:'smooth'}); }
+      });
+      document.getElementById('btn-r7-video').addEventListener('click', function () { openWater('video'); });
+      document.getElementById('btn-r7-shops').addEventListener('click', function () { list('discover'); });
+      document.getElementById('btn-r7-live').addEventListener('click', function () {
+        openModal({
+          title:'LIVE配信・一緒に歩く',
+          badge:'配信サーバー未接続・配信不可',
+          unconnected:true,
+          html:'<p style="font-size:13px;line-height:1.7">参加者LIVE・観光客との一緒に歩く配信は企画枠です。現在、実配信・通話・視聴はできません。配信者／視聴者の認証、位置情報保護、同意、利用時間・費用上限を実装・検証するまで開始しません。</p><p style="font-size:12px;color:#ffc6df">追加課金・外部送信・カメラ／マイク起動は行いません。</p>'
+        });
+      });
+
       var cameraPhotobomb = { enabled: false, cast: 'rivalry', pos: 'bottom-right', scale: 1.0, timing: 'natural' };
 
       document.getElementById('btn-spatial-page').addEventListener('click', function () {
@@ -2585,7 +2609,10 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       function openWater(tab) {
         const shell=parent.SUGR7UnifiedBridge;
         const home=parent.document.getElementById('frame-home')?.contentWindow.SUGR7Bridge;
-        if (!shell || !home?.openWater) return;
+        if (!shell || !home?.openWater) {
+          showToast('動画画面への接続を確認できません。HOMEから開いてください。', 8000);
+          return;
+        }
         closeModal();shell.switchTab('home');home.openWater(tab);
       }
       var cmsEventsLayer=L.layerGroup().addTo(map);

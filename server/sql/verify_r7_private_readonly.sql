@@ -21,8 +21,8 @@ SELECT
     SELECT COUNT(*) FROM pg_catalog.pg_constraint k
     WHERE k.conrelid = o.oid AND k.contype IN ('c','p','f')
   ), 0) AS constraint_count,
-  NOT COALESCE(pg_catalog.has_schema_privilege('anon', 'r7_private', 'USAGE'), false)
-     AND NOT COALESCE(pg_catalog.has_schema_privilege('authenticated', 'r7_private', 'USAGE'), false)
+  NOT COALESCE(pg_catalog.has_schema_privilege('anon', o.namespace_oid, 'USAGE'), false)
+     AND NOT COALESCE(pg_catalog.has_schema_privilege('authenticated', o.namespace_oid, 'USAGE'), false)
      AS direct_schema_usage_blocked,
   NOT COALESCE(pg_catalog.has_table_privilege('anon', o.oid, 'SELECT,INSERT,UPDATE,DELETE'), false)
      AND NOT COALESCE(pg_catalog.has_table_privilege('authenticated', o.oid, 'SELECT,INSERT,UPDATE,DELETE'), false)

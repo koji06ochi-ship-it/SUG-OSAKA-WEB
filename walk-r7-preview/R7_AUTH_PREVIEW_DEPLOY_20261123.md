@@ -35,3 +35,11 @@
 - 別工程でサーバー専用DB接続、実同時実行、プロバイダ課金の強制停止を確認し、追加費用・本番変更・API実リクエストの承認を得る。
 
 **正確な判定：Previewの自動デプロイはVercel管理情報上READY。実HTTP/API認証のエンドツーエンド成功は未確認。**
+
+## 追補：Vercelの保護設定を実測（2026-11-23）
+- Vercel get_project `sug-private-engine` にて `ssoProtection.enabled=true` / `deploymentType=all_except_custom_domains` を確認。パスワード保護は `enabled=false`。
+- このPreviewの通常の外部GETはVercel保護に阻まれている。作業コンテナからのDNS解決もできず、一般的なWebフェッチ経路でもAPIのJSONを取得できなかった。**アプリAPIのGETが失敗したという認定ではない**。
+- Vercel公式コネクターには認証済みPreviewを読み取れる専用機能があるが、アクセスのために23時間有効な一時共有リンクを発行する副作用がある。従来の「無断公開禁止」に従い、そのアクセス方式は**未使用**。
+- 公開範囲やSSO設定は変更しなかった。Supabaseの本物のユーザーアクセストークンの取得・送信も未実施。
+- 本番環境・既存BODY・他のAPIは変更なし。すべての有料OpenAI呼び出しはOFF。
+- 次の実API確認は、Vercelの保護を維持した認証済みHTTP経路（`vercel curl` 等）を用意してGET 200 JSON・OPTIONS・未認証POST 401・正式ユーザー認証POST 503を検査すること。その手段がこの会話から確保できるまでは、実通信PASSと判定しない。

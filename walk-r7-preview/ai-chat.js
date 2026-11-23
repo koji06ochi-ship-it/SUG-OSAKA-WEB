@@ -4,9 +4,9 @@
 const maxChars=500;
 const languageNames={ja:'日本語',en:'English',zh:'中文'};
 const labels={
- ja:{title:'Gemini AI観光案内・通訳',task:'機能',guide:'観光案内',translate:'自由文の翻訳',source:'入力言語',target:'翻訳先',input:'質問または翻訳する文章',send:'送信',off:'AIの自由文応答は停止中です。上の観光案内と定型文通訳を利用できます。',auth:'AIを利用するにはログインしてください。',invalid:'500文字以内で入力してください。',failed:'AIの応答を受け取れませんでした。'},
- en:{title:'Gemini AI guide and interpreter',task:'Task',guide:'Sightseeing',translate:'Translate text',source:'Input language',target:'Translate into',input:'Question or text to translate',send:'Send',off:'AI text responses are off. You can use the guide and phrasebook above.',auth:'Sign in to use AI.',invalid:'Enter up to 500 characters.',failed:'No AI response was received.'},
- zh:{title:'Gemini AI导览与翻译',task:'功能',guide:'观光导览',translate:'翻译文本',source:'输入语言',target:'目标语言',input:'请输入问题或待翻译文本',send:'发送',off:'AI文本功能已暂停。仍可使用上方的导览和常用短句。',auth:'请登录后使用AI。',invalid:'请输入500字以内的内容。',failed:'未收到AI回复。'}
+ ja:{title:'Gemini AI観光案内・通訳',task:'機能',guide:'観光案内',translate:'自由文の翻訳',source:'入力言語',target:'翻訳先',input:'質問または翻訳する文章',send:'送信',off:'登録済みスポット・定型文はこの入力欄から使えます（AI生成は停止中）。',auth:'AIを利用するにはログインしてください。',invalid:'500文字以内で入力してください。',failed:'AIの応答を受け取れませんでした。'},
+ en:{title:'Gemini AI guide and interpreter',task:'Task',guide:'Sightseeing',translate:'Translate text',source:'Input language',target:'Translate into',input:'Question or text to translate',send:'Send',off:'Saved places and phrases work here without AI. Generative AI is not enabled.',auth:'Sign in to use AI.',invalid:'Enter up to 500 characters.',failed:'No AI response was received.'},
+ zh:{title:'Gemini AI导览与翻译',task:'功能',guide:'观光导览',translate:'翻译文本',source:'输入语言',target:'目标语言',input:'请输入问题或待翻译文本',send:'发送',off:'可在此查询已收录的景点和常用短句（AI生成尚未启用）。',auth:'请登录后使用AI。',invalid:'请输入500字以内的内容。',failed:'未收到AI回复。'}
 };
 const controlStyle='box-sizing:border-box;width:100%;padding:10px;margin-top:8px;color:white;background:#151326;border:1px solid #ff007f;border-radius:9px;font-size:16px';
 function select(label,choices){
@@ -37,7 +37,7 @@ function mount(root,language,config){
  // After signing in, recheck status using the actual user JWT rather than cached pre-login status.
  window.SUGR7Auth.onAuthChange(async signedIn=>{
    if(!panel.isConnected)return;
-   if(!signedIn){enabled=false;output.textContent=t.auth;return;}
+   if(!signedIn){enabled=false;output.textContent=t.off;return;}
    const updated=await window.SUGR7Auth.loadConfig();
    if(!panel.isConnected)return;
    enabled=updated?.aiEnabled===true;
@@ -45,10 +45,22 @@ function mount(root,language,config){
  });
  send.addEventListener('click',async()=>{
   if(send.disabled)return;
-  const token=window.SUGR7Auth.getAccessToken();
-  if(!token){output.textContent=t.auth;return;}
   const question=prompt.value.trim();
   if(!question||question.length>maxChars){output.textContent=t.invalid;return;}
+  // Paid AI is separate: exact saved places and translated phrases remain usable,
+  // even when there is no login or no spending approval.
+  const token=window.SUGR7Auth.getAccessToken();
+  if(!enabled||!token){
+    const reply=window.SUGR7TourGuide?.offlineReply(question,
+      task.value==='translation'?target.value:source.value);
+    const prefix=language==='en'?'Saved guide / phrase (not AI): ':language==='zh'?
+      '已收录导览／短句（非AI）：':'登録済み案内・定型文（AI生成ではありません）：';
+    const missing=language==='en'?'No matching saved place or phrase. Arbitrary text translation requires AI.':
+      language==='zh'?'没有匹配的已收录景点或短句。任意文本翻译需要AI。':
+      '登録済みスポット・定型文に一致しません。自由文翻訳にはAI接続が必要です。';
+    output.textContent=reply?prefix+reply.text:missing;
+    return;
+  }
   const payload={task:task.value,question,language:source.value};
   if(task.value==='translation')payload.targetLanguage=target.value;
   send.disabled=true;output.textContent='…';

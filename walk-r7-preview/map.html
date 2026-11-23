@@ -1553,6 +1553,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 })(typeof window==='object'?window:globalThis);
 </script><script src="osaka-3d.js?v=r7-base-neon-20261123d"></script><script src="tour-guide.js?v=r7-trilingual-20261123a"></script><script src="ai-chat.js?v=r7-budget-guard-20261123a"></script><script src="neon-walk.js?v=r7-realwalk-20261123b"></script><script src="neon-events.js?v=r7-event-policy-20261123a"></script>
 <style>
+#sug-r7-neon-hud[data-expanded="false"]{width:auto;top:156px;right:10px;gap:0}
+#sug-r7-neon-hud[data-expanded="false"]>*:not(#btn-neon-panel-toggle){display:none!important}
+#sug-r7-neon-hud[data-expanded="true"]{top:156px;right:10px;width:min(208px,58vw);max-height:calc(100% - 180px);overflow-y:auto;padding:8px;border:1px solid #ff58ac;border-radius:15px;background:#090713ef;box-shadow:0 0 14px #ff2e9340}
+#sug-r7-neon-hud #btn-neon-panel-toggle{align-self:flex-end;min-height:34px;padding:7px 13px;border:1.5px solid #ff58ac;background:#270c22;color:#fff;box-shadow:0 0 10px #ff2e9350;font-size:12px}
+#sug-r7-neon-hud[data-expanded="true"] #btn-neon-panel-toggle{margin-bottom:6px}
 #sug-r7-neon-hud{position:absolute;z-index:23;top:112px;right:8px;width:min(188px,46%);display:flex;flex-direction:column;gap:6px;color:#fff;font:700 11px -apple-system,sans-serif;pointer-events:auto}#sug-r7-neon-hud .neon-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}#sug-r7-neon-hud button{border:1px solid #ff58ac;border-radius:999px;background:#140d20eb;color:#fff;padding:5px 8px;font-size:11px;cursor:pointer}#sug-r7-neon-hud button[aria-pressed="true"]{background:#ad185f}#sug-r7-neon-summary{padding:5px;border-radius:8px;background:#100a21db;text-shadow:0 0 10px #ff3399}#sug-r7-neon-hud small{font-size:9px;color:#d9c7d5}#map-stage.r7-neon-clean{aspect-ratio:9 / 16;overflow:hidden}#map-stage.r7-neon-clean .map-tools-left,#map-stage.r7-neon-clean .drawer-tabs-bar,#map-stage.r7-neon-clean .map-info-drawer,#map-stage.r7-neon-clean .bottom-nav{display:none!important}#map-stage.r7-neon-clean .top-bar>*:not(#r7-logo-img){visibility:hidden!important}#map-stage.r7-neon-clean #sug-r7-neon-hud>*:not(#btn-neon-clean){display:none!important}@media(prefers-reduced-motion:reduce){#map-stage.r7-neon-clean *{animation:none!important}}
 </style></head>
 <body>
@@ -1582,7 +1587,8 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 
         <!-- 2D Live Interactive Leaflet Real Street Map -->
         <div id="sug-real-map"></div><div id="osaka-3d" hidden aria-label="大阪3D地図"></div>
-        <div id="sug-r7-neon-hud" aria-label="ネオン歩行と企画">
+        <div id="sug-r7-neon-hud" aria-label="ネオン歩行と企画" data-expanded="false">
+          <button type="button" id="btn-neon-panel-toggle" aria-expanded="false" aria-controls="sug-r7-neon-summary">⚡ 企画</button>
           <div id="sug-r7-neon-summary" aria-live="polite">今夜 0.0km｜点灯 0</div>
           <div class="neon-row"><button type="button" id="btn-neon-today" aria-pressed="true">今日</button><button type="button" id="btn-neon-all" aria-pressed="false">累計</button></div>
           <div class="neon-row"><button type="button" id="btn-neon-flight">10秒3D飛行</button><button type="button" id="btn-neon-clean" aria-pressed="false" aria-label="撮影用クリーン表示">📷</button></div>
@@ -1851,6 +1857,15 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       const flower=document.getElementById('btn-neon-firework');let flowerOptIn=false;
       flower.onclick=()=>{flowerOptIn=!flowerOptIn;flower.setAttribute('aria-pressed',String(flowerOptIn));flower.textContent=flowerOptIn?'花火参加 ON':'花火参加 OFF';showToast(flowerOptIn?'参加同意を設定しました。接近検知サーバーは未接続です':'参加同意を解除しました');};
       document.getElementById('btn-neon-challenge').onclick=()=>showToast('大川チャレンジ：公式の歩数集計サーバーは未接続です');
+      // Collapsed by default: keep the cityscape visible until the visitor opens this panel.
+      const neonPanel=document.getElementById('sug-r7-neon-hud');
+      const neonPanelToggle=document.getElementById('btn-neon-panel-toggle');
+      neonPanelToggle.onclick=()=>{
+        const expanded=neonPanel.dataset.expanded!=='true';
+        neonPanel.dataset.expanded=String(expanded);
+        neonPanelToggle.setAttribute('aria-expanded',String(expanded));
+        neonPanelToggle.textContent=expanded?'× 閉じる':'⚡ 企画';
+      };
       document.addEventListener('visibilitychange',()=>{if(document.hidden){osaka3D.stopNeonReplay();flowerOptIn=false;flower.textContent='花火参加 OFF';flower.setAttribute('aria-pressed','false');}});
       const public3dToggle=document.getElementById('osaka-toggle');
       const original3dClick=public3dToggle.onclick;

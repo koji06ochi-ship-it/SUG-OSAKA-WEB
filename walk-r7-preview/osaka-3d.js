@@ -1589,6 +1589,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
           container.dataset.cityWindowStatus = 'standard-facades-coverage-dependent';
           container.dataset.customBuildingExtrusions = 'disabled-to-prevent-overlap';
           container.dataset.facadeLightSource = 'standard-style';
+          // Water/parks use Streets v8 independently from the disabled custom
+          // building extrusion. Register their shared source before adding layers.
+          if (!active.getSource('sug-r7-neon-streets-buildings')) {
+            active.addSource('sug-r7-neon-streets-buildings', {
+              type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8'
+            });
+          }
           addOsakaLandscapeLayers(active);
           addVerifiedOgimachiPark(active);
           addVerifiedNakanoshimaPark(active);

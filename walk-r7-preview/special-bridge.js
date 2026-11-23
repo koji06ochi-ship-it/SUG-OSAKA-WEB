@@ -45,8 +45,15 @@
   button.addEventListener('click', openSpecial);
   window.addEventListener('message', function(e){
     if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data) return;
-    if (e.data.type === 'SUG_CLOSE_SPECIAL') closeSpecial();
-    /* SPECIAL routes remain unconnected: never invent GPS, achievements, LIVE or game results. */
+    if (e.data.type === 'SUG_CLOSE_SPECIAL') { closeSpecial(); return; }
+    // The MAP already contains these two real UI entries. Do not synthesize results.
+    if (e.data.type === 'SUG_SPECIAL_ROUTE' && (e.data.route === 'reel' || e.data.route === 'live')) {
+      frame.contentWindow.postMessage({ type: 'SUG_SPECIAL_ROUTE_HANDLED' }, location.origin);
+      closeSpecial();
+      window.SUGR7UnifiedBridge.switchTab('map');
+      syncButton();
+    }
+    // The 'osaka' achievement and 'game' are not yet implemented here.
   });
   // Keep the HOME-only entry in sync when navigation originates in a child iframe.
   window.addEventListener('message', function (event) {

@@ -1970,6 +1970,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         });
         document.getElementById('confirm-gps-btn').addEventListener('click', function () {
           state.gpsConsent = true;
+          recenterButton.textContent='現在地';
           document.getElementById("gps-stop").hidden=false;
           closeModal();
           acquireGPS();
@@ -2146,9 +2147,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       document.getElementById('btn-zoom-in').onclick=()=>osaka3D.zoom(1)||map.zoomIn();
       document.getElementById('btn-zoom-out').onclick=()=>osaka3D.zoom(-1)||map.zoomOut();
       document.getElementById('gps-stop').onclick=function(){
-        state.gpsConsent=false;stopGPS();this.hidden=true;
+        state.gpsConsent=false;stopGPS();recenterButton.textContent='GPS開始';this.hidden=true;
       };
-      document.getElementById('btn-recenter').addEventListener('click', requestGPSWithConsent);
+      const recenterButton=document.getElementById('btn-recenter');
+       recenterButton.textContent='GPS開始';
+       recenterButton.addEventListener('click', requestGPSWithConsent);
       document.getElementById('btn-recenter').addEventListener('click',()=>{if(fix)osaka3D.focus([fix.lng,fix.lat],17.2);});
       document.getElementById('btn-discovery-banner').addEventListener('click', tickerDetail);
 

@@ -42,6 +42,35 @@
     window.SUGR7UnifiedBridge.switchTab(originTab);
     syncButton();
   }
+  // Reuse the existing MAP controls without changing map logic or fabricating state.
+  var mapRouteTicket = 0;
+  function activateMapFeature(route) {
+    var ticket = ++mapRouteTicket;
+    var mapFrame = document.getElementById('frame-map');
+    if (!mapFrame) return;
+    var targetId = route === 'reel' ? 'btn-neon-flight' : 'btn-neon-offers';
+    function tryActivate() {
+      if (ticket !== mapRouteTicket || window.SUGR7UnifiedBridge.getActiveTab() !== 'map') return false;
+      try {
+        var target = mapFrame.contentDocument && mapFrame.contentDocument.getElementById(targetId);
+        if (!target || typeof target.onclick !== 'function') return false;
+        target.click();
+        return true;
+      } catch (error) { return false; }
+    }
+    // Loaded MAP pages are activated after the visible viewport gets two paint frames.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (tryActivate()) return;
+        // If MAP is still loading, activate once after the iframe finishes loading.
+        mapFrame.addEventListener('load', function onMapLoaded() {
+          mapFrame.removeEventListener('load', onMapLoaded);
+          if (ticket !== mapRouteTicket) return;
+          requestAnimationFrame(function () { requestAnimationFrame(tryActivate); });
+        });
+      });
+    });
+  }
   button.addEventListener('click', openSpecial);
   window.addEventListener('message', function(e){
     if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data) return;
@@ -51,6 +80,7 @@
       frame.contentWindow.postMessage({ type: 'SUG_SPECIAL_ROUTE_HANDLED' }, location.origin);
       closeSpecial();
       window.SUGR7UnifiedBridge.switchTab('map');
+      activateMapFeature(e.data.route);
       syncButton();
     }
     // The 'osaka' achievement and 'game' are not yet implemented here.

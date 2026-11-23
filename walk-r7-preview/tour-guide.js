@@ -87,6 +87,12 @@ const phrases=[
  {ja:'助けてください',en:'Please help me.',zh:'请帮帮我。'}
 ];
 // Offline exact-information search. This is NOT generative AI or arbitrary translation.
+function phraseReply(question,lang){
+ const q=String(question||'').normalize('NFKC').trim().toLocaleLowerCase().replace(/[？?！!。．.,\s]+/g,'');
+ if(!q||q.length>500)return null;
+ const match=phrases.find(p=>Object.values(p).some(t=>t.normalize('NFKC').toLocaleLowerCase().replace(/[？?！!。．.,\s]+/g,'')===q));
+ return match?{kind:'phrase',text:match[lang]||match.ja,name:null}:null;
+}
 function offlineReply(question,lang){
  const q=String(question||'').normalize('NFKC').trim().toLocaleLowerCase();
  if(!q||q.length>500)return null;
@@ -163,5 +169,5 @@ function open(opts){
   });
  }
 }
-window.SUGR7TourGuide={open,offlineReply,locationsCount:locations.length,phrasesCount:phrases.length};
+window.SUGR7TourGuide={open,offlineReply,phraseReply,locationsCount:locations.length,phrasesCount:phrases.length};
 })();

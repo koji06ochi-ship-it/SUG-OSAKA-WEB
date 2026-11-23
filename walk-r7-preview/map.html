@@ -1637,7 +1637,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
           <button type="button" class="tool-btn" id="btn-ai-guide">AI観光案内</button>
           <button type="button" class="tool-btn pink" id="btn-hachikenya-hub">はちけんや・水上バス</button>
-          <button type="button" class="tool-btn" id="btn-store-menu-demo">店舗メニュー映り込み</button>
+          <button type="button" class="tool-btn pink" id="btn-osaka-chakai">大阪茶会®</button><button type="button" class="tool-btn" id="btn-store-menu-demo">店舗メニュー映り込み</button>
           <div class="zoom-pair">
             <button type="button" class="zoom-circle" id="btn-zoom-in" aria-label="拡大">+</button>
             <button type="button" class="zoom-circle" id="btn-zoom-out" aria-label="縮小">−</button>
@@ -2198,6 +2198,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         link.className='drawer-btn';link.href=routeURL(place);link.textContent='Appleマップで徒歩経路を開く';
         modalBody.append(link);
       }
+      // Featured Osaka Chakai: direct access without relying on search or a 3D layer load.
+      document.getElementById('btn-osaka-chakai').addEventListener('click',()=>{
+        const place=designatedPlaces.find(p=>p.name==='大阪茶会'&&p.approved===true);
+        if(place)selectPlace(place);
+      });
       function choosePlace(){
         openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<input type="search" id="place-query" placeholder="店舗・観光・駅・船着場を検索" aria-label="目的地名"><div id="place-choices"></div>'});
         const input=document.getElementById('place-query'),result=document.getElementById('place-choices');

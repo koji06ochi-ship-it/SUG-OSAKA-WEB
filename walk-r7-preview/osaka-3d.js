@@ -50,10 +50,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const BASEMAP_CONFIG = {
     lightPreset: 'dusk',
     theme: 'default',
-    show3dObjects: false,
-    show3dFacades: false,
-    show3dLandmarks: false,
-    colorBuildings: '#3B465D',
+    // Restore Mapbox Standard's built-in building meshes, facade detail, landmarks and light/shadows.
+    show3dObjects: true,
+    show3dBuildings: true,
+    show3dFacades: true,
+    show3dLandmarks: true,
+    show3dTrees: true,
+    colorBuildings: '#536078',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
     showPointOfInterestLabels: false,
@@ -1579,22 +1582,18 @@ window.createOsaka3D = function createOsaka3D(ui) {
               /* Ignore unsupported config tokens in older style revisions */
             }
           }
-          // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
-          active.setConfigProperty('basemap','show3dObjects',false);
-          container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
-          applyNightAtmosphere(active);
-          addNeonCityBuildings(active);
-          addPilotVerticalNeonEdges(active);
+          // Avoid double geometry: Standard's own buildings render instead of our flat
+          // fill-extrusions and hand-built facade windows. Keep all other existing data.
+          // The old implementation remains preserved in Git history for A/B and rollback.
+          container.dataset.buildingColorRequested = 'mapbox-standard-native-3d';
+          container.dataset.cityWindowStatus = 'standard-facades-coverage-dependent';
+          container.dataset.customBuildingExtrusions = 'disabled-to-prevent-overlap';
+          container.dataset.facadeLightSource = 'standard-style';
           addOsakaLandscapeLayers(active);
           addVerifiedOgimachiPark(active);
           addVerifiedNakanoshimaPark(active);
           addVerifiedOsakaCastlePark(active);
           addGeoLayers(active);
-          addExactVenueLayers(active);
-          addLandmarkBuildingLayers(active);
-          addVerifiedOsakaCastleTower(active);
-          addVerifiedCentralPublicHall(active);
-          tryVerifiedKanteleFootprint(active);
           addSpotMarkers(gl);
           addJRTemmaStationMarker(gl);
           addOsakaTenmanguFocus(gl);
@@ -1606,9 +1605,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
           timeout = null;
 
           container.dataset.state = 'style-ready';
-          container.dataset.basemap = 'mapbox-standard-night-neon';
+          container.dataset.basemap = 'mapbox-standard-native-3d-neon';
           container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
-          container.dataset.renderedBuildings = 'unverified';
+          container.dataset.renderedBuildings = 'mapbox-standard-enabled-not-device-verified';
           toggle.textContent = '2D';
           toggle.setAttribute('aria-pressed', 'true');
           resize();

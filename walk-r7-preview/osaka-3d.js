@@ -40,6 +40,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let trace = [];
   let routeCoords = [];
   let bearingAnchor = null;
+  let cameraAnchor = null;
+  let stableBearing = null;
   let lastFix = null;
   let ready = false;
 
@@ -1372,16 +1374,15 @@ window.createOsaka3D = function createOsaka3D(ui) {
     view.easeTo({ center: [place.lng, place.lat], pitch: 54, duration: 600 });
   }
 
+  // Real GPS motion only: no simulated steps, and no camera drift while stationary.
   function position(current, heading, follow) {
     if (!current || !Number.isFinite(current.lat) || !Number.isFinite(current.lng)) return;
     const coords = [current.lng, current.lat];
-    if (
-      !lastFix ||
-      Math.hypot(
-        (current.lng - lastFix.lng) * 111320 * Math.cos(current.lat * Math.PI / 180),
-        (current.lat - lastFix.lat) * 111320
-      ) >= 2
-    ) {
+    const deltaMetres = (a, b) => Math.hypot(
+      (a.lng - b.lng) * 111320 * Math.cos(current.lat * Math.PI / 180),
+      (a.lat - b.lat) * 111320
+    );
+    if (!lastFix || deltaMetres(current, lastFix) >= 2) {
       trace.push(coords);
       if (trace.length > 500) trace.shift();
     }
@@ -1397,26 +1398,45 @@ window.createOsaka3D = function createOsaka3D(ui) {
         currentMarker.setLngLat(coords);
       }
     }
-
     updateSource('sug-r7-user', featurePoint(current));
     updateSource('sug-r7-walk-trace', featureLine(trace));
 
     if (!view || !ready || !follow) return;
-    let bearing = Number.isFinite(heading) ? heading : null;
-    const previous = (heading && typeof heading === 'object' && Number.isFinite(heading.lat)) ? heading : bearingAnchor;
-    if (bearing === null && previous && Number.isFinite(previous.lat) && Number.isFinite(previous.lng)) {
-      const east = (current.lng - previous.lng) * 111320 * Math.cos(current.lat * Math.PI / 180);
-      const north = (current.lat - previous.lat) * 111320;
-      if (Math.hypot(east, north) >= Math.max(4, current.accuracy || 0, previous.accuracy || 0)) {
+    // A very uncertain GPS fix must not throw the walking camera across streets.
+    if (Number.isFinite(current.accuracy) && current.accuracy > 80) return;
+    const travelled = cameraAnchor ? deltaMetres(current, cameraAnchor) : Infinity;
+    const minMovement = Math.max(3, Math.min(12, (current.accuracy || 6) * 0.5));
+    if (cameraAnchor && travelled < minMovement) return;
+
+    let bearing = Number.isFinite(heading) && heading >= 0 ? heading : null;
+    if (bearing === null && bearingAnchor) {
+      const moved = deltaMetres(current, bearingAnchor);
+      const confidence = Math.max(5, ((current.accuracy || 0) + (bearingAnchor.accuracy || 0)) / 2);
+      if (moved >= confidence) {
+        const east = (current.lng - bearingAnchor.lng) * 111320 * Math.cos(current.lat * Math.PI / 180);
+        const north = (current.lat - bearingAnchor.lat) * 111320;
         bearing = Math.atan2(east, north) * 180 / Math.PI;
         bearingAnchor = current;
       }
     }
     if (!bearingAnchor) bearingAnchor = current;
-
-    const camera = { center: coords, pitch: 68, duration: 650, essential: true };
-    if (bearing !== null) camera.bearing = bearing;
+    if (bearing !== null) {
+      // Shortest-angle smoothing prevents sudden 360-degree turns near north.
+      stableBearing = stableBearing === null ? bearing
+        : stableBearing + (((bearing - stableBearing + 540) % 360) - 180) * 0.35;
+    }
+    cameraAnchor = current;
+    const camera = {
+      center: coords,
+      zoom: 19.1,
+      pitch: 77,
+      offset: [0, Math.round(Math.max(0, container.clientHeight) * 0.20)],
+      duration: 950,
+      essential: true
+    };
+    if (stableBearing !== null) camera.bearing = stableBearing;
     view.easeTo(camera);
+    container.dataset.camera = 'pedestrian-follow-gps';
   }
 
   function route(coordinates) {
@@ -1467,10 +1487,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
         config: { basemap: BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
         center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
-        zoom: MINT_MUSEUM_INSPECTION ? 18 : 16.9,
-        pitch: 68,
+        zoom: MINT_MUSEUM_INSPECTION ? 18 : 19.1,
+        pitch: MINT_MUSEUM_INSPECTION ? 68 : 77,
         bearing: -68,
-        maxPitch: 70,
+        maxPitch: 85,
         antialias: true
       });
 
@@ -1566,13 +1586,15 @@ window.createOsaka3D = function createOsaka3D(ui) {
       }
       lastFix = null;
       bearingAnchor = null;
+      cameraAnchor = null;
+      stableBearing = null;
       trace = [];
       updateSource('sug-r7-user', EMPTY);
       updateSource('sug-r7-walk-trace', EMPTY);
     },
-    focus(center, zoom = 16.9) {
+    focus(center, zoom = 19.1) {
       if (!view) return false;
-      view.easeTo({ center, zoom, pitch: 68 });
+      view.easeTo({ center, zoom, pitch: 77 });
       return true;
     },
     zoom(delta) {

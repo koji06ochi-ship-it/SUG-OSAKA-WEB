@@ -53,3 +53,16 @@
 - **未検証：実Supabase BearerセッションのPOST検証、ログアウト後拒否、AI回答、翻訳結果、DB費用上限の強制停止**。これらをPASSに含めない。
 - 追加課金・有料API呼び出し・DB変更・本番デプロイなし。
 - ランタイムログは指定期間内に表示なし。実HTTP応答を示す取得結果そのものを一次証拠とする。
+
+## 追補：Hobby 12関数上限の解消・Supabase実HTTP疎通（2026-11-23）
+- ユーザーが「する」と明示承認した範囲のみ操作。
+- 前回の新関数 `api/walk-auth-check.mjs` はVercel Hobby制約 `exceeded_serverless_functions_per_deployment`（最大12関数）を引き起こした。**この確認用ファイルのみ**作業ブランチから削除。コミット `1d9b8a5b67d3e4eff2198ef6997371c557aa9ab2`。
+- 同じ診断機能を既存 `api/walk-ai.mjs` の `GET /api/walk-ai?authProbe=1` に統合。変更コミット `0f6648c9d6c06a8898e16755ffd04d0b84c30531`。
+- GitHub APIの実ツリーを再取得し、`api/`配下は **12ファイル**、確認用追加ファイルは存在せず、`api/walk-ai.mjs`は存在することを確認（truncated=false）。
+- このコミットのVercel Preview deployment `dpl_77ZANSWFKbvagYqxV4kN3DKkRHi8` が **READY** と確認。
+- ユーザーが承認済みの一時アクセス方式で実HTTPリクエストを実施（実デプロイURL、認証保護は変更なし）。
+  - `GET /api/walk-ai` → HTTP **200**、`authConfigured:true`, `enabled:false`、観光/通訳、3言語を確認。
+  - `GET /api/walk-ai?authProbe=1` → HTTP **200**、`supabaseReachable:true`, `invalidTokenRejected:true`, `realUserSessionTested:false`, `paidCalls:0`。
+- 検査は存在しない固定のトークンを使って、Supabase `/auth/v1/user` が401/403を返した場合のみPASSとする。実ユーザーのログイントークンや個人情報は取得・送信していない。
+- 実際の認証サーバーへの到達、無効トークン拒否は実通信として確認済み。**有効なユーザーのPOST認証、WALK UIとのログイン連携、課金上限強制停止、AIテキスト生成は依然として未検証**。
+- 既存GitHub `sug-private-engine/main` とBODYコードは変更なし。本番・DB・有料AI・LIVEには手を加えず、追加プラン契約なし。

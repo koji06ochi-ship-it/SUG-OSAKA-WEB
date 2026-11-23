@@ -59,6 +59,13 @@
   });
   var nav = root.querySelector('.preview-nav');
   if(nav) nav.addEventListener('click', function(){requestAnimationFrame(syncButton);});
+  // Also synchronize navigation initiated through the public unified bridge API.
+  var originalSwitchTab = window.SUGR7UnifiedBridge.switchTab;
+  window.SUGR7UnifiedBridge.switchTab = function () {
+    var result = originalSwitchTab.apply(this, arguments);
+    syncButton();
+    return result;
+  };
   window.SUGR7SpecialBridge = {open:openSpecial,close:closeSpecial};
   syncButton();
 })();

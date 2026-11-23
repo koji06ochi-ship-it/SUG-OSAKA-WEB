@@ -1893,7 +1893,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       document.getElementById('btn-neon-all').onclick=()=>{neonTrail?.setView('all');document.getElementById('btn-neon-today').setAttribute('aria-pressed','false');document.getElementById('btn-neon-all').setAttribute('aria-pressed','true');updateNeonHUD();};
       document.getElementById('btn-neon-flight').onclick=()=>{updateNeonHUD();const result=osaka3D.startNeonReplay();if(!result.started)showToast(result.reason==='NO_RECORDED_WALK'?'実際に歩いたGPS記録が必要です':'先に3D地図を開いてください');};
       document.getElementById('btn-neon-clean').onclick=()=>{const stage=document.getElementById('map-stage');const enabled=stage.classList.toggle('r7-neon-clean');document.getElementById('btn-neon-clean').setAttribute('aria-pressed',String(enabled));if(enabled&&!osaka3D.isActive())showToast('撮影には3D地図を開いてください');osaka3D.resize();};
-      document.getElementById('btn-neon-offers').onclick=()=>showToast('現在、確認済みの10分限定特典はありません');
+      document.getElementById('btn-neon-offers').onclick=()=>showToast('現在、確認済みの10分限定特典はありません', 8000);
       const flower=document.getElementById('btn-neon-firework');let flowerOptIn=false;
       flower.onclick=()=>{flowerOptIn=!flowerOptIn;flower.setAttribute('aria-pressed',String(flowerOptIn));flower.textContent=flowerOptIn?'花火参加 ON':'花火参加 OFF';showToast(flowerOptIn?'参加同意を設定しました。接近検知サーバーは未接続です':'参加同意を解除しました');};
       document.getElementById('btn-neon-challenge').onclick=()=>showToast('大川チャレンジ：公式の歩数集計サーバーは未接続です');
@@ -1960,12 +1960,13 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       window.addEventListener('orientationchange',()=>setTimeout(resizeVisibleMap,120));
 
       var toastTimer = null;
-      function showToast(msg) {
+      function showToast(msg, durationMs) {
         var el = document.getElementById('toast');
         el.textContent = msg;
         el.classList.add('show');
         if (toastTimer) clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2400);
+        var duration = Number.isFinite(durationMs) ? Math.max(2400, Math.min(durationMs, 15000)) : 2400;
+        toastTimer = setTimeout(function () { el.classList.remove('show'); }, duration);
       }
 
       function dispatchBridge(name, payload) {

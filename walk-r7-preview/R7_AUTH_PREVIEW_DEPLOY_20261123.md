@@ -43,3 +43,13 @@
 - 公開範囲やSSO設定は変更しなかった。Supabaseの本物のユーザーアクセストークンの取得・送信も未実施。
 - 本番環境・既存BODY・他のAPIは変更なし。すべての有料OpenAI呼び出しはOFF。
 - 次の実API確認は、Vercelの保護を維持した認証済みHTTP経路（`vercel curl` 等）を用意してGET 200 JSON・OPTIONS・未認証POST 401・正式ユーザー認証POST 503を検査すること。その手段がこの会話から確保できるまでは、実通信PASSと判定しない。
+
+## 追補：一時Preview共有リンクを明示承認のうえ作成して実GET成功（2026-11-23）
+- ユーザーが一時リンクの作成を「する」と明示承認。Vercelの認証済みPreviewフェッチ機能を1回呼び出し、既存デプロイ`dpl_5iQmtp3erp6dpWSc29BKWUmwo1Sp`の`/api/walk-ai`を実HTTPで取得した。
+- **実測結果：HTTP 200 OK**、`Content-Type: application/json`、`Cache-Control: no-store`。
+- JSONレスポンス：`{"service":"walk-ai","enabled":false,"mode":"AUTH_PREFLIGHT_ONLY","authConfigured":true,"tasks":["sightseeing","translation"],"langs":["ja","en","zh"]}`
+- Preview環境のSupabase認証設定がサーバーから読み取られ、APIのGET関数が応答できたことを実証した。
+- VercelのSSO設定は維持。一時リンクは最大23時間の有効期限付きであり、本番公開やSSO解除は実施していない。リンクのトークン値は保存・出力していない。
+- **未検証：実Supabase BearerセッションのPOST検証、ログアウト後拒否、AI回答、翻訳結果、DB費用上限の強制停止**。これらをPASSに含めない。
+- 追加課金・有料API呼び出し・DB変更・本番デプロイなし。
+- ランタイムログは指定期間内に表示なし。実HTTP応答を示す取得結果そのものを一次証拠とする。

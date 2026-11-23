@@ -42,10 +42,10 @@ function mount(root,language,config){
   utterance.rate=0.94;speechSynthesis.speak(utterance);
  });
  stop.addEventListener('click',()=>{if(canSpeak())speechSynthesis.cancel();});
- function showAnswer(text,answerLanguage){
+ function showAnswer(text,answerLanguage,spokenText=text){
   if(canSpeak())speechSynthesis.cancel();
   output.textContent=text;
-  output.dataset.answer=text;
+  output.dataset.answer=spokenText;
   output.dataset.language=answerLanguage;
   speak.hidden=!canSpeak();
  }
@@ -60,16 +60,16 @@ function mount(root,language,config){
  // After signing in, recheck status using the actual user JWT rather than cached pre-login status.
  window.SUGR7Auth.onAuthChange(async signedIn=>{
    if(!panel.isConnected)return;
-   if(!signedIn){enabled=false;output.textContent=t.off;return;}
+   if(!signedIn){enabled=false;output.textContent=t.off;delete output.dataset.answer;return;}
    const updated=await window.SUGR7Auth.loadConfig();
    if(!panel.isConnected)return;
    enabled=updated?.aiEnabled===true;
-   output.textContent=enabled?'':t.off;
+   output.textContent=enabled?'':t.off;delete output.dataset.answer;
  });
  send.addEventListener('click',async()=>{
   if(send.disabled)return;
   const question=prompt.value.trim();
-  if(!question||question.length>maxChars){output.textContent=t.invalid;return;}
+  if(!question||question.length>maxChars){output.textContent=t.invalid;delete output.dataset.answer;return;}
   // Paid AI is separate: exact saved places and translated phrases remain usable,
   // even when there is no login or no spending approval.
   const token=window.SUGR7Auth.getAccessToken();
@@ -81,13 +81,13 @@ function mount(root,language,config){
     const missing=language==='en'?'No matching saved place or phrase. Arbitrary text translation requires AI.':
       language==='zh'?'没有匹配的已收录景点或短句。任意文本翻译需要AI。':
       '登録済みスポット・定型文に一致しません。自由文翻訳にはAI接続が必要です。';
-    if(reply)showAnswer(prefix+reply.text,task.value==='translation'?target.value:source.value);
+    if(reply)showAnswer(prefix+reply.text,task.value==='translation'?target.value:source.value,reply.text);
    else {output.textContent=missing;delete output.dataset.answer;}
     return;
   }
   const payload={task:task.value,question,language:source.value};
   if(task.value==='translation')payload.targetLanguage=target.value;
-  send.disabled=true;output.textContent='…';
+  send.disabled=true;output.textContent='…';delete output.dataset.answer;
   try{
    const response=await fetch(window.SUGR7Auth.endpoint,{
     method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
@@ -113,7 +113,7 @@ function mount(root,language,config){
    if(typeof result.answer!=='string'||!result.answer.trim()||result.answer.length>3000)
     throw new Error('INVALID_ANSWER');
    showAnswer(result.answer,task.value==='translation'?target.value:source.value);
-  }catch{output.textContent=t.failed;}
+  }catch{output.textContent=t.failed;delete output.dataset.answer;}
   finally{send.disabled=false;}
  });
  panel.append(task,source,target,prompt,send,output,speak,stop);

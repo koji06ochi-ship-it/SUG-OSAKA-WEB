@@ -4,10 +4,15 @@
 const endpoint='/api/walk-ai';
 const projectOrigin='https://nnqzxcgkqjnmtzcvorha.supabase.co';
 let session=null;
+const authListeners=new Set();
+function notifyAuthChange(){for(const cb of authListeners){try{cb(!!getAccessToken());}catch{}}}
+function onAuthChange(callback){if(typeof callback!=='function')return()=>{};authListeners.add(callback);return()=>authListeners.delete(callback);}
 function t(ja,en,zh,lang){return ({ja,en,zh})[lang]||ja;}
 async function loadConfig(){
+ const token=getAccessToken();
  try{
   const response=await fetch(endpoint+'?clientConfig=1',{
+   headers:token?{Authorization:'Bearer '+token}:{},
    credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(6000)
   });
   if(!response.ok)return null;
@@ -57,7 +62,7 @@ async function mount(root,lang){
  }
  button.addEventListener('click',async()=>{
   if(button.type!=='button')return;
-  const token=getAccessToken();session=null;render();if(!token)return;
+  const token=getAccessToken();session=null;render();notifyAuthChange();if(!token)return;
   try{
    const response=await fetch(projectOrigin+'/auth/v1/logout?scope=local',{
     method:'POST',headers:{apikey:config.key,Authorization:'Bearer '+token},
@@ -86,7 +91,7 @@ async function mount(root,lang){
     typeof data.user?.id!=='string'||data.user.is_anonymous===true||
     !Number.isFinite(data.expires_in)||data.expires_in<=0)throw new Error('INVALID_AUTH_RESPONSE');
    session={accessToken:data.access_token,expiresAt:Date.now()+data.expires_in*1000};
-   render();
+   render();notifyAuthChange();
   }catch{
    message.textContent=t('ログインできませんでした。アカウントと通信状況を確認してください。',
     'Sign-in failed. Check your account and connection.','登录失败，请检查账户及网络。',lang);
@@ -94,5 +99,5 @@ async function mount(root,lang){
  });
  render();return config;
 }
-window.SUGR7Auth={mount,getAccessToken,endpoint};
+window.SUGR7Auth={mount,getAccessToken,onAuthChange,loadConfig,endpoint};
 })();

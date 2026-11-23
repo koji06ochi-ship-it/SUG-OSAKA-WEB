@@ -1753,7 +1753,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       // User-selected R7 directory. Locations are set only when independently verified.
       // No dummy 0,0 coordinates; unlocated entries open an exact-name map search instead.
       const designatedPlaces = [
-        {"name":"大阪茶会","category":"shop","address":"大阪府大阪市北区天神橋2-1-25 1F","lat":34.6964688,"lng":135.5118458,"osmWayId":195060089,"heightMetres":11,"highlightColor":"#ff4fa6","approved":true,"highlight3D":true},
+        {"name":"大阪茶会","category":"shop","address":"大阪府大阪市北区天神橋2-1-25 1F","lat":34.6964688,"lng":135.5118458,"osmWayId":195060089,"heightMetres":11,"highlightColor":"#7A9A35","approved":true,"highlight3D":true,"featured":true,"instagram":"https://www.instagram.com/osakachakai/","officialWebsite":"https://www.osakachakai.jp/","credit":"写真・ロゴ提供：CAFE 大阪茶会（児玉様掲載許可）","brandName":"CAFE 大阪茶会®"},
         {"name":"焼肉ホルモン 暸","category":"shop","address":"大阪府大阪市北区天神橋4-8-23 中山ビル","lat":34.70483414,"lng":135.51125867,"osmWayId":1158470731,"highlightColor":"#ffd065","approved":true,"highlight3D":true},
         {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4-7-11-501","lat":34.70355095,"lng":135.51109761,"osmWayId":221266078,"heightMetres":13,"highlightColor":"#00e5ff","approved":true,"highlight3D":true},
         {"name":"川の駅はちけんや","category":"shop","address":"大阪府大阪市中央区北浜東1-2","lat":34.690498,"lng":135.514475,"osmWayId":368384007,"levels":1,"highlightColor":"#2ee89a","approved":true,"highlight3D":true},
@@ -2151,11 +2151,33 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         destination=place; destinationReached=false; follow=false;
          osaka3D.destination(place);
         map.setView([place.lat,place.lng],16);
-        openModal({title:place.name,badge:'目的地',html:''});
+        openModal({title:place.brandName || place.name,badge:place.featured?'公式掲載店舗':'目的地',html:''});
+        const modalBody=document.getElementById('modal-body');
+        if(place.featured && place.name==='大阪茶会'){
+          const intro=document.createElement('p');
+          intro.textContent='日本茶と陶磁器を楽しむ、天神橋のカフェ。大阪茶会の公式Instagramでお店の最新情報をご覧いただけます。';
+          intro.style.cssText='font-size:13px;line-height:1.7;color:#f6eff5;margin:10px 0;';
+          const address=document.createElement('p');
+          address.textContent=place.address;
+          address.style.cssText='font-size:12px;color:#d7cce0;';
+          modalBody.append(intro,address);
+          const instagram=document.createElement('a');
+          instagram.href=place.instagram;instagram.target='_blank';instagram.rel='noopener noreferrer';
+          instagram.className='drawer-btn';instagram.textContent='公式Instagram @osakachakai を開く';
+          modalBody.append(instagram);
+          const website=document.createElement('a');
+          website.href=place.officialWebsite;website.target='_blank';website.rel='noopener noreferrer';
+          website.className='drawer-btn';website.textContent='公式サイトを開く';
+          modalBody.append(website);
+          const credit=document.createElement('p');
+          credit.textContent=place.credit;
+          credit.style.cssText='font-size:10px;color:#b9adc1;margin:12px 0 4px;';
+          modalBody.append(credit);
+        }
         const link=document.createElement('a');
         link.target='_blank';link.rel='noopener noreferrer';
         link.className='drawer-btn';link.href=routeURL(place);link.textContent='Appleマップで徒歩経路を開く';
-        document.getElementById('modal-body').append(link);
+        modalBody.append(link);
       }
       function choosePlace(){
         openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<input type="search" id="place-query" placeholder="店舗・観光・駅・船着場を検索" aria-label="目的地名"><div id="place-choices"></div>'});

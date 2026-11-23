@@ -1131,6 +1131,9 @@
       }
 
       function closeSheet() {
+        // Explicitly stop native tourism video when the overlay is closed.
+        var video = document.getElementById('r7-tour-video');
+        if (video) { video.pause(); video.removeAttribute('src'); video.load(); }
         document.getElementById('sheet-backdrop').classList.remove('open');
         currentSheetAction = null;
       }
@@ -1450,6 +1453,9 @@
       };
 
       function openTourismVideoPlayer() {
+        // Switching language/chapter must not keep an old video playing in the background.
+        var previousVideo = document.getElementById('r7-tour-video');
+        if (previousVideo) previousVideo.pause();
         var ch = TOURISM_CHAPTERS.find(function (c) { return c.id === tourismMediaState.chapter; }) || TOURISM_CHAPTERS[0];
         var chTitle = ch[tourismMediaState.lang] || ch.ja;
         var media = window.SUGR7TourismMedia && window.SUGR7TourismMedia.get(ch.id);
@@ -1474,7 +1480,7 @@
           '<div style="position:relative;border-radius:14px;border:1.4px solid rgba(255,46,147,0.72);background:linear-gradient(135deg,#0d0a1e,#1a0c24);padding:14px;margin-bottom:8px;text-align:center;">' +
             '<div style="font-size:10px;color:#ffe59e;font-weight:700;margin-bottom:4px;">' + ch.num + ' ' + ch.dur + (ch.pr ? ' ｜ 【広告・PR】' : '') + '</div>' +
             '<div style="font-size:12.5px;font-weight:800;color:#fff;margin-bottom:6px;">' + chTitle + '</div>' +
-            '<div style="font-size:10px;color:#9b92b2;">' + transWarn + '</div>' +
+            '<div style="font-size:10px;color:#9b92b2;" role="status">' + transWarn + '</div>' +
             (media
               ? '<video id="r7-tour-video" controls playsinline preload="none" src="' + media.src + '" style="display:block;width:100%;max-height:210px;margin:9px auto 0;border-radius:10px;background:#000" aria-label="観光動画"></video>'
               : '<div role="status" style="padding:18px 8px;margin-top:8px;border:1px dashed #805a7e;border-radius:10px;font-size:12px;color:#e5cadd;">動画素材はまだ登録されていません</div>') +

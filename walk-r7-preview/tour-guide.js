@@ -55,6 +55,30 @@ const locations=[
  ja:'天満橋駅は京阪電車とOsaka Metro谷町線の駅です。八軒家浜周辺の散策にも便利です。運行情報は各鉄道会社の公式案内をご確認ください。',
  en:'Temmabashi Station serves Keihan Railway and the Osaka Metro Tanimachi Line. It is convenient for visiting the Hachikenyahama waterfront.',
  zh:'天满桥站可搭乘京阪电车及大阪地铁谷町线，前往八轩家滨滨水区域很方便。'}},
+ {key:'hotarumachi',name:'ほたるまち',terms:['ほたるまち','hotarumachi','萤町'],descriptions:{
+ ja:'ほたるまちは大阪・福島の堂島川沿いのエリアです。水辺の散策を楽しめます。店舗や催しの最新情報は公式案内をご確認ください。',
+ en:'Hotarumachi is an area by the Dojima River in Fukushima, Osaka. It is a place to explore the waterfront. Check official sources for current shops and events.',
+ zh:'萤町位于大阪福岛的堂岛川沿岸，可以沿河漫步。店铺和活动的最新信息请查看官方公告。'}},
+ {key:'nakanoshima_banks',name:'中之島バンクス',terms:['中之島バンクス','nakanoshima banks','中之岛banks'],descriptions:{
+ ja:'中之島バンクスは中之島の堂島川沿いにある水辺エリアです。飲食店などの営業情報は各施設の公式情報をご確認ください。',
+ en:'Nakanoshima Banks is a waterfront area along the Dojima River in Nakanoshima. Check each venue for current opening information.',
+ zh:'中之岛Banks是堂岛川沿岸的滨水区域。餐饮店等设施的营业信息请查看各店官方公告。'}},
+ {key:'nakanoshima_gate',name:'中之島GATE',terms:['中之島gate','中之島ゲート','nakanoshima gate','中之岛gate'],descriptions:{
+ ja:'中之島GATEは大阪の水辺交通に関わる拠点です。船の便や利用条件は最新の公式運航情報をご確認ください。',
+ en:'Nakanoshima GATE is a waterfront transport hub in Osaka. Confirm any boat schedules and access conditions with the operator.',
+ zh:'中之岛GATE是大阪的水上交通相关据点。船班和使用条件请向运营方确认。'}},
+ {key:'tombori',name:'とんぼりリバーパーク',terms:['とんぼりリバーパーク','とんぼり','tombori river park','道顿堀河畔'],descriptions:{
+ ja:'とんぼりリバーパークは道頓堀川沿いの遊歩道エリアです。道頓堀の水辺を歩きながら街の風景を楽しめます。',
+ en:'Tombori River Park is a riverside promenade area along the Dotonbori River. Enjoy views of the neighborhood from the waterfront.',
+ zh:'道顿堀河畔步道沿着道顿堀川延伸，可以一边散步一边欣赏街景。'}},
+ {key:'canal_terrace',name:'キャナルテラス堀江',terms:['キャナルテラス堀江','canal terrace horie','堀江运河露台'],descriptions:{
+ ja:'キャナルテラス堀江は大阪・堀江の水辺エリアです。各店舗の営業日やサービスは公式情報をご確認ください。',
+ en:'Canal Terrace Horie is a waterfront spot in Osaka’s Horie area. Check official information for current venue services.',
+ zh:'堀江运河露台位于大阪堀江的水边区域。请查看官方公告了解各店的营业信息。'}},
+ {key:'tugboat',name:'TUGBOAT TAISHO',terms:['tugboat taisho','タグボート大正','タグボートたいしょう','大正拖船'],descriptions:{
+ ja:'TUGBOAT TAISHOは大阪・大正の川沿いにある飲食・交流スポットです。営業時間やイベントは公式情報をご確認ください。',
+ en:'TUGBOAT TAISHO is a riverside food and social venue in Osaka’s Taisho area. Check official sources for hours and events.',
+ zh:'TUGBOAT TAISHO是大阪大正河畔的餐饮交流场所。营业时间和活动请查看官方公告。'}},
  {key:'chakai',name:'CAFE 大阪茶会®',terms:['大阪茶会','osaka chakai','osakachakai','茶会','日本茶','tea cafe','tea ceremony','茶馆','茶會'],descriptions:{
  ja:'CAFE 大阪茶会®は大阪市北区天神橋2-1-25 1階にある、日本茶と陶磁器を楽しめるカフェです。公式Instagramは @osakachakai です。',
  en:'CAFE Osaka Chakai® is a Japanese tea and pottery café at 2-1-25 Tenjinbashi, Kita-ku, Osaka, on the ground floor. Its official Instagram is @osakachakai.',
@@ -84,6 +108,14 @@ const phrases=[
  {ja:'お会計をお願いします',en:'Could I have the bill, please?',zh:'请结账。'},
  {ja:'アレルギーがあります',en:'I have a food allergy.',zh:'我有食物过敏。'},
  {ja:'ゆっくり話してください',en:'Please speak slowly.',zh:'请说慢一点。'},
+ {ja:'この近くでおすすめの場所はありますか？',en:'Is there somewhere nearby you recommend?',zh:'这附近有什么推荐的地方吗？'},
+ {ja:'この地図を見てもらえますか？',en:'Could you look at this map?',zh:'可以帮我看看这张地图吗？'},
+ {ja:'左に曲がってください',en:'Please turn left.',zh:'请左转。'},
+ {ja:'右に曲がってください',en:'Please turn right.',zh:'请右转。'},
+ {ja:'まっすぐ進んでください',en:'Please go straight.',zh:'请直走。'},
+ {ja:'ここで待ってください',en:'Please wait here.',zh:'请在这里等一下。'},
+ {ja:'切符はどこで買えますか？',en:'Where can I buy a ticket?',zh:'在哪里可以买票？'},
+ {ja:'この船は八軒家浜に行きますか？',en:'Does this boat go to Hachikenyahama?',zh:'这艘船去八轩家滨吗？'},
  {ja:'助けてください',en:'Please help me.',zh:'请帮帮我。'}
 ];
 // Offline exact-information search. This is NOT generative AI or arbitrary translation.

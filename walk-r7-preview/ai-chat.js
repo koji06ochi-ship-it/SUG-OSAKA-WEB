@@ -32,7 +32,8 @@ function mount(root, lang){
  const cfg=window.SUGR7AIService;
  // Explicitly gate on server-approved settings; no auto-probe, no secret in source.
  const enabled=!!(cfg&&cfg.enabled===true&&cfg.serverHardCapConfirmed===true&&
-    typeof cfg.endpoint==='string'&&/^\/api\/walk-ai$/.test(cfg.endpoint));
+    typeof cfg.endpoint==='string'&&/^\/api\/walk-ai$/.test(cfg.endpoint)&&
+    typeof cfg.getAccessToken==='function');
  if(!enabled){send.disabled=true;send.style.opacity='.5';output.textContent=t.offline;}
  send.addEventListener('click',async()=>{
   if(!enabled)return;
@@ -41,9 +42,13 @@ function mount(root, lang){
   send.disabled=true;output.textContent='…';
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
   try{
+   // The host app must provide its existing authenticated session in memory.
+   // Never persist or print this token; without one, do not contact the API.
+   const token=await cfg.getAccessToken();
+   if(typeof token!=='string'||!/^[A-Za-z0-9._~-]{16,8192}$/.test(token))throw Error('LOGIN_REQUIRED');
    const response=await fetch(cfg.endpoint,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    credentials:'same-origin',cache:'no-store',signal:controller.signal,
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    credentials:'omit',cache:'no-store',signal:controller.signal,
     body:JSON.stringify({task:task.value,question:text,language:lang,...(task.value==='translation'?{targetLanguage:target.value}:{})})
    });
    if(!response.ok)throw Error('request rejected');

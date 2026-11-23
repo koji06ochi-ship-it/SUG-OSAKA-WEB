@@ -22,9 +22,6 @@ async function loadConfig(authorization){
   return {key:data.publishableKey,aiEnabled:data.aiEnabled===true};
  }catch{return null;}
 }
-const listeners=new Set();
-function announce(){for(const listener of listeners){try{listener(!!getAccessToken());}catch{}}}
-function onAuthChange(listener){listeners.add(listener);return ()=>listeners.delete(listener);}
 async function currentAIConfig(){
  const token=getAccessToken();
  if(!token)return {aiEnabled:false};
@@ -99,7 +96,7 @@ async function mount(root,lang){
     typeof data.user?.id!=='string'||data.user.is_anonymous===true||
     !Number.isFinite(data.expires_in)||data.expires_in<=0)throw new Error('INVALID_AUTH_RESPONSE');
    session={accessToken:data.access_token,expiresAt:Date.now()+data.expires_in*1000};
-   render();announce();notifyAuthChange();
+   render();notifyAuthChange();
   }catch{
    message.textContent=t('ログインできませんでした。アカウントと通信状況を確認してください。',
     'Sign-in failed. Check your account and connection.','登录失败，请检查账户及网络。',lang);

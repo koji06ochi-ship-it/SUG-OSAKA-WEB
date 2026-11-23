@@ -63,60 +63,23 @@
       });
     });
   }
-  // Attach a seventh tile without replacing the existing Event/SAFE or QUEST cards.
-  function mountHomeSpecialCard() {
-    var doc;
-    try { doc = home.contentDocument; } catch (_) { return false; }
-    if (!doc || !doc.body) return false;
-    if (doc.getElementById('sug-home-special-card')) return true;
-    var labels = Array.from(doc.querySelectorAll('button,a,div,span,strong,p,h2,h3'));
-    var eventLabel = labels.find(function (node) {
-      return node.children.length === 0 && /イベント\s*[\/／]\s*SAFE/.test(node.textContent || '');
-    });
-    var grid = null;
-    if (eventLabel) {
-      for (var parent = eventLabel.parentElement, i = 0; parent && i < 9; parent = parent.parentElement, i++) {
-        if (parent.children.length < 3 || parent.children.length > 12) continue;
-        var text = (parent.textContent || '').replace(/\s/g, '');
-        if (text.includes('AI観光') && text.includes('AI通訳') && text.includes('QUEST')) {
-          grid = parent;
-          break;
-        }
-      }
-    }
-    var tile = doc.createElement('button');
-    tile.type = 'button';
-    tile.id = 'sug-home-special-card';
-    tile.setAttribute('aria-label', 'SPECIALを開く');
-    tile.innerHTML = '<span aria-hidden="true" style="font-size:30px">✨</span><strong>SPECIAL</strong>';
-    tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:150px;width:100%;border:2px solid #ff499f;border-radius:22px;background:linear-gradient(145deg,#280b25,#090712);color:#fff;box-shadow:inset 0 0 20px #ff2e9325,0 0 17px #ff2e9338;font:700 16px -apple-system,BlinkMacSystemFont,sans-serif;cursor:pointer';
-    tile.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openSpecial(); });
-    if (grid) {
-      grid.appendChild(tile);
-      return true;
-    }
-    // Safe fallback: place an in-flow full-width entry inside HOME rather than
-    // an overlay that hides an existing card.
-    var anchor = labels.find(function (node) {
-      return node.children.length === 0 && /R7状態/.test(node.textContent || '');
-    });
-    if (!anchor) return false;
-    var section = anchor;
-    for (var j = 0; j < 6 && section.parentElement; j++) {
-      if (section.parentElement.children.length >= 2) break;
-      section = section.parentElement;
-    }
-    tile.style.minHeight = '64px';
-    tile.style.flexDirection = 'row';
-    tile.style.margin = '10px auto';
-    tile.style.maxWidth = 'calc(100% - 28px)';
-    section.parentElement.insertBefore(tile, section);
-    return true;
+  // Dedicated HOME-only dock in the parent shell: no dependency on iframe DOM or text labels.
+  // Reserve its own space above the permanent five-tab navigation; no card overlap.
+  var launch = document.createElement('button');
+  launch.type = 'button';
+  launch.id = 'sug-home-special-entry';
+  launch.setAttribute('aria-label', 'SPECIALを開く');
+  launch.innerHTML = '<span aria-hidden="true" style="font-size:23px">✨</span><strong>SPECIAL</strong><span aria-hidden="true">›</span>';
+  launch.style.cssText = 'position:absolute;left:14px;right:14px;bottom:78px;height:55px;z-index:31;display:flex;align-items:center;justify-content:center;gap:18px;border:1.5px solid #ff54ab;border-radius:17px;background:linear-gradient(105deg,#2b0c26,#09050c 65%,#331022);color:white;box-shadow:0 0 14px #ff2e9355;font:800 16px -apple-system,BlinkMacSystemFont,sans-serif;cursor:pointer';
+  root.appendChild(launch);
+  launch.addEventListener('click', openSpecial);
+  var dockStyle = document.createElement('style');
+  dockStyle.textContent = '#frame-home.active{bottom:146px;height:calc(100% - 146px)} #sug-home-special-entry[hidden]{display:none!important}';
+  document.head.appendChild(dockStyle);
+  function syncDock() {
+    launch.hidden = window.SUGR7UnifiedBridge.getActiveTab() !== 'home' || layer.dataset.open === 'true';
   }
-  home.addEventListener('load', mountHomeSpecialCard);
-  try {
-    if (home.contentDocument && home.contentDocument.readyState !== 'loading') mountHomeSpecialCard();
-  } catch (_) {}
+  syncButton = syncDock;
   window.addEventListener('message', function(e){
     if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data) return;
     if (e.data.type === 'SUG_CLOSE_SPECIAL') { closeSpecial(); return; }

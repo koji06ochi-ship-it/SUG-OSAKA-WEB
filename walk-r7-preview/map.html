@@ -1428,7 +1428,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       color:#fff;border-radius:10px;padding:8px 10px;min-height:36px;font-size:12px;font-weight:700;
       cursor:pointer;
     }
-    .r7-compact-tools:not(.r7-expanded) > :not(#r7-tool-expander):not(#btn-recenter):not(#osaka-toggle){display:none!important;}
+    .r7-compact-tools:not(.r7-expanded) > :not(#r7-tool-expander):not(#btn-recenter):not(#osaka-toggle):not(#btn-eye-view){display:none!important;}
     .r7-compact-tools:not(.r7-expanded) .tool-btn{min-height:34px!important;padding:5px 8px!important;}
     .r7-compact-tools.r7-expanded{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));width:calc(100% - 20px)!important;right:10px!important;bottom:126px!important;background:rgba(8,6,19,.96)!important;padding:9px!important;}
     .r7-compact-tools.r7-expanded .r7-tool-expander{grid-column:1/-1;}
@@ -1862,6 +1862,9 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         eyeViewButton.textContent=mode==='eye'?'全体':'目線';
         eyeViewButton.setAttribute('aria-pressed',String(mode==='eye'));
         eyeViewButton.setAttribute('aria-label',mode==='eye'?'3D全体モードに戻す':'3D目線モードに切替');
+        // Close expanded options immediately, so the street view is actually visible.
+        const menu=document.getElementById('r7-map-tools');
+        if(menu?.classList.contains('r7-expanded')) document.getElementById('r7-tool-expander')?.click();
       });
       const public3dToggle=document.getElementById('osaka-toggle');
       const original3dClick=public3dToggle.onclick;

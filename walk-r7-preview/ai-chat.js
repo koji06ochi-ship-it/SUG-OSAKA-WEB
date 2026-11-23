@@ -70,7 +70,8 @@ function mount(root, lang){
   });
   signOut.addEventListener('click',()=>{auth.signOut();refreshAuth()});
   authBox.append(signIn);authBox.append(signOut);authBox.append(authStatus);
-  refreshAuth();panel.append(authBox);
+  // Show login near the top. The free translated phrases remain above this panel.
+  refreshAuth();panel.insertBefore(authBox,task);
  }
  const cfg=window.SUGR7AIService;
  // Explicitly gate on server-approved settings; no auto-probe, no secret in source.

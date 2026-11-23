@@ -18,7 +18,25 @@
     } catch { return null; }
   };
   const t = (ja, en, zh, lang) => ({ja, en, zh})[lang] || ja;
-  function mount(root, lang) {
+  async function loadConfig() {
+    const provided=validConfig();
+    if(provided)return provided;
+    const endpoint=window.SUGR7AuthBootstrapURL;
+    if(typeof endpoint!=='string')return null;
+    try{
+      const u=new URL(endpoint);
+      if(u.protocol!=='https:' || !u.hostname.endsWith('.vercel.app') || u.pathname!=='/api/walk-ai' || u.search!=='?clientConfig=1' || u.hash)return null;
+      const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),6000);
+      try{
+        const response=await fetch(u.href,{method:'GET',mode:'cors',cache:'no-store',signal:controller.signal});
+        if(!response.ok)return null;
+        const data=await response.json();
+        window.SUGR7AuthConfig={url:data.supabaseUrl,publishableKey:data.publishableKey};
+        return validConfig();
+      }finally{clearTimeout(timer)}
+    }catch{return null}
+  }
+  async function mount(root, lang) {
     if (!root) return;
     const section = document.createElement('section');
     section.style.cssText = 'padding:12px;margin-top:12px;border:1px solid #70415f;border-radius:12px;color:#fff';
@@ -29,7 +47,7 @@
     message.setAttribute('aria-live', 'polite');
     message.style.cssText = 'font-size:12px;white-space:pre-wrap';
     section.append(message);
-    const cfg = validConfig();
+    const cfg = await loadConfig();
     if (!cfg) {
       message.textContent = t('ログイン設定は未接続です。観光案内と定型文通訳は引き続き利用できます。',
         'Sign-in is not configured. Offline guide and fixed translations remain available.',

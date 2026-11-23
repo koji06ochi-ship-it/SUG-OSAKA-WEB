@@ -27,6 +27,18 @@ const locations=[
  ja:'中之島公園は川に囲まれた中之島の都市公園です。水辺の風景を楽しめます。',
  en:'Nakanoshima Park is an urban park on an island between rivers, known for its waterfront setting.',
  zh:'中之岛公园位于河流环绕的中之岛，可欣赏滨水景色。'}},
+ {key:'temmabashi',name:'天満橋駅',terms:['天満橋駅','temmabashi station','天满桥站'],descriptions:{
+ ja:'天満橋駅は京阪電車とOsaka Metro谷町線の駅です。八軒家浜方面への散策の起点になります。乗換・運行状況は各鉄道会社の公式案内をご確認ください。',
+ en:'Temmabashi Station is served by Keihan Railway and the Osaka Metro Tanimachi Line. It is a useful starting point for walking toward Hachikenyahama. Check operators for live train information.',
+ zh:'天满桥站有京阪电车与大阪地铁谷町线，可从这里步行前往八轩家滨。列车时刻及运行情况请查询铁路运营商官方信息。'}},
+ {key:'tenmangu',name:'大阪天満宮',terms:['大阪天満宮','大阪天満宫','osaka tenmangu','tenmangu shrine','大阪天满宫'],descriptions:{
+ ja:'大阪天満宮は大阪市北区にある神社です。周辺の天神橋筋商店街とあわせて散策できます。行事や参拝時間は公式案内をご確認ください。',
+ en:'Osaka Tenmangu is a shrine in Osaka’s Kita Ward, close to the Tenjinbashisuji shopping street. Check its official information for events and visiting details.',
+ zh:'大阪天满宫位于大阪市北区，附近可以游览天神桥筋商店街。活动与参拜时间请查看官方公告。'}},
+ {key:'hommachibashi',name:'本町橋船着場',terms:['本町橋船着場','本町橋','hommachibashi','hommachi bridge pier','本町桥'],descriptions:{
+ ja:'本町橋船着場は東横堀川沿いの水辺スポットです。船の利用可否、運航情報は主催・運航者の案内をご確認ください。',
+ en:'Hommachibashi Pier is a waterfront spot along the Higashiyokobori River. Check the relevant operator for boat access and service details.',
+ zh:'本町桥船着场位于东横堀川沿岸。乘船及运行详情请查看相关运营方公告。'}},
  {key:'chakai',name:'CAFE 大阪茶会®',terms:['大阪茶会','osaka chakai','osakachakai','茶会','日本茶','tea cafe','tea ceremony','茶馆','茶會'],descriptions:{
  ja:'CAFE 大阪茶会®は大阪市北区天神橋2-1-25 1階にある、日本茶と陶磁器を楽しめるカフェです。公式Instagramは @osakachakai です。',
  en:'CAFE Osaka Chakai® is a Japanese tea and pottery café at 2-1-25 Tenjinbashi, Kita-ku, Osaka, on the ground floor. Its official Instagram is @osakachakai.',
@@ -40,15 +52,23 @@ const phrases=[
  {ja:'おすすめの食事はありますか？',en:'Do you recommend somewhere to eat?',zh:'有什么推荐的餐厅吗？'},
  {ja:'一緒に歩きませんか？',en:'Would you like to walk together?',zh:'要一起散步吗？'},
  {ja:'ありがとうございます',en:'Thank you.',zh:'谢谢。'},
+ {ja:'ここへ行きたいです',en:'I would like to go here.',zh:'我想去这里。'},
+ {ja:'この道で合っていますか？',en:'Is this the right way?',zh:'这条路走对了吗？'},
+ {ja:'駅まで一緒に歩いてもらえますか？',en:'Could you walk with me to the station?',zh:'能陪我走到车站吗？'},
+ {ja:'日本語が分かりません',en:'I do not understand Japanese.',zh:'我听不懂日语。'},
+ {ja:'英語を話せますか？',en:'Do you speak English?',zh:'你会说英语吗？'},
+ {ja:'トイレはどこですか？',en:'Where is the restroom?',zh:'洗手间在哪里？'},
+ {ja:'これはいくらですか？',en:'How much does this cost?',zh:'这个多少钱？'},
+ {ja:'写真を撮ってもらえますか？',en:'Could you take a photo for me?',zh:'可以帮我拍张照吗？'},
  {ja:'助けてください',en:'Please help me.',zh:'请帮帮我。'}
 ];
 // Offline exact-information search. This is NOT generative AI or arbitrary translation.
 function offlineReply(question,lang){
- const q=String(question||'').trim().toLocaleLowerCase();
+ const q=String(question||'').normalize('NFKC').trim().toLocaleLowerCase();
  if(!q||q.length>500)return null;
  const spot=locations.find(l=>l.terms.some(t=>q.includes(t.toLocaleLowerCase())));
  if(spot)return {kind:'place',text:spot.descriptions[lang]||spot.descriptions.ja,name:spot.name};
- const matched=phrases.find(p=>Object.values(p).some(t=>q.replace(/[？?！!。．.,\s]+/g,'')===t.toLocaleLowerCase().replace(/[？?！!。．.,\s]+/g,'')));
+ const matched=phrases.find(p=>Object.values(p).some(t=>q.replace(/[？?！!。．.,\s]+/g,'')===t.normalize('NFKC').toLocaleLowerCase().replace(/[？?！!。．.,\s]+/g,'')));
  if(matched)return {kind:'phrase',text:matched[lang],name:null};
  return null;
 }

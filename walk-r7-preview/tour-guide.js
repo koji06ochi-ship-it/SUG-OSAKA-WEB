@@ -39,6 +39,22 @@ const locations=[
  ja:'本町橋船着場は東横堀川沿いの水辺スポットです。船の利用可否、運航情報は主催・運航者の案内をご確認ください。',
  en:'Hommachibashi Pier is a waterfront spot along the Higashiyokobori River. Check the relevant operator for boat access and service details.',
  zh:'本町桥船着场位于东横堀川沿岸。乘船及运行详情请查看相关运营方公告。'}},
+ {key:'tenmangu',name:'大阪天満宮',terms:['大阪天満宮','osaka tenmangu','大阪天满宫','天満宮','tenmangu'],descriptions:{
+ ja:'大阪天満宮は大阪市北区にある神社です。天神橋筋商店街とあわせて散策できます。行事や参拝案内は公式情報をご確認ください。',
+ en:'Osaka Tenmangu is a shrine in Kita Ward. You can also stroll along the nearby Tenjinbashisuji shopping street. Check official information for events and visits.',
+ zh:'大阪天满宫是大阪市北区的一座神社，附近可游览天神桥筋商店街。祭典与参拜信息请查看官方公告。'}},
+ {key:'tenjinbashisuji',name:'天神橋筋商店街',terms:['天神橋筋商店街','天神橋筋','tenjinbashisuji shopping street','tenjinbashi shopping street','天神桥筋商店街'],descriptions:{
+ ja:'天神橋筋商店街には飲食店や買い物スポットが集まっています。周辺の天満や南森町エリアを歩いて楽しめます。',
+ en:'Tenjinbashisuji Shopping Street is known for its shops and places to eat. Enjoy exploring the Tenma and Minamimorimachi neighborhoods nearby.',
+ zh:'天神桥筋商店街聚集了许多餐饮店和购物场所，可以步行游览附近的天满与南森町区域。'}},
+ {key:'tenma',name:'JR天満駅',terms:['JR天満駅','天満駅','temma station','tenma station','天满站'],descriptions:{
+ ja:'JR天満駅は大阪環状線の駅です。天神橋筋商店街や扇町公園へ歩いて行けます。発着時刻は鉄道会社の最新案内をご確認ください。',
+ en:'JR Temma Station is on the Osaka Loop Line, within walking distance of Tenjinbashisuji Shopping Street and Ogimachi Park. Check the rail operator for current departures.',
+ zh:'JR天满站位于大阪环状线上，可以步行前往天神桥筋商店街和扇町公园。列车时刻请查看铁路运营方最新信息。'}},
+ {key:'temmabashi',name:'天満橋駅',terms:['天満橋駅','天満橋','temmabashi station','temmabashi','天满桥站'],descriptions:{
+ ja:'天満橋駅は京阪電車とOsaka Metro谷町線の駅です。八軒家浜周辺の散策にも便利です。運行情報は各鉄道会社の公式案内をご確認ください。',
+ en:'Temmabashi Station serves Keihan Railway and the Osaka Metro Tanimachi Line. It is convenient for visiting the Hachikenyahama waterfront.',
+ zh:'天满桥站可搭乘京阪电车及大阪地铁谷町线，前往八轩家滨滨水区域很方便。'}},
  {key:'chakai',name:'CAFE 大阪茶会®',terms:['大阪茶会','osaka chakai','osakachakai','茶会','日本茶','tea cafe','tea ceremony','茶馆','茶會'],descriptions:{
  ja:'CAFE 大阪茶会®は大阪市北区天神橋2-1-25 1階にある、日本茶と陶磁器を楽しめるカフェです。公式Instagramは @osakachakai です。',
  en:'CAFE Osaka Chakai® is a Japanese tea and pottery café at 2-1-25 Tenjinbashi, Kita-ku, Osaka, on the ground floor. Its official Instagram is @osakachakai.',
@@ -60,6 +76,14 @@ const phrases=[
  {ja:'トイレはどこですか？',en:'Where is the restroom?',zh:'洗手间在哪里？'},
  {ja:'これはいくらですか？',en:'How much does this cost?',zh:'这个多少钱？'},
  {ja:'写真を撮ってもらえますか？',en:'Could you take a photo for me?',zh:'可以帮我拍张照吗？'},
+ {ja:'ここから駅まで歩けますか？',en:'Can I walk to the station from here?',zh:'从这里可以步行到车站吗？'},
+ {ja:'この電車は天満橋に行きますか？',en:'Does this train go to Temmabashi?',zh:'这趟列车去天满桥吗？'},
+ {ja:'切符はどこで買えますか？',en:'Where can I buy a ticket?',zh:'请问在哪里买车票？'},
+ {ja:'トイレはどこですか？',en:'Where is the restroom?',zh:'请问洗手间在哪里？'},
+ {ja:'写真を撮ってもらえますか？',en:'Could you take a photo for me?',zh:'可以帮我拍张照片吗？'},
+ {ja:'お会計をお願いします',en:'Could I have the bill, please?',zh:'请结账。'},
+ {ja:'アレルギーがあります',en:'I have a food allergy.',zh:'我有食物过敏。'},
+ {ja:'ゆっくり話してください',en:'Please speak slowly.',zh:'请说慢一点。'},
  {ja:'助けてください',en:'Please help me.',zh:'请帮帮我。'}
 ];
 // Offline exact-information search. This is NOT generative AI or arbitrary translation.

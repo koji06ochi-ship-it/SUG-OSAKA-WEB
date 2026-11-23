@@ -56,12 +56,12 @@ window.createOsaka3D = function createOsaka3D(ui) {
     showPointOfInterestLabels: false,
     showTransitLabels: false,
     showRoadLabels: true,
-    colorLand: '#090D19',
+    colorLand: '#080B16',
     colorWater: '#102B48',
     colorGreenspace: '#163F34',
     colorMotorways: '#FF007F',
-    colorTrunks: '#C60072',
-    colorRoads: '#672846'
+    colorTrunks: '#FF4AA5',
+    colorRoads: '#BE718D'
   };
 
   container.dataset.state = 'closed';
@@ -1369,7 +1369,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   function destination(place) {
     if (!view || !place || !Number.isFinite(place.lng) || !Number.isFinite(place.lat)) return;
-    view.easeTo({ center: [place.lng, place.lat], pitch: 68, duration: 600 });
+    view.easeTo({ center: [place.lng, place.lat], pitch: 54, duration: 600 });
   }
 
   function position(current, heading, follow) {
@@ -1470,7 +1470,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         zoom: MINT_MUSEUM_INSPECTION ? 18 : 16.9,
         pitch: 68,
         bearing: -68,
-        maxPitch: 78,
+        maxPitch: 70,
         antialias: true
       });
 

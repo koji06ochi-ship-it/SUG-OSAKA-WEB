@@ -29,6 +29,49 @@ function mount(root, lang){
  const send=document.createElement('button');send.type='button';send.textContent=t.send;
  send.style.cssText='margin-top:8px;border:1px solid #ff007f;border-radius:9px;background:#28142c;color:white;padding:10px;width:100%';panel.append(send);
  const output=document.createElement('p');output.style.cssText='white-space:pre-wrap;line-height:1.5;font-size:12px';output.setAttribute('aria-live','polite');panel.append(output);
+ // Existing Supabase users can verify their account, without starting any billed AI.
+ // Login state lives only in this tab's memory. The password is cleared after submit.
+ const auth=window.SUGR7AuthSession;
+ if(auth){
+  const authBox=document.createElement('div');
+  authBox.style.cssText='margin:12px 0;padding:10px;border:1px solid #70304d;border-radius:10px;background:#100b19';
+  const authTitle=document.createElement('p');
+  authTitle.textContent=lang==='ja'?'既存アカウントの認証確認（AIは停止中）':lang==='zh'?'验证现有账号（AI尚未启用）':'Existing account check (AI stays off)';
+  authBox.append(authTitle);
+  const email=document.createElement('input');email.type='email';email.autocomplete='username';
+  email.placeholder=lang==='ja'?'登録済みメールアドレス':'Email';
+  email.style.cssText='display:block;box-sizing:border-box;width:100%;padding:9px;margin-bottom:7px;color:#fff;background:#151326;border:1px solid #844164;border-radius:8px';
+  authBox.append(email);
+  const password=document.createElement('input');password.type='password';password.autocomplete='current-password';
+  password.placeholder=lang==='ja'?'パスワード':'Password';
+  password.style.cssText=email.style.cssText;authBox.append(password);
+  const signIn=document.createElement('button');signIn.type='button';
+  signIn.textContent=lang==='ja'?'認証を確認':lang==='zh'?'登录验证':'Check sign-in';
+  signIn.style.cssText='padding:9px;border:1px solid #ff479f;background:#361129;color:#fff;border-radius:8px';
+  const signOut=document.createElement('button');signOut.type='button';
+  signOut.textContent=lang==='ja'?'ログアウト':lang==='zh'?'退出':'Sign out';
+  signOut.style.cssText='margin-left:8px;padding:9px;border:1px solid #6d5d71;background:#201829;color:#fff;border-radius:8px';
+  const authStatus=document.createElement('p');authStatus.setAttribute('aria-live','polite');
+  authStatus.style.cssText='font-size:12px;margin:8px 0 0';
+  function refreshAuth(){
+   authStatus.textContent=auth.isSignedIn()?
+    (lang==='ja'?'認証済み。AIの有料機能は未開放です。':lang==='zh'?'认证成功。付费AI仍未启用。':'Authenticated. Paid AI remains disabled.'):
+    (lang==='ja'?'未認証（既存ユーザーのみ）':lang==='zh'?'未认证（仅限现有用户）':'Not signed in (existing users only)');
+  }
+  signIn.addEventListener('click',async()=>{
+   if(signIn.disabled)return;
+   const mail=email.value,pass=password.value;password.value='';
+   signIn.disabled=true;
+   authStatus.textContent=lang==='ja'?'認証中…':'Checking…';
+   try{await auth.signIn(mail,pass);refreshAuth()}
+   catch{authStatus.textContent=lang==='ja'?'認証できませんでした。メールとパスワードを確認してください。':
+        lang==='zh'?'验证失败，请检查账号。':'Sign-in failed. Check your credentials.'}
+   finally{signIn.disabled=false}
+  });
+  signOut.addEventListener('click',()=>{auth.signOut();refreshAuth()});
+  authBox.append(signIn);authBox.append(signOut);authBox.append(authStatus);
+  refreshAuth();panel.append(authBox);
+ }
  const cfg=window.SUGR7AIService;
  // Explicitly gate on server-approved settings; no auto-probe, no secret in source.
  const enabled=!!(cfg&&cfg.enabled===true&&cfg.serverHardCapConfirmed===true&&

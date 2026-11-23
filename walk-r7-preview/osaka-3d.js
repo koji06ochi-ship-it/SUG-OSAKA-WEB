@@ -61,9 +61,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
     colorLand: '#080B16',
     colorWater: '#102B48',
     colorGreenspace: '#163F34',
-    colorMotorways: '#FF007F',
-    colorTrunks: '#FF4AA5',
-    colorRoads: '#BE718D'
+    // Keep real streets readable; reserve bright pink for an actual selected route.
+    colorMotorways: '#505A70',
+    colorTrunks: '#485368',
+    colorRoads: '#323C53'
   };
 
   container.dataset.state = 'closed';

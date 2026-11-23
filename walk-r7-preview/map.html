@@ -1900,6 +1900,9 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       window.addEventListener('message',ev=>{
         if(ev.source!==parent || ev.origin!==location.origin || !ev.data || ev.data.type!=='sug-r7-map-visible')return;
         resizeVisibleMap();
+        // iOS iframe may not dispatch visibilitychange when a tab becomes active.
+        // Resume the already-consented GPS watcher after the parent activates MAP.
+        syncWatch();
       });
       window.addEventListener('orientationchange',()=>setTimeout(resizeVisibleMap,120));
 
@@ -1996,8 +1999,19 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           acceptGPS(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy,pos.timestamp);
         }, error=>{
           if (generation!==gpsGeneration) return;
-          stopGPS(); if(error.code===1) state.gpsConsent=false;
-          showToast('現在地を取得できません。現在地ボタンから再確認できます。');
+          stopGPS();
+          if(error.code===1){
+            state.gpsConsent=false;
+            document.getElementById('gps-stop').hidden=true;
+            document.getElementById('gps-badge').textContent='GPS: 位置情報の許可が必要';
+            showToast('Safariの位置情報が拒否されています。設定を確認してください。');
+          } else if(error.code===2){
+            document.getElementById('gps-badge').textContent='GPS: 現在地を特定できません';
+            showToast('現在地を特定できません。屋外や通信状態を確認してください。');
+          } else {
+            document.getElementById('gps-badge').textContent='GPS: 応答待ちで停止';
+            showToast('GPSが時間切れです。現在地ボタンで再試行できます。');
+          }
         }, {enableHighAccuracy:true, maximumAge:0, timeout:10000});
       }
       function syncWatch() {

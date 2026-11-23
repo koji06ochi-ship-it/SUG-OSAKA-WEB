@@ -16,7 +16,7 @@ function select(label,choices){
 }
 function mount(root,language,config){
  const t=labels[language]||labels.ja;
- const disabled=config?.aiEnabled!==true;
+ let enabled=config?.aiEnabled===true;
  const panel=document.createElement('section');panel.style.cssText='margin-top:18px;border-top:1px solid #74415d;padding-top:10px';
  const title=document.createElement('h3');title.textContent=t.title;panel.append(title);
  const task=select(t.task,{sightseeing:t.guide,translation:t.translate});
@@ -26,19 +26,28 @@ function mount(root,language,config){
  prompt.setAttribute('aria-label',t.input);prompt.placeholder=t.input;prompt.style.cssText=controlStyle;
  const send=document.createElement('button');send.type='button';send.textContent=t.send;send.style.cssText=controlStyle;
  const output=document.createElement('p');output.style.cssText='white-space:pre-wrap;line-height:1.5;font-size:12px';
- output.setAttribute('aria-live','polite');if(disabled)output.textContent=t.off;
+ output.setAttribute('aria-live','polite');if(!enabled)output.textContent=t.off;
  function updateTarget(){
   target.hidden=task.value!=='translation';
   for(const option of target.options)option.disabled=option.value===source.value;
   if(target.selectedOptions[0]?.disabled)target.value=Object.keys(languageNames).find(key=>key!==source.value);
  }
  task.addEventListener('change',updateTarget);source.addEventListener('change',updateTarget);updateTarget();
- // Keep the form operable for future activation; server-side budget gates own the decision.
- // UI never claims an AI answer was generated when budget is disabled.
+ // Server-side budget gates own whether paid inference may run.
+ // After signing in, recheck status using the actual user JWT rather than cached pre-login status.
+ window.SUGR7Auth.onAuthChange(async signedIn=>{
+   if(!panel.isConnected)return;
+   if(!signedIn){enabled=false;output.textContent=t.auth;return;}
+   const updated=await window.SUGR7Auth.loadConfig();
+   if(!panel.isConnected)return;
+   enabled=updated?.aiEnabled===true;
+   output.textContent=enabled?'':t.off;
+ });
  send.addEventListener('click',async()=>{
   if(send.disabled)return;
   const token=window.SUGR7Auth.getAccessToken();
   if(!token){output.textContent=t.auth;return;}
+  if(!enabled){output.textContent=t.off;return;}
   const question=prompt.value.trim();
   if(!question||question.length>maxChars){output.textContent=t.invalid;return;}
   const payload={task:task.value,question,language:source.value};

@@ -46,34 +46,55 @@ function speak(text,language){
  if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined')return false;
  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=voices[language];u.rate=0.93;speechSynthesis.speak(u);return true;
 }
+const ui={
+ ja:{intro:'登録済み6スポットを3言語で案内。音声は端末の読み上げ機能を使用します。',note:'実AI自由会話・自由文翻訳は未接続。運行時刻・料金などの最新情報は未取得です。',spot:'観光スポット',phrase:'定型文通訳（3言語）',phraseLabel:'通訳する定型文',read:'観光案内を読み上げる',readTranslated:'翻訳した定型文を読み上げる',stop:'読み上げ停止',unsupported:'この端末は読み上げ非対応です。',warning:'※定型文は事前翻訳です。任意の文章のAI翻訳ではありません。'},
+ en:{intro:'Explore six registered Osaka attractions in three languages. Speech is provided by your device.',note:'Free-form AI chat and translation are not connected. Live schedules and prices are unavailable.',spot:'Sightseeing spot',phrase:'Phrase interpreter (3 languages)',phraseLabel:'Select a phrase',read:'Read sightseeing guide',readTranslated:'Read translated phrase',stop:'Stop speech',unsupported:'Speech is not supported on this device.',warning:'Pre-translated phrases only. This is not a free-form AI translator.'},
+ zh:{intro:'以三种语言介绍六处已收录的大阪景点，语音由设备朗读功能提供。',note:'AI自由对话与任意文本翻译尚未连接，不提供实时班次或价格。',spot:'观光景点',phrase:'常用语翻译（三种语言）',phraseLabel:'选择常用语',read:'朗读景点介绍',readTranslated:'朗读翻译结果',stop:'停止朗读',unsupported:'此设备不支持语音朗读。',warning:'仅提供预先翻译的常用语，不支持任意文本AI翻译。'}
+};
 function open(opts){
- const root=opts.root;if(!root)return;
+ const root=opts&&opts.root;if(!root)return;
+ if('speechSynthesis' in window)speechSynthesis.cancel();
  root.replaceChildren();
- const heading=item('p','観光案内：登録済みスポットの説明を3言語で表示します。音声は端末の読み上げ機能を使用します。');root.append(heading);
- const note=item('p','実AIの自由会話・自由文翻訳は未接続です。運行時刻や料金などの最新情報は表示しません。');note.style.cssText='font-size:12px;color:#ffd0e9';root.append(note);
- const controls=item('div');const lang=item('select');lang.setAttribute('aria-label','案内言語');lang.style.cssText='width:100%;padding:10px;background:#171427;color:white;border:1px solid #ff007f;border-radius:8px';
+ const heading=item('p');root.append(heading);
+ const note=item('p');note.style.cssText='font-size:12px;color:#ffd0e9';root.append(note);
+ const controls=item('div');
+ const lang=item('select');lang.setAttribute('aria-label','案内言語');lang.style.cssText='width:100%;padding:10px;background:#171427;color:white;border:1px solid #ff007f;border-radius:8px';
  for(const [id,label] of Object.entries(languageNames)){const o=item('option',label);o.value=id;lang.append(o);}
  lang.value=languageNames[opts.lang]?opts.lang:'ja';controls.append(lang);
- const spot=item('select');spot.setAttribute('aria-label','観光スポット');spot.style.cssText=lang.style.cssText+';margin-top:8px';
+ const spot=item('select');spot.style.cssText=lang.style.cssText+';margin-top:8px';
  locations.forEach(l=>{const o=item('option',l.name);o.value=l.key;spot.append(o);});
  const nearest=opts.nearestName||'';
  const match=locations.find(l=>l.terms.some(t=>nearest.includes(t)));if(match)spot.value=match.key;
  controls.append(spot);root.append(controls);
  const output=item('div');output.style.cssText='border:1px solid #70415f;border-radius:12px;padding:12px;margin:10px 0;white-space:pre-wrap;line-height:1.55';root.append(output);
- const speakBtn=button('案内を読み上げる',()=>{if(!speak(output.textContent,lang.value))status.textContent='この端末は読み上げ非対応です。';});root.append(speakBtn);
- const status=item('p');status.style.cssText='font-size:12px';root.append(status);
- function update(){const l=locations.find(p=>p.key===spot.value);output.textContent=l.descriptions[lang.value]||l.descriptions.ja;}
- lang.addEventListener('change',()=>{update();drawPhrases();});spot.addEventListener('change',update);update();
- const title=item('h3','定型文通訳（3言語）');title.style.marginTop='18px';root.append(title);
+ const status=item('p');status.style.cssText='font-size:12px';status.setAttribute('aria-live','polite');
+ const speakBtn=button('',()=>{if(!speak(output.textContent,lang.value))status.textContent=ui[lang.value].unsupported;});root.append(speakBtn,status);
+ const title=item('h3');title.style.marginTop='18px';root.append(title);
  const phraseSel=item('select');phraseSel.setAttribute('aria-label','通訳する定型文');phraseSel.style.cssText=lang.style.cssText;
  phrases.forEach((p,i)=>{const o=item('option',p.ja);o.value=String(i);phraseSel.append(o);});root.append(phraseSel);
  const translated=item('div');translated.style.cssText='padding:12px;margin:10px 0;border:1px solid #70415f;border-radius:10px;white-space:pre-wrap';root.append(translated);
+ const translateBtn=button('',()=>{if(!speak(translated.textContent,lang.value))status.textContent=ui[lang.value].unsupported;});root.append(translateBtn);
+ const stopBtn=button('',()=>{if('speechSynthesis' in window)speechSynthesis.cancel();});root.append(stopBtn);
+ const warning=item('p');warning.style.cssText='font-size:11px;opacity:.8';root.append(warning);
+ const chatRoot=item('section');root.append(chatRoot);
  function drawPhrases(){const p=phrases[Number(phraseSel.value)]||phrases[0];translated.textContent=p[lang.value];}
- phraseSel.addEventListener('change',drawPhrases);drawPhrases();
- root.append(button('翻訳した定型文を読み上げる',()=>{if(!speak(translated.textContent,lang.value))status.textContent='読み上げは利用できません。';}));
- root.append(button('読み上げ停止',()=>{if('speechSynthesis' in window)speechSynthesis.cancel();}));
- const warning=item('p','※定型文は事前翻訳です。任意の文章のAI翻訳ではありません。');warning.style.cssText='font-size:11px;opacity:.8';root.append(warning);
- if(window.SUGR7AIChat)window.SUGR7AIChat.mount(root,lang.value);
+ function updateSpot(){const l=locations.find(p=>p.key===spot.value)||locations[0];output.textContent=l.descriptions[lang.value]||l.descriptions.ja;}
+ function refresh(){
+  const t=ui[lang.value]||ui.ja;
+  heading.textContent=t.intro;note.textContent=t.note;spot.setAttribute('aria-label',t.spot);
+  title.textContent=t.phrase;phraseSel.setAttribute('aria-label',t.phraseLabel);
+  speakBtn.textContent=t.read;translateBtn.textContent=t.readTranslated;stopBtn.textContent=t.stop;warning.textContent=t.warning;
+  const old=phraseSel.value;
+  [...phraseSel.options].forEach((o,i)=>{o.textContent=phrases[i][lang.value];});
+  phraseSel.value=old;status.textContent='';
+  updateSpot();drawPhrases();
+  chatRoot.replaceChildren();if(window.SUGR7AIChat)window.SUGR7AIChat.mount(chatRoot,lang.value);
+ }
+ lang.addEventListener('change',()=>{if('speechSynthesis' in window)speechSynthesis.cancel();refresh();});
+ spot.addEventListener('change',updateSpot);
+ phraseSel.addEventListener('change',drawPhrases);
+ refresh();
 }
+
 window.SUGR7TourGuide={open,locationsCount:locations.length,phrasesCount:phrases.length};
 })();

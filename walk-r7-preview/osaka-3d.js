@@ -192,7 +192,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     el.innerHTML='<span class="sug-r7-spot-pill" style="border-color:#49caff;color:#d7f6ff;box-shadow:0 0 15px #168dff88;background:#061929ee">🚉 JR天満駅</span>';
     el.addEventListener('click',e=>{
       e.stopPropagation();
-      if(view) view.easeTo({center:[station.lng,station.lat],zoom:18,pitch:65,duration:750});
+      if(view) view.easeTo({center:[station.lng,station.lat],zoom:17.8,pitch:68,duration:750});
       if(typeof ui.select==='function')ui.select(station);
     });
     spotMarkers.push(new gl.Marker({element:el,anchor:'bottom'})
@@ -1429,8 +1429,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     cameraAnchor = current;
     const camera = {
       center: coords,
-      zoom: 19.1,
-      pitch: 77,
+      zoom: 18.25,
+      pitch: 72,
       offset: [0, Math.round(Math.max(0, container.clientHeight) * 0.20)],
       duration: 950,
       essential: true
@@ -1488,8 +1488,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
         config: { basemap: BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
         center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
-        zoom: MINT_MUSEUM_INSPECTION ? 18 : 19.1,
-        pitch: MINT_MUSEUM_INSPECTION ? 68 : 77,
+        zoom: MINT_MUSEUM_INSPECTION ? 18 : 17.3,
+        pitch: MINT_MUSEUM_INSPECTION ? 68 : 65,
         bearing: -68,
         maxPitch: 85,
         antialias: true
@@ -1593,9 +1593,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       updateSource('sug-r7-user', EMPTY);
       updateSource('sug-r7-walk-trace', EMPTY);
     },
-    focus(center, zoom = 19.1) {
+    focus(center, zoom = 18.25) {
       if (!view) return false;
-      view.easeTo({ center, zoom, pitch: 77 });
+      view.easeTo({ center, zoom, pitch: 72 });
       return true;
     },
     zoom(delta) {

@@ -1564,11 +1564,18 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 #sug-map-actions{z-index:535}
 #sug-map-actions[data-expanded="false"]{
   left:10px;right:auto;bottom:134px;top:auto!important;
-  width:auto;display:flex;flex-direction:column;gap:0;
+  width:auto;display:flex;flex-direction:row;align-items:center;gap:7px;
   padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none;
 }
 #sug-map-actions[data-expanded="false"]::before{content:none!important}
-#sug-map-actions[data-expanded="false"] > .tool-btn{display:none!important}
+/* Keep the real 3D/2D toggle visible beside the collapsed tools menu. */
+#sug-map-actions[data-expanded="false"] > .tool-btn:not(#osaka-toggle){display:none!important}
+#sug-map-actions[data-expanded="false"] > #osaka-toggle{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-width:65px;min-height:39px;border:1.5px solid #5ae8ff;
+  border-radius:999px;background:#091a26ee;color:#d8fbff;font-size:13px;
+  box-shadow:0 0 12px #5ae8ff55;
+}
 #sug-map-actions-toggle{
   grid-column:1 / -1;min-height:39px;min-width:106px;
   border:1.5px solid #ff58ac;border-radius:999px;background:#17091ddf;

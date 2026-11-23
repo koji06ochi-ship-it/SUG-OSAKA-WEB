@@ -352,6 +352,7 @@
     }
 
     .sheet-desc {
+      white-space: pre-line;
       margin: 0 0 14px;
       font-size: 12.5px;
       line-height: 1.55;
@@ -502,6 +503,7 @@
     </main>
   </div>
 
+  <script src="neon-walk.js"></script>
   <script>
     (function () {
       'use strict';
@@ -659,18 +661,51 @@
         showToast(I18N[lang].backToast);
       });
 
+      function getOsakaNightRecord() {
+        try {
+          if (!window.SUGR7NeonWalk || !window.localStorage) return null;
+          // Read the MAP's own bounded/validated on-device GPS segments. No network or fake progress.
+          const rows = window.SUGR7NeonWalk.read(window.localStorage);
+          const today = window.SUGR7NeonWalk.dayKey(Date.now());
+          const sum = items => items.reduce((n, item) => n + item.metres, 0);
+          return {todayMetres: sum(rows.filter(item => item.day === today)),
+                  totalMetres: sum(rows), count: rows.length};
+        } catch (_) { return null; }
+      }
+      function osakaNightDescription(language) {
+        const record = getOsakaNightRecord();
+        const dictionary = {
+          ja: {today:'今日の記録',total:'保存中の累計',units:'km',noRecord:'この端末にGPS歩行記録はまだありません。',
+               pending:'称号の獲得条件・共有カードは未設定です。',unavailable:'端末内の記録を取得できません。'},
+          en: {today:"Today's recorded walk",total:'Stored cumulative walk',units:'km',
+               noRecord:'No saved GPS walk records on this device.',pending:'Badge rules and sharing cards are not yet defined.',
+               unavailable:'Device records are unavailable.'},
+          zh: {today:'今日步行记录',total:'设备保存的累计记录',units:'公里',
+               noRecord:'此设备尚无GPS步行记录。',pending:'称号达成条件及分享卡片尚未设定。',
+               unavailable:'无法读取设备记录。'}
+        };
+        const d = dictionary[language] || dictionary.ja;
+        if (!record) return d.unavailable + '\n' + d.pending;
+        const format = metres => (metres / 1000).toFixed(2) + ' ' + d.units;
+        return d.today + ': ' + format(record.todayMetres) + '\n' +
+               d.total + ': ' + format(record.totalMetres) + '\n' +
+               (record.count ? '' : d.noRecord + '\n') + d.pending;
+      }
       const sheet = document.getElementById('sheet');
       document.querySelectorAll('.neon-card').forEach(card => {
         card.addEventListener('click', () => {
           const route = card.dataset.route;
           const item = I18N[lang].cards[route];
           if (!item) return;
-          if (window.parent && window.parent !== window) {
+          if (route !== 'osaka' && window.parent && window.parent !== window) {
             try { window.parent.postMessage({ type: 'SUG_SPECIAL_ROUTE', route: route }, '*'); } catch (e) {}
           }
-          document.getElementById('sheet-status').textContent = item.status;
+          document.getElementById('sheet-status').textContent = route === 'osaka' ? (
+            lang === 'ja' ? '端末内GPS記録' : lang === 'en' ? 'ON-DEVICE GPS RECORD' : '设备GPS记录'
+          ) : item.status;
           document.getElementById('sheet-title').textContent = item.title;
-          document.getElementById('sheet-desc').textContent = item.desc;
+          document.getElementById('sheet-desc').textContent =
+            route === 'osaka' ? osakaNightDescription(lang) : item.desc;
           sheet.classList.add('open');
           sheet.setAttribute('aria-hidden', 'false');
         });

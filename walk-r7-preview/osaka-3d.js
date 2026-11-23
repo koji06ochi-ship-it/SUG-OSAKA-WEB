@@ -477,7 +477,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         if(!Array.isArray(ring)||ring.length<4||ring.length>100)continue;
         const center=ring.slice(0,-1).reduce((p,c)=>[p[0]+c[0]/(ring.length-1),p[1]+c[1]/(ring.length-1)],[0,0]);
         const d=dist(center,viewCenter);
-        if(d>220)continue;
+        if(d>360)continue;
         const height=Number(feature.properties.height);
         if(!Number.isFinite(height)||height<9||height>160)continue;
         const key=String(feature.id??'')+'|'+center.map(n=>n.toFixed(5)).join(',');
@@ -486,9 +486,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
         candidates.push({ring,height,base:Math.max(0,Number(feature.properties.min_height)||0),d});
       }
       candidates.sort((a,b)=>a.d-b.d);
-      const result=[],chosen=candidates.slice(0,8);
+      const result=[],chosen=candidates.slice(0,20);
       let windowCount=0;
-      const MAX_WINDOWS=240;
+      const MAX_WINDOWS=360;
+      const WINDOWS_PER_BUILDING=18;
       for(const building of chosen){
         // Sample max 8 real corners, omit ring closure and near-duplicates.
         let corners=[];
@@ -516,16 +517,17 @@ window.createOsaka3D = function createOsaka3D(ui) {
         }
         // Approximate individual facade windows from mapped building edges.
         // Only use actual building footprints, never invent building locations.
-        const floorCount=Math.min(8,Math.floor((building.height-building.base-2)/3.25));
-        for(let floor=1;floor<=floorCount&&windowCount<MAX_WINDOWS;floor++){
+        const buildingWindowStart=windowCount;
+        const floorCount=Math.min(7,Math.floor((building.height-building.base-2)/3.25));
+        for(let floor=1;floor<=floorCount&&windowCount<MAX_WINDOWS&&windowCount-buildingWindowStart<WINDOWS_PER_BUILDING;floor++){
           const floorBase=building.base+floor*3.25+0.65;
           if(floorBase+1.15>=building.height)break;
-          for(let edge=0;edge<Math.min(fullRing.length-1,8)&&windowCount<MAX_WINDOWS;edge++){
+          for(let edge=0;edge<Math.min(fullRing.length-1,8)&&windowCount<MAX_WINDOWS&&windowCount-buildingWindowStart<WINDOWS_PER_BUILDING;edge++){
             const a=fullRing[edge],b=fullRing[edge+1];
             const length=dist(a,b);
             if(length<4||length>100)continue;
             const count=Math.min(5,Math.floor(length/4.5));
-            for(let j=0;j<count&&windowCount<MAX_WINDOWS;j++){
+            for(let j=0;j<count&&windowCount<MAX_WINDOWS&&windowCount-buildingWindowStart<WINDOWS_PER_BUILDING;j++){
               // An unlit pane is deliberately skipped for a natural night skyline.
               const pattern=(floor*17+edge*13+j*7+Math.round(building.height));
               if(pattern%5===0)continue;
@@ -546,6 +548,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       lastRefreshCenter=viewCenter;
       container.dataset.windowStatus=windowCount?'geometry-ready':'no-eligible-buildings';
       container.dataset.windowCount=String(windowCount);
+      container.dataset.windowBuildings=String(chosen.length);
+      container.dataset.windowLimit=String(MAX_WINDOWS);
       container.dataset.windowAccuracy='decorative-not-surveyed';
       container.dataset.baseNeonStatus=chosen.length?'geometry-ready':'no-eligible-buildings';
       container.dataset.baseNeonBands=String(result.filter(f=>f.properties.kind.startsWith('base-')).length);

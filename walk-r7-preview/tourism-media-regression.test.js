@@ -9,7 +9,7 @@ const vm=require('node:vm');
 const raw=fs.readFileSync(path.join(__dirname,'tourism-media.js'),'utf8');
 function load(rows){
  const src=raw.replace('const approved = Object.freeze({});','const approved = Object.freeze('+JSON.stringify(rows)+');');
- assert.notEqual(src,raw,'catalogue insertion must be found');
+ if (Object.keys(rows).length) assert.notEqual(src,raw,'catalogue insertion must be found');
  const root={};vm.runInNewContext(src,{window:root});
  return root.SUGR7TourismMedia;
 }

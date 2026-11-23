@@ -26,7 +26,11 @@ const locations=[
  {key:'nakanoshima',name:'中之島公園',terms:['中之島公園'],descriptions:{
  ja:'中之島公園は川に囲まれた中之島の都市公園です。水辺の風景を楽しめます。',
  en:'Nakanoshima Park is an urban park on an island between rivers, known for its waterfront setting.',
- zh:'中之岛公园位于河流环绕的中之岛，可欣赏滨水景色。'}}
+ zh:'中之岛公园位于河流环绕的中之岛，可欣赏滨水景色。'}},
+ {key:'chakai',name:'CAFE 大阪茶会®',terms:['大阪茶会','osaka chakai','osakachakai','茶会','日本茶','tea cafe','tea ceremony','茶馆','茶會'],descriptions:{
+ ja:'CAFE 大阪茶会®は大阪市北区天神橋2-1-25 1階にある、日本茶と陶磁器を楽しめるカフェです。公式Instagramは @osakachakai です。',
+ en:'CAFE Osaka Chakai® is a Japanese tea and pottery café at 2-1-25 Tenjinbashi, Kita-ku, Osaka, on the ground floor. Its official Instagram is @osakachakai.',
+ zh:'CAFE 大阪茶会® 位于大阪市北区天神桥2-1-25一楼，是可以体验日本茶与陶瓷茶器的咖啡馆。官方Instagram：@osakachakai。'}}
 ];
 const phrases=[
  {ja:'こんにちは',en:'Hello.',zh:'你好。'},
@@ -38,6 +42,16 @@ const phrases=[
  {ja:'ありがとうございます',en:'Thank you.',zh:'谢谢。'},
  {ja:'助けてください',en:'Please help me.',zh:'请帮帮我。'}
 ];
+// Offline exact-information search. This is NOT generative AI or arbitrary translation.
+function offlineReply(question,lang){
+ const q=String(question||'').trim().toLocaleLowerCase();
+ if(!q||q.length>500)return null;
+ const spot=locations.find(l=>l.terms.some(t=>q.includes(t.toLocaleLowerCase())));
+ if(spot)return {kind:'place',text:spot.descriptions[lang]||spot.descriptions.ja,name:spot.name};
+ const matched=phrases.find(p=>Object.values(p).some(t=>q.replace(/[？?！!。．.,\s]+/g,'')===t.toLocaleLowerCase().replace(/[？?！!。．.,\s]+/g,'')));
+ if(matched)return {kind:'phrase',text:matched[lang],name:null};
+ return null;
+}
 const languageNames={ja:'日本語',en:'English',zh:'中文'};
 const voices={ja:'ja-JP',en:'en-US',zh:'zh-CN'};
 function item(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;}
@@ -51,6 +65,31 @@ function open(opts){
  root.replaceChildren();
  const heading=item('p','観光案内：登録済みスポットの説明を3言語で表示します。音声は端末の読み上げ機能を使用します。');root.append(heading);
  const note=item('p','実AIの自由会話・自由文翻訳は未接続です。運行時刻や料金などの最新情報は表示しません。');note.style.cssText='font-size:12px;color:#ffd0e9';root.append(note);
+ const freeBox=item('section');
+ freeBox.style.cssText='margin:12px 0;padding:12px;border:1px solid #8c5c77;border-radius:10px;background:rgba(18,12,32,.75)';
+ const freeTitle=item('strong','無料オフライン案内｜質問する');
+ const freeDescription=item('p','登録済みの大阪スポットと定型文だけを検索します。自由会話AI・任意文章の翻訳ではありません。');
+ freeDescription.style.cssText='font-size:11px;opacity:.85;line-height:1.5';
+ const question=document.createElement('textarea');
+ question.rows=2;question.maxLength=500;question.placeholder='例：大阪茶会はどこ？ / Where is Osaka Castle?';
+ question.setAttribute('aria-label','オフラインで質問');
+ question.style.cssText='box-sizing:border-box;width:100%;padding:10px;border:1px solid #ff007f;border-radius:8px;background:#171427;color:#fff;font-size:16px';
+ const ask=button('オフラインで調べる',()=>reply());
+ const answer=item('p');answer.setAttribute('aria-live','polite');
+ answer.style.cssText='font-size:13px;white-space:pre-wrap;line-height:1.6';
+ const sourceLink=document.createElement('a');
+ sourceLink.href='https://www.instagram.com/osakachakai/';
+ sourceLink.target='_blank';sourceLink.rel='noopener noreferrer';sourceLink.textContent='大阪茶会 公式Instagram';
+ sourceLink.style.cssText='display:none;color:#f9aace;text-decoration:underline;font-size:12px';
+ function reply(){
+   const r=offlineReply(question.value,lang.value);
+   answer.textContent=r?r.text:({ja:'登録済みのスポット・定型文に一致しません。観光スポットを選ぶか、AI接続後に質問してください。',
+     en:'No matching saved place or phrase. Choose a listed destination or ask when AI is available.',
+     zh:'未找到匹配的地点或常用短句。请选择已收录的景点，或待AI接通后提问。'})[lang.value];
+   sourceLink.style.display=r?.name==='CAFE 大阪茶会®'?'inline-block':'none';
+ }
+ question.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();reply();}});
+ freeBox.append(freeTitle,freeDescription,question,ask,answer,sourceLink);root.append(freeBox);
  const controls=item('div');const lang=item('select');lang.setAttribute('aria-label','案内言語');lang.style.cssText='width:100%;padding:10px;background:#171427;color:white;border:1px solid #ff007f;border-radius:8px';
  for(const [id,label] of Object.entries(languageNames)){const o=item('option',label);o.value=id;lang.append(o);}
  lang.value=languageNames[opts.lang]?opts.lang:'ja';controls.append(lang);

@@ -63,39 +63,60 @@
       });
     });
   }
-  // Mount an independent SPECIAL tile inside HOME's existing card grid.
-  // Never replace the existing Spatial Copy / QUEST card or its handlers.
+  // Attach a seventh tile without replacing the existing Event/SAFE or QUEST cards.
   function mountHomeSpecialCard() {
     var doc;
     try { doc = home.contentDocument; } catch (_) { return false; }
-    if (!doc || !doc.body || doc.getElementById('sug-home-special-card')) return false;
-    var nodes = Array.from(doc.querySelectorAll('button,a,[role="button"],div,span'));
-    var label = nodes.find(function (node) {
-      return node.children.length === 0 && /空間コピペ|空間コピー|QUEST/.test(node.textContent || '');
+    if (!doc || !doc.body) return false;
+    if (doc.getElementById('sug-home-special-card')) return true;
+    var labels = Array.from(doc.querySelectorAll('button,a,div,span,strong,p,h2,h3'));
+    var eventLabel = labels.find(function (node) {
+      return node.children.length === 0 && /イベント\s*[\/／]\s*SAFE/.test(node.textContent || '');
     });
-    if (!label) return false;
-    var candidate = label;
     var grid = null;
-    for (var i = 0; candidate && i < 7; i++, candidate = candidate.parentElement) {
-      var parent = candidate.parentElement;
-      if (!parent || parent.children.length < 3 || parent.children.length > 12) continue;
-      var display = doc.defaultView.getComputedStyle(parent).display;
-      if (display.indexOf('grid') !== -1) { grid = parent; break; }
+    if (eventLabel) {
+      for (var parent = eventLabel.parentElement, i = 0; parent && i < 9; parent = parent.parentElement, i++) {
+        if (parent.children.length < 3 || parent.children.length > 12) continue;
+        var text = (parent.textContent || '').replace(/\s/g, '');
+        if (text.includes('AI観光') && text.includes('AI通訳') && text.includes('QUEST')) {
+          grid = parent;
+          break;
+        }
+      }
     }
-    if (!grid) return false;
     var tile = doc.createElement('button');
     tile.type = 'button';
     tile.id = 'sug-home-special-card';
-    tile.setAttribute('aria-label','SPECIALを開く');
-    tile.innerHTML = '<span aria-hidden="true" style="font-size:32px;line-height:1">✨</span><strong style="font-size:16px;letter-spacing:0.05em">SPECIAL</strong>';
-    tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:155px;width:100%;border:2px solid #ff499f;border-radius:22px;background:linear-gradient(145deg,#240a23,#090712);color:#fff;box-shadow:inset 0 0 20px #ff2e9325,0 0 17px #ff2e9338;font-family:inherit;cursor:pointer';
-    tile.addEventListener('click', openSpecial);
-    grid.appendChild(tile);
+    tile.setAttribute('aria-label', 'SPECIALを開く');
+    tile.innerHTML = '<span aria-hidden="true" style="font-size:30px">✨</span><strong>SPECIAL</strong>';
+    tile.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:150px;width:100%;border:2px solid #ff499f;border-radius:22px;background:linear-gradient(145deg,#280b25,#090712);color:#fff;box-shadow:inset 0 0 20px #ff2e9325,0 0 17px #ff2e9338;font:700 16px -apple-system,BlinkMacSystemFont,sans-serif;cursor:pointer';
+    tile.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openSpecial(); });
+    if (grid) {
+      grid.appendChild(tile);
+      return true;
+    }
+    // Safe fallback: place an in-flow full-width entry inside HOME rather than
+    // an overlay that hides an existing card.
+    var anchor = labels.find(function (node) {
+      return node.children.length === 0 && /R7状態/.test(node.textContent || '');
+    });
+    if (!anchor) return false;
+    var section = anchor;
+    for (var j = 0; j < 6 && section.parentElement; j++) {
+      if (section.parentElement.children.length >= 2) break;
+      section = section.parentElement;
+    }
+    tile.style.minHeight = '64px';
+    tile.style.flexDirection = 'row';
+    tile.style.margin = '10px auto';
+    tile.style.maxWidth = 'calc(100% - 28px)';
+    section.parentElement.insertBefore(tile, section);
     return true;
   }
   home.addEventListener('load', mountHomeSpecialCard);
-  // If the iframe has already loaded by the time the bridge starts.
-  if (home.contentDocument && home.contentDocument.readyState === 'complete') mountHomeSpecialCard();
+  try {
+    if (home.contentDocument && home.contentDocument.readyState !== 'loading') mountHomeSpecialCard();
+  } catch (_) {}
   window.addEventListener('message', function(e){
     if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data) return;
     if (e.data.type === 'SUG_CLOSE_SPECIAL') { closeSpecial(); return; }

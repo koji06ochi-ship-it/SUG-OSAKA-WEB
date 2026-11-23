@@ -74,8 +74,9 @@ function mount(root,language,config){
   // even when there is no login or no spending approval.
   const token=window.SUGR7Auth.getAccessToken();
   if(!enabled||!token){
-    const reply=window.SUGR7TourGuide?.offlineReply(question,
-      task.value==='translation'?target.value:source.value);
+    const reply=task.value==='translation'?
+      window.SUGR7TourGuide?.phraseReply(question,target.value):
+      window.SUGR7TourGuide?.offlineReply(question,source.value);
     const prefix=language==='en'?'Saved guide / phrase (not AI): ':language==='zh'?
       '已收录导览／短句（非AI）：':'登録済み案内・定型文（AI生成ではありません）：';
     const missing=language==='en'?'No matching saved place or phrase. Arbitrary text translation requires AI.':

@@ -3,27 +3,27 @@
 (function(){
 'use strict';
 const locations=[
- {key:'hachikenya',name:'八軒家浜',terms:['八軒家浜','八軒家'],descriptions:{
+ {key:'hachikenya',name:'八軒家浜',terms:['八軒家浜','八軒家','hachikenya','hachikenyahama','八轩家滨'],descriptions:{
  ja:'八軒家浜は大川沿いの水辺エリアです。天満橋周辺から水辺の散策を楽しめます。船の運航状況や乗り場は公式案内をご確認ください。',
  en:'Hachikenyahama is a riverside area along the Okawa River near Temmabashi. Enjoy a walk beside the water. Check official information for boat services and boarding points.',
  zh:'八轩家滨位于大川沿岸，靠近天满桥。适合沿河散步。乘船地点及运行情况请查看官方公告。'}},
- {key:'hall',name:'大阪市中央公会堂',terms:['大阪市中央公会堂','中央公会堂'],descriptions:{
+ {key:'hall',name:'大阪市中央公会堂',terms:['大阪市中央公会堂','中央公会堂','osaka city central public hall','central public hall','大阪市中央公会堂'],descriptions:{
  ja:'大阪市中央公会堂は中之島にある歴史的な公共建築です。見学や催しの案内は施設の公式情報で確認してください。',
  en:'Osaka City Central Public Hall is a historic civic building on Nakanoshima. Check its official website for visits and events.',
  zh:'大阪市中央公会堂是位于中之岛的历史性公共建筑。参观与活动信息请查看官方网站。'}},
- {key:'castle',name:'大阪城',terms:['大阪城'],descriptions:{
+ {key:'castle',name:'大阪城',terms:['大阪城','osaka castle','大阪城公园','大阪城公園'],descriptions:{
  ja:'大阪城は大阪を代表する歴史的名所です。大阪城公園とあわせて散策できます。入館情報は公式サイトで確認してください。',
  en:'Osaka Castle is one of the city’s best-known historic landmarks. You can also explore Osaka Castle Park. Check the official site for admission information.',
  zh:'大阪城是大阪著名的历史地标，也可以游览大阪城公园。入馆信息请查看官方网站。'}},
- {key:'mint',name:'造幣博物館',terms:['造幣博物館','造幣局'],descriptions:{
+ {key:'mint',name:'造幣博物館',terms:['造幣博物館','造幣局','mint museum','japan mint','造币博物馆','造币局'],descriptions:{
  ja:'造幣博物館では貨幣の歴史に関する展示を紹介しています。公開日や見学条件は造幣局の公式案内で確認してください。',
  en:'The Mint Museum introduces the history of coins and currency. Check the Japan Mint’s official information for visiting days and conditions.',
  zh:'造币博物馆介绍钱币相关的历史。开放日期与参观条件请查看日本造币局官方信息。'}},
- {key:'park',name:'扇町公園',terms:['扇町公園'],descriptions:{
+ {key:'park',name:'扇町公園',terms:['扇町公園','ogimachi park','扇町公园'],descriptions:{
  ja:'扇町公園は大阪市北区の都市公園です。周辺には扇町駅や関西テレビがあります。',
  en:'Ogimachi Park is an urban park in Osaka’s Kita Ward, near Ogimachi Station and Kansai Television.',
  zh:'扇町公园位于大阪市北区，附近有扇町站和关西电视台。'}},
- {key:'nakanoshima',name:'中之島公園',terms:['中之島公園'],descriptions:{
+ {key:'nakanoshima',name:'中之島公園',terms:['中之島公園','nakanoshima park','中之岛公园'],descriptions:{
  ja:'中之島公園は川に囲まれた中之島の都市公園です。水辺の風景を楽しめます。',
  en:'Nakanoshima Park is an urban park on an island between rivers, known for its waterfront setting.',
  zh:'中之岛公园位于河流环绕的中之岛，可欣赏滨水景色。'}},

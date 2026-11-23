@@ -2538,13 +2538,14 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         const shops = kind==='discover';
         const items = shops ? rows().find(r=>r.type==='shops').items : selectedEvents();
         const ranked = items.slice().sort((a,b)=>fresh() ? (point(a)?distance(a):Infinity)-(point(b)?distance(b):Infinity) : 0);
-        openModal({title:shops?'おすすめ店舗':'おすすめイベント',badge:ranked.length+'件',html:''}); activeList=kind;
+        openModal({title:shops?'掲載確認済みの店舗':'おすすめイベント',badge:ranked.length+'件',html:''}); activeList=kind;
         const body=document.getElementById('modal-body');
         if (!ranked.length) body.append(textNode('p',shops?'掲載する確認済み店舗はありません。':'掲載中のイベントはありません。'));
         for (const item of ranked) {
           const card=document.createElement('article');
           card.append(textNode('strong',item.name || item.title));
           if (!shops) card.append(textNode('p',[{published:'公開中',postponed:'延期',cancelled:'中止'}[item.status],item.venue,item.startAt,item.endAt].filter(Boolean).join(' ｜ ')));
+          if (shops && item.verifiedAt) card.append(textNode('small','掲載情報の最終確認: '+String(item.verifiedAt).slice(0,10)+' ｜ 店舗の営業状況は公式情報をご確認ください'));
           if (fresh() && point(item)) card.append(textNode('small','現在地から約'+Math.round(distance(item))+'m'));
           const url=item.sourceUrl || item.officialUrl;
           if (typeof url==='string' && /^https:\/\//i.test(url)) {

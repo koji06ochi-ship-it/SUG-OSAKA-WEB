@@ -119,5 +119,5 @@ function open(opts){
   });
  }
 }
-window.SUGR7TourGuide={open,locationsCount:locations.length,phrasesCount:phrases.length};
+window.SUGR7TourGuide={open,offlineReply,locationsCount:locations.length,phrasesCount:phrases.length};
 })();

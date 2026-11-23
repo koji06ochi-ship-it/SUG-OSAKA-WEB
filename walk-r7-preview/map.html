@@ -1414,6 +1414,33 @@ svg.leaflet-image-layer.leaflet-interactive path {
 #sug-r7-token-actions button{min-height:43px;padding:8px;border:1px solid #ff3b9a;border-radius:9px;background:#301029;color:#fff}
 #sug-r7-token-save{grid-column:span 2;background:#a71360!important;font-weight:700}
 #sug-r7-token-status{min-height:1.5em;color:#ffd3e7!important}
+
+    /* R7 iPhone map clarity: keep the map visible; expand optional controls on demand. */
+    .r7-compact-tools.map-tools-left {
+      top:auto!important;bottom:116px!important;left:10px!important;right:auto!important;
+      width:auto!important;max-width:min(94vw,360px);display:flex!important;flex-direction:row!important;
+      align-items:center;gap:5px!important;padding:6px!important;background:rgba(8,6,19,.76)!important;
+      border-radius:12px!important;box-shadow:0 2px 12px rgba(0,0,0,.38)!important;
+    }
+    .r7-compact-tools.map-tools-left::before{content:none!important;}
+    .r7-compact-tools .r7-tool-expander,.r7-dock-expander{
+      appearance:none;border:1px solid #ff479f;background:rgba(27,8,29,.95);
+      color:#fff;border-radius:10px;padding:8px 10px;min-height:36px;font-size:12px;font-weight:700;
+      cursor:pointer;
+    }
+    .r7-compact-tools:not(.r7-expanded) > :not(#r7-tool-expander):not(#btn-recenter):not(#osaka-toggle){display:none!important;}
+    .r7-compact-tools:not(.r7-expanded) .tool-btn{min-height:34px!important;padding:5px 8px!important;}
+    .r7-compact-tools.r7-expanded{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));width:calc(100% - 20px)!important;right:10px!important;bottom:126px!important;background:rgba(8,6,19,.96)!important;padding:9px!important;}
+    .r7-compact-tools.r7-expanded .r7-tool-expander{grid-column:1/-1;}
+    .r7-compact-tools.r7-expanded .zoom-pair{position:static!important;justify-content:center;}
+    .r7-compact-dock.bottom-dock{min-height:0!important;padding:5px 10px 7px!important;gap:4px!important;background:rgba(8,5,18,.88)!important;}
+    .r7-compact-dock:not(.r7-expanded) .discovery-banner,.r7-compact-dock:not(.r7-expanded) .drawer-tabs-bar{display:none!important;}
+    .r7-compact-dock .r7-dock-expander{min-height:27px;padding:3px 10px;font-size:10px;align-self:flex-end;}
+    .r7-compact-dock .metrics-row{padding:0 3px;gap:6px;}
+    .r7-compact-dock .metric-mini .val{font-size:12px;}
+    /* Do not dim streets or overlay a dark vignette over road lines. */
+    #sug-real-map .leaflet-tile-pane{filter:grayscale(.12) saturate(.9) brightness(1.02) contrast(1.08)!important;}
+    .map-stage::after{background:linear-gradient(to bottom,rgba(4,3,11,.35),transparent 18%,transparent 84%,rgba(4,3,11,.18))!important;box-shadow:none!important;}
 </style>
 <script>window.SUG_WALK_UI_ROOT=document;</script>
 <script>// Only approved listings with source and review date go here. No inferred POI data.
@@ -1604,7 +1631,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         </header>
 
         <!-- Compact Left Map Action Controls -->
-        <div class="map-tools-left">
+        <div class="map-tools-left r7-compact-tools" id="r7-map-tools"><button type="button" class="r7-tool-expander" id="r7-tool-expander" aria-expanded="false" aria-controls="r7-map-tools" aria-label="地図メニューを開く">☰ メニュー</button>
           <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn" id="sug-r7-token-settings">3D設定</button>
           <button type="button" class="tool-btn" id="btn-search-open">スポット検索</button>
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
@@ -1633,7 +1660,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           <div class="metrics-row">
             <div class="metric-mini">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff2e93" stroke-width="2"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/></svg>
-              <div><span class="lbl">STEPS</span><span class="val" id="val-steps">-- 歩</span></div>
+              <div><span class="lbl">STEPS</span><span class="val" id="val-steps">未連携</span></div>
             </div>
             <div class="metric-mini">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5ae8ff" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
@@ -2012,7 +2039,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
             closeModal();
           });
         } else if (tab === 'walk') {
-          var stepsStr = state.metrics.steps !== null ? Number(state.metrics.steps).toLocaleString('ja-JP') + ' 歩' : '-- 歩';
+          var stepsStr = state.metrics.steps !== null ? Number(state.metrics.steps).toLocaleString('ja-JP') + ' 歩' : '未連携';
           var distStr = state.metrics.distanceKm !== null ? Number(state.metrics.distanceKm).toFixed(2) + ' km' : '-- km';
           var coinStr = state.coinBalance !== null ? Number(state.coinBalance).toLocaleString('ja-JP') + ' COIN' : '-- COIN';
           openModal({
@@ -2569,6 +2596,30 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       try { window.dispatchEvent(new CustomEvent('sug:eventsUpdated')); } catch(e){}
     }
   });
+})();
+</script>
+<script>
+(function(){
+ 'use strict';
+ const tools=document.getElementById('r7-map-tools'),toolToggle=document.getElementById('r7-tool-expander');
+ const dock=document.getElementById('r7-map-dock'),dockToggle=document.getElementById('r7-dock-expander');
+ function setExpanded(el,btn,on,openText,closedText){
+  el.classList.toggle('r7-expanded',on);
+  btn.setAttribute('aria-expanded',String(on));
+  btn.textContent=on?openText:closedText;
+ }
+ if(tools&&toolToggle){
+  setExpanded(tools,toolToggle,false,'✕ 閉じる','☰ メニュー');
+  toolToggle.addEventListener('click',()=>setExpanded(tools,toolToggle,!tools.classList.contains('r7-expanded'),'✕ 閉じる','☰ メニュー'));
+ }
+ if(dock&&dockToggle){
+  setExpanded(dock,dockToggle,false,'詳細を閉じる ▾','詳細を開く ▴');
+  dockToggle.addEventListener('click',()=>setExpanded(dock,dockToggle,!dock.classList.contains('r7-expanded'),'詳細を閉じる ▾','詳細を開く ▴'));
+ }
+ // Safari does not expose Apple Health step totals to an ordinary web page.
+ // Display "未連携" until native BODY/Health data is explicitly delivered.
+ const steps=document.getElementById('val-steps');
+ if(steps && /^--\s*歩$/.test(steps.textContent||''))steps.textContent='未連携';
 })();
 </script></body>
 </html>

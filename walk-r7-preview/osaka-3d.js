@@ -424,6 +424,17 @@ window.createOsaka3D = function createOsaka3D(ui) {
           'fill-extrusion-opacity':opacity,'fill-extrusion-emissive-strength':1}
       });
     }
+    // Illuminated windows are decorative, NOT verified real-world window positions.
+    // Extruded thin facade bands are capped so iPhone GPU usage stays bounded.
+    for(const [kind,color] of [
+      ['window-white','#F4F0DD'],['window-warm','#FFD38B'],['window-blue','#9ADDF4']
+    ]){
+      active.addLayer({...base,id:'sug-r7-'+kind,
+        filter:['==',['get','kind'],kind],
+        paint:{...base.paint,'fill-extrusion-color':color,
+          'fill-extrusion-opacity':0.92,'fill-extrusion-emissive-strength':1}
+      });
+    }
     const toRad=Math.PI/180;
     const cosLat=Math.cos(HUB.lat*toRad);
     const dist=(a,b)=>Math.hypot((a[0]-b[0])*111320*cosLat,(a[1]-b[1])*111320);
@@ -447,8 +458,12 @@ window.createOsaka3D = function createOsaka3D(ui) {
       return {type:'Polygon',coordinates:[[...p,p[0]]]};
     }
     let updated=false;
+    let lastRefreshCenter=null;
     function refresh() {
-      if(active!==view||updated)return;
+      if(active!==view)return;
+      const vc=active.getCenter();
+      const viewCenter=[vc.lng,vc.lat];
+      if(lastRefreshCenter&&dist(viewCenter,lastRefreshCenter)<65)return;
       let features=[];
       try{features=active.querySourceFeatures('sug-r7-neon-streets-buildings',{sourceLayer:'building'});}
       catch(e){container.dataset.verticalNeonStatus='source-unavailable';return;}
@@ -461,8 +476,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
         const ring=polygons[0]&&polygons[0][0];
         if(!Array.isArray(ring)||ring.length<4||ring.length>100)continue;
         const center=ring.slice(0,-1).reduce((p,c)=>[p[0]+c[0]/(ring.length-1),p[1]+c[1]/(ring.length-1)],[0,0]);
-        const d=dist(center,[HUB.lng,HUB.lat]);
-        if(d>250)continue;
+        const d=dist(center,viewCenter);
+        if(d>220)continue;
         const height=Number(feature.properties.height);
         if(!Number.isFinite(height)||height<9||height>160)continue;
         const key=String(feature.id??'')+'|'+center.map(n=>n.toFixed(5)).join(',');
@@ -471,7 +486,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
         candidates.push({ring,height,base:Math.max(0,Number(feature.properties.min_height)||0),d});
       }
       candidates.sort((a,b)=>a.d-b.d);
-      const result=[],chosen=candidates.slice(0,6);
+      const result=[],chosen=candidates.slice(0,8);
+      let windowCount=0;
+      const MAX_WINDOWS=240;
       for(const building of chosen){
         // Sample max 8 real corners, omit ring closure and near-duplicates.
         let corners=[];
@@ -497,9 +514,39 @@ window.createOsaka3D = function createOsaka3D(ui) {
               geometry});
           }
         }
+        // Approximate individual facade windows from mapped building edges.
+        // Only use actual building footprints, never invent building locations.
+        const floorCount=Math.min(8,Math.floor((building.height-building.base-2)/3.25));
+        for(let floor=1;floor<=floorCount&&windowCount<MAX_WINDOWS;floor++){
+          const floorBase=building.base+floor*3.25+0.65;
+          if(floorBase+1.15>=building.height)break;
+          for(let edge=0;edge<Math.min(fullRing.length-1,8)&&windowCount<MAX_WINDOWS;edge++){
+            const a=fullRing[edge],b=fullRing[edge+1];
+            const length=dist(a,b);
+            if(length<4||length>100)continue;
+            const count=Math.min(5,Math.floor(length/4.5));
+            for(let j=0;j<count&&windowCount<MAX_WINDOWS;j++){
+              // An unlit pane is deliberately skipped for a natural night skyline.
+              const pattern=(floor*17+edge*13+j*7+Math.round(building.height));
+              if(pattern%5===0)continue;
+              const t=(j+0.5)/count,half=0.62/length;
+              const p=[a[0]+(b[0]-a[0])*(t-half),a[1]+(b[1]-a[1])*(t-half)];
+              const q=[a[0]+(b[0]-a[0])*(t+half),a[1]+(b[1]-a[1])*(t+half)];
+              const geometry=baseStrip(p,q,0.42);
+              if(!geometry)continue;
+              const kind=pattern%10<7?'window-white':pattern%10<9?'window-warm':'window-blue';
+              result.push({type:'Feature',properties:{kind,base:floorBase,height:floorBase+1.15},geometry});
+              windowCount++;
+            }
+          }
+        }
       }
       active.getSource(sourceId).setData({type:'FeatureCollection',features:result});
       updated=true;
+      lastRefreshCenter=viewCenter;
+      container.dataset.windowStatus=windowCount?'geometry-ready':'no-eligible-buildings';
+      container.dataset.windowCount=String(windowCount);
+      container.dataset.windowAccuracy='decorative-not-surveyed';
       container.dataset.baseNeonStatus=chosen.length?'geometry-ready':'no-eligible-buildings';
       container.dataset.baseNeonBands=String(result.filter(f=>f.properties.kind.startsWith('base-')).length);
       container.dataset.verticalNeonStatus=chosen.length?'pilot-geometry-ready':'no-eligible-buildings';
@@ -508,6 +555,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     }
     // Wait until source tiles have been loaded; no perpetual animation loop.
     active.once('idle',refresh);
+    active.on('moveend',refresh);
     active.on('sourcedata',e=>{
       if(!updated&&e.sourceId==='sug-r7-neon-streets-buildings'&&e.isSourceLoaded){
         active.once('idle',refresh);

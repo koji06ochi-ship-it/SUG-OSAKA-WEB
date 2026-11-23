@@ -48,6 +48,15 @@
     if (e.data.type === 'SUG_CLOSE_SPECIAL') closeSpecial();
     /* SPECIAL routes remain unconnected: never invent GPS, achievements, LIVE or game results. */
   });
+  // Keep the HOME-only entry in sync when navigation originates in a child iframe.
+  window.addEventListener('message', function (event) {
+    if (event.origin !== location.origin || !event.data || event.data.type !== 'SUG_SWITCH_TAB') return;
+    var knownScreen = ['home', 'map', 'meet', 'log', 'settings'].some(function (key) {
+      var target = document.getElementById('frame-' + key);
+      return target && target.contentWindow === event.source;
+    });
+    if (knownScreen) requestAnimationFrame(syncButton);
+  });
   var nav = root.querySelector('.preview-nav');
   if(nav) nav.addEventListener('click', function(){requestAnimationFrame(syncButton);});
   window.SUGR7SpecialBridge = {open:openSpecial,close:closeSpecial};

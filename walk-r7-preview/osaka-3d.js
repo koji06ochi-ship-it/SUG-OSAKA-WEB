@@ -44,6 +44,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   let stableBearing = null;
   let lastFix = null;
   let ready = false;
+  let cameraMode = 'overview'; // toggles without switching map instances or changing GPS permissions
 
   // Mapbox Standard v3 runtime basemap configuration (black x neon-pink x midnight-river)
   const BASEMAP_CONFIG = {
@@ -1429,9 +1430,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     cameraAnchor = current;
     const camera = {
       center: coords,
-      zoom: 18.25,
-      pitch: 72,
-      offset: [0, Math.round(Math.max(0, container.clientHeight) * 0.20)],
+      zoom: cameraMode === 'eye' ? 19.35 : 18.25,
+      pitch: cameraMode === 'eye' ? 82 : 72,
+      offset: [0, Math.round(Math.max(0, container.clientHeight) * (cameraMode === 'eye' ? 0.28 : 0.20))],
       duration: 950,
       essential: true
     };
@@ -1488,8 +1489,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
         config: { basemap: BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
         center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
-        zoom: MINT_MUSEUM_INSPECTION ? 18 : 17.3,
-        pitch: MINT_MUSEUM_INSPECTION ? 68 : 65,
+        zoom: MINT_MUSEUM_INSPECTION ? 18 : (cameraMode === 'eye' ? 19.35 : 17.3),
+        pitch: MINT_MUSEUM_INSPECTION ? 68 : (cameraMode === 'eye' ? 82 : 65),
         bearing: -68,
         maxPitch: 85,
         antialias: true
@@ -1571,11 +1572,30 @@ window.createOsaka3D = function createOsaka3D(ui) {
     }
   }
 
+  function setCameraMode(mode) {
+    if (mode !== 'eye' && mode !== 'overview') return false;
+    cameraMode = mode;
+    container.dataset.viewMode = mode;
+    // Switching camera mode must work even without GPS consent or movement.
+    if (view && ready) {
+      view.easeTo({
+        zoom: mode === 'eye' ? 19.35 : 17.3,
+        pitch: mode === 'eye' ? 82 : 65,
+        offset: [0, mode === 'eye' ? Math.round(container.clientHeight * 0.28) : 0],
+        duration: 850,
+        essential: true
+      });
+    }
+    return true;
+  }
+
   toggle.onclick = () => (view || pending ? close() : open());
   window.addEventListener('orientationchange', resize);
 
   return {
     position,
+    setCameraMode,
+    getCameraMode: () => cameraMode,
     destination,
     route,
     resize,
@@ -1595,7 +1615,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     },
     focus(center, zoom = 18.25) {
       if (!view) return false;
-      view.easeTo({ center, zoom, pitch: 72 });
+      view.easeTo({ center, zoom: cameraMode === 'eye' ? 19.35 : zoom, pitch: cameraMode === 'eye' ? 82 : 72 });
       return true;
     },
     zoom(delta) {

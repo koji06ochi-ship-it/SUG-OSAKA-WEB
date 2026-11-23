@@ -12,8 +12,7 @@ async function loadConfig(authorization){
  const token=getAccessToken();
  try{
   const response=await fetch(endpoint+'?clientConfig=1',{
-   headers:token?{Authorization:'Bearer '+token}:{},
-   headers:authorization?{Authorization:authorization}:{},
+   headers:token?{Authorization:'Bearer '+token}:authorization?{Authorization:authorization}:{},
    credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(6000)
   });
   if(!response.ok)return null;

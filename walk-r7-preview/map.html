@@ -1753,7 +1753,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       // User-selected R7 directory. Locations are set only when independently verified.
       // No dummy 0,0 coordinates; unlocated entries open an exact-name map search instead.
       const designatedPlaces = [
-        {"name":"大阪茶会","category":"shop","address":"大阪府大阪市北区天神橋2-1-25 1F","lat":34.6964688,"lng":135.5118458,"osmWayId":195060089,"heightMetres":11,"highlightColor":"#7A9A35","approved":true,"highlight3D":true,"featured":true,"instagram":"https://www.instagram.com/osakachakai/","officialWebsite":"https://www.osakachakai.jp/","credit":"写真・ロゴ提供：CAFE 大阪茶会（児玉様掲載許可）","brandName":"CAFE 大阪茶会®"},
+        {"name":"大阪茶会","category":"shop","address":"大阪府大阪市北区天神橋2-1-25 1F","lat":34.6964688,"lng":135.5118458,"osmWayId":195060089,"heightMetres":11,"highlightColor":"#7A9A35","approved":true,"highlight3D":true,"featured":true,"instagram":"https://www.instagram.com/osakachakai/","officialWebsite":"https://www.osakachakai.jp/","credit":"公式サイト画像・ロゴ © OSAKA CHAKAI／掲載許可：児玉様","brandName":"CAFE 大阪茶会®"},
         {"name":"焼肉ホルモン 暸","category":"shop","address":"大阪府大阪市北区天神橋4-8-23 中山ビル","lat":34.70483414,"lng":135.51125867,"osmWayId":1158470731,"highlightColor":"#ffd065","approved":true,"highlight3D":true},
         {"name":"S.u.G大阪","category":"shop","address":"大阪府大阪市北区天神橋4-7-11-501","lat":34.70355095,"lng":135.51109761,"osmWayId":221266078,"heightMetres":13,"highlightColor":"#00e5ff","approved":true,"highlight3D":true},
         {"name":"川の駅はちけんや","category":"shop","address":"大阪府大阪市中央区北浜東1-2","lat":34.690498,"lng":135.514475,"osmWayId":368384007,"levels":1,"highlightColor":"#2ee89a","approved":true,"highlight3D":true},
@@ -2160,7 +2160,26 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           const address=document.createElement('p');
           address.textContent=place.address;
           address.style.cssText='font-size:12px;color:#d7cce0;';
-          modalBody.append(intro,address);
+          // Display original image files hosted on the cafe's own official website.
+          // No AI redraw or generated substitute. Image load failures retain the text links.
+          const media=document.createElement('div');
+          media.style.cssText='margin:10px 0;display:grid;gap:9px;';
+          const officialLogo=document.createElement('img');
+          officialLogo.src='https://www.osakachakai.jp/source/img/about/logo1.png';
+          officialLogo.alt='大阪茶会 公式サイト掲載ロゴ';
+          officialLogo.loading='lazy';
+          officialLogo.referrerPolicy='no-referrer';
+          officialLogo.style.cssText='display:block;width:100%;max-width:300px;max-height:130px;object-fit:contain;background:#f7f6f1;border-radius:9px;padding:8px;margin:auto;';
+          officialLogo.onerror=()=>{officialLogo.remove();};
+          const shopPhoto=document.createElement('img');
+          shopPhoto.src='https://www.osakachakai.jp/source/img/shop/shop-img1.png';
+          shopPhoto.alt='大阪茶会 公式サイト掲載店舗写真';
+          shopPhoto.loading='lazy';
+          shopPhoto.referrerPolicy='no-referrer';
+          shopPhoto.style.cssText='display:block;width:100%;max-height:240px;object-fit:cover;border-radius:11px;border:1px solid rgba(121,155,59,.5);';
+          shopPhoto.onerror=()=>{shopPhoto.remove();};
+          media.append(officialLogo,shopPhoto);
+          modalBody.append(media,intro,address);
           const instagram=document.createElement('a');
           instagram.href=place.instagram;instagram.target='_blank';instagram.rel='noopener noreferrer';
           instagram.className='drawer-btn';instagram.textContent='公式Instagram @osakachakai を開く';

@@ -686,6 +686,12 @@
         if (e.target === sheet) closeSheet();
       });
 
+      // Close the preview sheet after the parent safely routes to an existing MAP feature.
+      window.addEventListener('message', ev => {
+        if (ev.source !== window.parent || ev.origin !== location.origin || !ev.data) return;
+        if (ev.data.type === 'SUG_SPECIAL_ROUTE_HANDLED') closeSheet();
+      });
+
       // Sync with existing R7 index.html language broadcast when integrated
       window.addEventListener('message', ev => {
         if (ev.data && ev.data.type === 'SUG_APPLY_LANG' && ev.data.lang) {

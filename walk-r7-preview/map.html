@@ -1578,7 +1578,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js?v=r7-road-clarity-20261123a"></script><script src="tour-guide.js?v=r7-auth-20261123b"></script><script src="auth-client.js?v=r7-auth-20261123b"></script><script src="ai-chat.js?v=r7-auth-20261123b"></script></head>
+</script><script src="osaka-3d.js?v=r7-pedestrian-camera-20261124"></script><script src="tour-guide.js?v=r7-auth-20261123b"></script><script src="auth-client.js?v=r7-auth-20261123b"></script><script src="ai-chat.js?v=r7-auth-20261123b"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -1849,7 +1849,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         spots:places,
         hub:{lat:34.690498,lng:135.514475},
         selectedVenues: designatedPlaces.slice(0,4),
-        onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,null,follow);}
+        onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,fix.heading,follow);}
       });
       const public3dToggle=document.getElementById('osaka-toggle');
       const original3dClick=public3dToggle.onclick;
@@ -1996,7 +1996,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         const generation=++gpsGeneration;
         watchID=navigator.geolocation.watchPosition(pos=>{
           if (generation!==gpsGeneration) return;
-          acceptGPS(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy,pos.timestamp);
+          acceptGPS(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy,pos.timestamp,pos.coords.heading);
         }, error=>{
           if (generation!==gpsGeneration) return;
           stopGPS();
@@ -2563,11 +2563,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         else if (ids.has('hub') && !arrived.has('hub')) document.getElementById('btn-hachikenya-hub').click();
         arrived=ids;
       }
-      function acceptGPS(lat,lng,accuracy,timestamp) {
+      function acceptGPS(lat,lng,accuracy,timestamp,heading) {
         if (document.hidden || parent.SUGR7UnifiedBridge?.getActiveTab()!=='map' || !state.gpsConsent || !point({lat,lng}) || !Number.isFinite(accuracy) || accuracy<0 ||
             !Number.isFinite(timestamp) || timestamp>Date.now()+5000 || Date.now()-timestamp>60000) return false;
         if (fix && timestamp<=fix.t) return false;
-        fix={lat,lng,accuracy,t:timestamp};
+        fix={lat,lng,accuracy,t:timestamp,heading:Number.isFinite(heading)&&heading>=0&&heading<360?heading:null};
         if (accuracy<=30) {
           const dt=anchor?(timestamp-anchor.t)/1000:0;
           const step=anchor?map.distance([anchor.lat,anchor.lng],[lat,lng]):0;
@@ -2582,7 +2582,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           destinationReached=true; showToast(destination.name+'に到着しました');
         }
         updateUserMarker(lat,lng);
-         osaka3D.position(fix,null,follow);
+         osaka3D.position(fix,fix.heading,follow);
          checkArrival(); return true;
       }
       function paintTicker() {

@@ -8,11 +8,12 @@ const authListeners=new Set();
 function notifyAuthChange(){for(const cb of authListeners){try{cb(!!getAccessToken());}catch{}}}
 function onAuthChange(callback){if(typeof callback!=='function')return()=>{};authListeners.add(callback);return()=>authListeners.delete(callback);}
 function t(ja,en,zh,lang){return ({ja,en,zh})[lang]||ja;}
-async function loadConfig(){
+async function loadConfig(authorization){
  const token=getAccessToken();
  try{
   const response=await fetch(endpoint+'?clientConfig=1',{
    headers:token?{Authorization:'Bearer '+token}:{},
+   headers:authorization?{Authorization:authorization}:{},
    credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(6000)
   });
   if(!response.ok)return null;
@@ -21,6 +22,14 @@ async function loadConfig(){
    !/^sb_publishable_[A-Za-z0-9_-]+$/.test(data.publishableKey))return null;
   return {key:data.publishableKey,aiEnabled:data.aiEnabled===true};
  }catch{return null;}
+}
+const listeners=new Set();
+function announce(){for(const listener of listeners){try{listener(!!getAccessToken());}catch{}}}
+function onAuthChange(listener){listeners.add(listener);return ()=>listeners.delete(listener);}
+async function currentAIConfig(){
+ const token=getAccessToken();
+ if(!token)return {aiEnabled:false};
+ return (await loadConfig('Bearer '+token))||{aiEnabled:false};
 }
 function getAccessToken(){
  if(session&&session.expiresAt<=Date.now())session=null;
@@ -91,7 +100,7 @@ async function mount(root,lang){
     typeof data.user?.id!=='string'||data.user.is_anonymous===true||
     !Number.isFinite(data.expires_in)||data.expires_in<=0)throw new Error('INVALID_AUTH_RESPONSE');
    session={accessToken:data.access_token,expiresAt:Date.now()+data.expires_in*1000};
-   render();notifyAuthChange();
+   render();announce();notifyAuthChange();
   }catch{
    message.textContent=t('ログインできませんでした。アカウントと通信状況を確認してください。',
     'Sign-in failed. Check your account and connection.','登录失败，请检查账户及网络。',lang);

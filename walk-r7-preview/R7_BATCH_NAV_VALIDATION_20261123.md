@@ -41,3 +41,16 @@
 - 変更対象：walk-r7-preview/map.htmlのみ。
 - 前回MAP BLOB SHA: ac1f7c1427ce239e7bc61f45c7437d2f6f6bc24d
 - 今回MAP BLOB SHA: 6c42181eb16d088e61e7ddd6c713c02d2ed72e27
+
+
+## 追補：HOME 3導線の統一（2026-11-23）
+- 実装コミット：da975230b487612671dd81eaabbee51937815058
+- 対象：walk-r7-preview/home.html。ほかの正式画面は変更なし。
+- HOMEのAI観光／AI通訳／LIVEの3カードからMAPへ切り替えた後、既存ボタンのclickを実行する。
+  - AI観光→btn-ai-guide（登録済み6スポット／3言語）。
+  - AI通訳→btn-r7-translate（事前翻訳8定型文／3言語）。
+  - LIVE→btn-r7-live（配信バックエンド未接続、状態説明のみ）。
+- MAP未準備時にはiframe load後に実行するフォールバックを追加。その他のHOMEカードは既存動作維持。
+- コード検証：HOMEインラインJS 2本構文PASS、MAPに対象3 IDあり、正式5タブ配列あり、旧HOME動画openWaterあり。
+- 未検証：iPhoneでHOMEから3導線のタップ操作、MAP iframe表示後に自動開閉する挙動。自動検証環境は現時点で利用可能と確認できていない。
+- 絶対条件：有料サービス／LIVE／動的AIは起動・契約・課金なし。

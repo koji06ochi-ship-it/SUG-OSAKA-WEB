@@ -1559,6 +1559,38 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 #sug-r7-neon-hud #btn-neon-panel-toggle{align-self:flex-end;min-height:34px;padding:7px 13px;border:1.5px solid #ff58ac;background:#270c22;color:#fff;box-shadow:0 0 10px #ff2e9350;font-size:12px}
 #sug-r7-neon-hud[data-expanded="true"] #btn-neon-panel-toggle{margin-bottom:6px}
 #sug-r7-neon-hud{position:absolute;z-index:23;top:112px;right:8px;width:min(188px,46%);display:flex;flex-direction:column;gap:6px;color:#fff;font:700 11px -apple-system,sans-serif;pointer-events:auto}#sug-r7-neon-hud .neon-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}#sug-r7-neon-hud button{border:1px solid #ff58ac;border-radius:999px;background:#140d20eb;color:#fff;padding:5px 8px;font-size:11px;cursor:pointer}#sug-r7-neon-hud button[aria-pressed="true"]{background:#ad185f}#sug-r7-neon-summary{padding:5px;border-radius:8px;background:#100a21db;text-shadow:0 0 10px #ff3399}#sug-r7-neon-hud small{font-size:9px;color:#d9c7d5}#map-stage.r7-neon-clean{aspect-ratio:9 / 16;overflow:hidden}#map-stage.r7-neon-clean .map-tools-left,#map-stage.r7-neon-clean .drawer-tabs-bar,#map-stage.r7-neon-clean .map-info-drawer,#map-stage.r7-neon-clean .bottom-nav{display:none!important}#map-stage.r7-neon-clean .top-bar>*:not(#r7-logo-img){visibility:hidden!important}#map-stage.r7-neon-clean #sug-r7-neon-hud>*:not(#btn-neon-clean){display:none!important}@media(prefers-reduced-motion:reduce){#map-stage.r7-neon-clean *{animation:none!important}}
+
+/* R7 map actions: small drawer by default; keep the city visible. */
+#sug-map-actions{z-index:535}
+#sug-map-actions[data-expanded="false"]{
+  left:10px;right:auto;bottom:134px;top:auto!important;
+  width:auto;display:flex;flex-direction:column;gap:0;
+  padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none;
+}
+#sug-map-actions[data-expanded="false"]::before{content:none!important}
+#sug-map-actions[data-expanded="false"] > .tool-btn{display:none!important}
+#sug-map-actions-toggle{
+  grid-column:1 / -1;min-height:39px;min-width:106px;
+  border:1.5px solid #ff58ac;border-radius:999px;background:#17091ddf;
+  color:#fff;font:800 12px -apple-system,BlinkMacSystemFont,sans-serif;
+  box-shadow:0 0 13px #ff2e9366;cursor:pointer;
+}
+#sug-map-actions[data-expanded="true"]{
+  left:10px;right:10px;bottom:134px;top:auto!important;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  max-height:min(48vh,390px);overflow-y:auto;
+}
+#sug-map-actions[data-expanded="true"]::before{content:none!important}
+#sug-map-actions[data-expanded="true"] #sug-map-actions-toggle{justify-self:start}
+.map-stage > .zoom-pair.r7-map-zoom{
+  position:absolute;z-index:536;left:auto;right:12px;top:auto!important;bottom:190px;
+  display:flex;gap:6px;
+}
+@media(max-height:650px){
+  #sug-map-actions[data-expanded="false"],#sug-map-actions[data-expanded="true"]{bottom:117px}
+  .map-stage > .zoom-pair.r7-map-zoom{bottom:168px}
+}
+#map-stage.r7-neon-clean #sug-map-actions,#map-stage.r7-neon-clean > .r7-map-zoom{display:none!important}
 </style></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
@@ -1621,17 +1653,18 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         </header>
 
         <!-- Compact Left Map Action Controls -->
-        <div class="map-tools-left">
+        <div class="map-tools-left" id="sug-map-actions" data-expanded="false">
+          <button type="button" id="sug-map-actions-toggle" aria-expanded="false" aria-controls="btn-recenter">🧭 操作</button>
           <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn" id="sug-r7-token-settings">3D設定</button>
           <button type="button" class="tool-btn" id="btn-search-open">スポット検索</button>
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
           <button type="button" class="tool-btn" id="btn-ai-guide">AI観光案内</button>
           <button type="button" class="tool-btn pink" id="btn-hachikenya-hub">はちけんや・水上バス</button>
           <button type="button" class="tool-btn" id="btn-store-menu-demo">店舗メニュー映り込み</button>
-          <div class="zoom-pair">
-            <button type="button" class="zoom-circle" id="btn-zoom-in" aria-label="拡大">+</button>
-            <button type="button" class="zoom-circle" id="btn-zoom-out" aria-label="縮小">−</button>
-          </div>
+        </div>
+        <div class="zoom-pair r7-map-zoom" aria-label="地図の拡大・縮小">
+          <button type="button" class="zoom-circle" id="btn-zoom-in" aria-label="拡大">+</button>
+          <button type="button" class="zoom-circle" id="btn-zoom-out" aria-label="縮小">−</button>
         </div>
 
         <!-- Official Character Slot (Initial OFF) -->
@@ -2616,5 +2649,22 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
     }
   });
 })();
-</script></body>
+</script><script>
+(function(){
+  function setupMapActions(){
+    var panel=document.getElementById('sug-map-actions');
+    var toggle=document.getElementById('sug-map-actions-toggle');
+    if(!panel||!toggle)return;
+    toggle.addEventListener('click',function(){
+      var expanded=panel.getAttribute('data-expanded')!=='true';
+      panel.setAttribute('data-expanded',String(expanded));
+      toggle.setAttribute('aria-expanded',String(expanded));
+      toggle.textContent=expanded?'× 閉じる':'🧭 操作';
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupMapActions);
+  else setupMapActions();
+})();
+</script>
+</body>
 </html>

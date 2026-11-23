@@ -36,7 +36,7 @@ async function signIn(email,password,fetchImpl=fetch){
   // No refresh token retained. Expire early; sign-in required after refresh/navigation.
   expiresAt=Date.now()+Math.min(Number(data.expires_in),3600)*1000-15000;
   return {authenticated:true,expiresInSeconds:Math.max(0,Math.floor((expiresAt-Date.now())/1000))};
- }catch(err){clear();throw err}
+ }catch(err){if(requestGeneration===authGeneration)clear();throw err}
  finally{clearTimeout(timer)}
 }
 window.SUGR7AuthSession=Object.freeze({getAccessToken:async()=>token(),signIn,signOut:clear,isSignedIn:()=>!!token()});

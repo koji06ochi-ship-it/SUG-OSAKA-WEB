@@ -1632,7 +1632,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
 
         <!-- Compact Left Map Action Controls -->
         <div class="map-tools-left r7-compact-tools" id="r7-map-tools"><button type="button" class="r7-tool-expander" id="r7-tool-expander" aria-expanded="false" aria-controls="r7-map-tools" aria-label="地図メニューを開く">☰ メニュー</button>
-          <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn" id="sug-r7-token-settings">3D設定</button>
+          <button type="button" class="tool-btn pink" id="btn-recenter">現在地</button><button type="button" class="tool-btn" id="osaka-toggle" aria-pressed="false">3D</button><button type="button" class="tool-btn pink" id="btn-eye-view" aria-pressed="false" aria-label="3D目線モードに切替">目線</button><button type="button" class="tool-btn" id="sug-r7-token-settings">3D設定</button>
           <button type="button" class="tool-btn" id="btn-search-open">スポット検索</button>
           <button type="button" class="tool-btn pink" id="btn-route">徒歩ルート</button>
           <button type="button" class="tool-btn" id="btn-ai-guide">AI観光案内</button>
@@ -1850,6 +1850,18 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         hub:{lat:34.690498,lng:135.514475},
         selectedVenues: designatedPlaces.slice(0,4),
         onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,fix.heading,follow);}
+      });
+      const eyeViewButton=document.getElementById('btn-eye-view');
+      eyeViewButton.addEventListener('click',()=>{
+        if(!osaka3D.isActive()){
+          showToast('3Dマップを起動してから切り替えてください');
+          return;
+        }
+        const mode=osaka3D.getCameraMode()==='eye'?'overview':'eye';
+        osaka3D.setCameraMode(mode);
+        eyeViewButton.textContent=mode==='eye'?'全体':'目線';
+        eyeViewButton.setAttribute('aria-pressed',String(mode==='eye'));
+        eyeViewButton.setAttribute('aria-label',mode==='eye'?'3D全体モードに戻す':'3D目線モードに切替');
       });
       const public3dToggle=document.getElementById('osaka-toggle');
       const original3dClick=public3dToggle.onclick;

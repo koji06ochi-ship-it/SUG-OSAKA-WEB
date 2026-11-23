@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>S.u.G WALK R7｜SPECIAL</title>
+  <style>
+    :root {
+      --bg-black: #050408;
+      --card-bg: rgba(16, 10, 22, 0.92);
+      --pink-neon: #ff2e93;
+      --pink-soft: #ff6ec4;
+      --gold: #f5c85c;
+      --text-main: #ffffff;
+      --text-sub: rgba(235, 226, 242, 0.72);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #020204;
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Inter", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    .frame-wrap {
+      padding: 16px 8px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Exact iPhone 393 x 852 independent SPECIAL screen */
+    .special-screen {
+      position: relative;
+      width: 393px;
+      max-width: 100%;
+      height: 852px;
+      border-radius: 40px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        radial-gradient(circle at 50% 32%, rgba(255, 46, 147, 0.12) 0%, transparent 56%),
+        var(--bg-black);
+      box-shadow:
+        0 0 0 1.5px rgba(255, 46, 147, 0.28),
+        0 24px 72px rgba(0, 0, 0, 0.92);
+      display: flex;
+      flex-direction: column;
+      padding: max(20px, calc(14px + env(safe-area-inset-top, 0px))) 18px max(26px, calc(20px + env(safe-area-inset-bottom, 0px)));
+    }
+
+    @media (max-width: 420px) {
+      .frame-wrap { padding: 0; }
+      .special-screen {
+        width: 100%;
+        height: 100dvh;
+        min-height: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* Top bar: Left Back + Right JA / EN / 中文 */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 46, 147, 0.55);
+      background: rgba(255, 46, 147, 0.08);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.18s ease;
+    }
+
+    .back-btn:active {
+      transform: scale(0.95);
+      background: rgba(255, 46, 147, 0.22);
+    }
+
+    .lang-group {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(245, 200, 92, 0.34);
+      gap: 2px;
+    }
+
+    .lang-btn {
+      border: 0;
+      background: transparent;
+      color: rgba(235, 226, 242, 0.7);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--pink-neon);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 46, 147, 0.55);
+    }
+
+    /* Center Hero: 3D Trick-Art Pop-Out Illusion (original transparent PNG breaks out of recessed neon portal) */
+    .hero-center {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px 14px;
+      min-height: 0;
+      perspective: 920px;
+    }
+
+    .hero-tag {
+      margin: 0 0 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .trick-stage {
+      position: relative;
+      width: 292px;
+      height: 278px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .trick-stage:active {
+      cursor: grabbing;
+    }
+
+    /* Soft floating shadow directly behind Pink Bear for natural pop-out depth on pure black */
+    .hero-shadow-layer {
+      position: absolute;
+      width: 266px;
+      max-width: 90%;
+      height: auto;
+      opacity: 0.72;
+      filter: brightness(0) blur(16px);
+      transform: translate3d(0px, 20px, -18px) scale(0.96);
+      pointer-events: none;
+      user-select: none;
+      transition: transform 0.14s ease-out;
+    }
+
+    /* Foreground Transparent Pink Bear + S.u.G: pure black pop-out with shadow + subtle pink glow only */
+    .hero-img {
+      position: relative;
+      z-index: 4;
+      display: block;
+      width: 272px;
+      max-width: 92%;
+      height: auto;
+      object-fit: contain;
+      transform: translate3d(0px, 0px, 28px);
+      filter:
+        drop-shadow(0 18px 22px rgba(0, 0, 0, 0.90))
+        drop-shadow(0 0 18px rgba(255, 46, 147, 0.24));
+      user-select: none;
+      -webkit-user-drag: none;
+      transition: transform 0.14s ease-out;
+    }
+
+    /* Bottom: 4 Unified, Simple Pink-Neon Entry Cards */
+    .menu-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+
+    .neon-card {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 16px;
+      border: 1.2px solid rgba(255, 46, 147, 0.68);
+      background: linear-gradient(135deg, rgba(255, 46, 147, 0.10) 0%, var(--card-bg) 55%, rgba(245, 200, 92, 0.05) 100%);
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.55),
+        0 0 14px rgba(255, 46, 147, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.14s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .neon-card:hover {
+      border-color: var(--pink-soft);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 46, 147, 0.28);
+    }
+
+    .neon-card:active {
+      transform: scale(0.98);
+    }
+
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: rgba(255, 46, 147, 0.14);
+      border: 1px solid rgba(255, 110, 196, 0.38);
+      flex-shrink: 0;
+    }
+
+    .card-text {
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      color: #fff;
+      line-height: 1.25;
+    }
+
+    .card-sub {
+      margin-top: 2px;
+      font-size: 10.5px;
+      color: var(--text-sub);
+      line-height: 1.3;
+    }
+
+    .card-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 200, 92, 0.55);
+      background: rgba(245, 200, 92, 0.10);
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .chevron {
+      color: var(--pink-soft);
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    /* Honest transition / unimplemented status sheet */
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: rgba(2, 2, 6, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: flex-end;
+      padding: 16px;
+    }
+
+    .sheet-backdrop.open {
+      display: flex;
+    }
+
+    .sheet-box {
+      width: 100%;
+      border-radius: 20px;
+      padding: 18px 18px 16px;
+      background: #100a16;
+      border: 1.2px solid rgba(255, 46, 147, 0.65);
+      box-shadow: 0 0 30px rgba(255, 46, 147, 0.24);
+    }
+
+    .sheet-status {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 200, 92, 0.55);
+      background: rgba(245, 200, 92, 0.12);
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .sheet-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .sheet-desc {
+      margin: 0 0 14px;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: rgba(238, 230, 246, 0.86);
+    }
+
+    .sheet-close {
+      width: 100%;
+      padding: 11px;
+      border-radius: 12px;
+      border: 0;
+      background: var(--pink-neon);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: absolute;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      z-index: 40;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #120b18;
+      border: 1px solid rgba(255, 46, 147, 0.65);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="frame-wrap">
+    <main class="special-screen" aria-label="S.u.G WALK R7 SPECIAL">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <button type="button" class="back-btn" id="btn-back">← 戻る</button>
+        <div class="lang-group" role="group" aria-label="Language">
+          <button type="button" class="lang-btn active" data-lang="ja">日本語</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="zh">中文</button>
+        </div>
+      </header>
+
+      <!-- Center Main Visual: 3D Trick-Art Pop-Out Pink Bear + S.u.G -->
+      <section class="hero-center" aria-label="SPECIAL Main Visual">
+        <p class="hero-tag">SPECIAL WORLD</p>
+        <div class="trick-stage" id="trick-stage">
+          <img
+            class="hero-shadow-layer"
+            id="hero-shadow"
+            src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            class="hero-img"
+            id="hero-img"
+            src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+            alt="S.u.G Pink Bear"
+          />
+        </div>
+      </section>
+
+      <!-- Bottom: 4 Unified Simple Pink-Neon Entry Cards -->
+      <nav class="menu-stack" aria-label="SPECIAL Menu">
+        <button type="button" class="neon-card" data-route="reel">
+          <div class="card-left">
+            <div class="card-icon" aria-hidden="true">🎬</div>
+            <div class="card-text">
+              <div class="card-title" id="t-reel">10秒 3D NIGHT REEL</div>
+              <div class="card-sub" id="s-reel">大阪3Dマップ自動飛行・動画撮影</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-badge" id="b-reel">接続予定</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="neon-card" data-route="osaka">
+          <div class="card-left">
+            <div class="card-icon" aria-hidden="true">🏆</div>
+            <div class="card-text">
+              <div class="card-title" id="t-osaka">OSAKA NIGHT 称号</div>
+              <div class="card-sub" id="s-osaka">GPS実績による称号・共有カード</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-badge" id="b-osaka">接続予定</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="neon-card" data-route="live">
+          <div class="card-left">
+            <div class="card-icon" aria-hidden="true">⚡</div>
+            <div class="card-text">
+              <div class="card-title" id="t-live">LIVE &amp; OFFERS</div>
+              <div class="card-sub" id="s-live">17LIVE・Instagram・限定特典</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-badge" id="b-live">接続予定</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="neon-card" data-route="game">
+          <div class="card-left">
+            <div class="card-icon" aria-hidden="true">🎮</div>
+            <div class="card-text">
+              <div class="card-title" id="t-game">S.u.G GAME</div>
+              <div class="card-sub" id="s-game">今後制作するミニゲーム専用エリア</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-badge" id="b-game">準備中</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- Toast -->
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+      <!-- Honest Transition Preview Sheet -->
+      <div class="sheet-backdrop" id="sheet" aria-hidden="true">
+        <div class="sheet-box" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+          <span class="sheet-status" id="sheet-status">未接続（画面設計）</span>
+          <h2 class="sheet-title" id="sheet-title">Title</h2>
+          <p class="sheet-desc" id="sheet-desc">Description</p>
+          <button type="button" class="sheet-close" id="sheet-close">閉じる</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const I18N = {
+        ja: {
+          back: '← 戻る',
+          backToast: 'HOMEへ戻るイベントを送信しました（既存5タブ維持）',
+          close: '閉じる',
+          cards: {
+            reel: {
+              title: '10秒 3D NIGHT REEL',
+              sub: '大阪3Dマップ自動飛行・動画撮影',
+              badge: '接続予定',
+              status: '未接続（遷移先設計）',
+              desc: '大阪3Dマップの自動飛行・撮影モードへ遷移する入口です。現在はSPECIAL画面デザイン段階のため、本体マップへの本接続は未実装です。'
+            },
+            osaka: {
+              title: 'OSAKA NIGHT 称号',
+              sub: 'GPS実績による称号・共有カード',
+              badge: '接続予定',
+              status: '未接続（遷移先設計）',
+              desc: '実GPSの歩行・通過実績に基づく多言語称号カードを表示する入口です。現在は未接続のためダミー実績は表示していません。'
+            },
+            live: {
+              title: 'LIVE & OFFERS',
+              sub: '17LIVE・Instagram・限定特典',
+              badge: '接続予定',
+              status: '未接続（遷移先設計）',
+              desc: '17LIVE・Instagram配信や期間限定店舗特典へ遷移する入口です。現在は未接続のため架空の配信・特典は表示していません。'
+            },
+            game: {
+              title: 'S.u.G GAME',
+              sub: '今後制作するミニゲーム専用エリア',
+              badge: '準備中',
+              status: '将来統合エリア（準備中）',
+              desc: '今後制作するオリジナルミニゲームを統合する専用枠です。現時点で架空のゲームやスコアは表示しません。'
+            }
+          }
+        },
+        en: {
+          back: '← Back',
+          backToast: 'Return to HOME signal sent (5 tabs preserved)',
+          close: 'Close',
+          cards: {
+            reel: {
+              title: '10s 3D NIGHT REEL',
+              sub: 'Osaka 3D map auto-flythrough & capture',
+              badge: 'PLANNED',
+              status: 'NOT CONNECTED (UI DESIGN)',
+              desc: 'Entry to the Osaka 3D map 10-second flythrough capture mode. Not yet wired to the main map in this standalone design preview.'
+            },
+            osaka: {
+              title: 'OSAKA NIGHT Badges',
+              sub: 'Real GPS titles & share cards',
+              badge: 'PLANNED',
+              status: 'NOT CONNECTED (UI DESIGN)',
+              desc: 'Entry to multilingual night-walker badges based on real GPS progress. No fabricated stats are shown before connection.'
+            },
+            live: {
+              title: 'LIVE & OFFERS',
+              sub: '17LIVE, Instagram & limited shop perks',
+              badge: 'PLANNED',
+              status: 'NOT CONNECTED (UI DESIGN)',
+              desc: 'Entry to external 17LIVE / Instagram streams and limited-time shop perks. No placeholder streams are shown.'
+            },
+            game: {
+              title: 'S.u.G GAME',
+              sub: 'Dedicated hub for upcoming mini-games',
+              badge: 'COMING SOON',
+              status: 'FUTURE GAME HUB',
+              desc: 'Reserved area for upcoming S.u.G mini-games. No fake games or scores are displayed.'
+            }
+          }
+        },
+        zh: {
+          back: '← 返回',
+          backToast: '已发送返回首页事件（保留原有5个标签）',
+          close: '关闭',
+          cards: {
+            reel: {
+              title: '10秒 3D NIGHT REEL',
+              sub: '大阪3D地图自动航拍・视频录制',
+              badge: '待接入',
+              status: '尚未接入（界面设计）',
+              desc: '大阪3D地图10秒自动航拍与录屏入口。当前为独立界面设计阶段，尚未连接主地图。'
+            },
+            osaka: {
+              title: 'OSAKA NIGHT 称号',
+              sub: '真实GPS成就称号・分享卡片',
+              badge: '待接入',
+              status: '尚未接入（界面设计）',
+              desc: '基于真实GPS步行记录解锁的多语言称号卡片入口。接入前不展示任何虚构数据。'
+            },
+            live: {
+              title: 'LIVE & OFFERS',
+              sub: '17LIVE・Instagram・限时店铺福利',
+              badge: '待接入',
+              status: '尚未接入（界面设计）',
+              desc: '17LIVE、Instagram直播与限时店铺福利入口。接入前不展示虚构直播或优惠。'
+            },
+            game: {
+              title: 'S.u.G GAME',
+              sub: '未来整合原创小游戏的专属区域',
+              badge: '筹备中',
+              status: '未来游戏专区（筹备中）',
+              desc: '用于未来整合S.u.G原创小游戏的专属区域。当前不展示任何虚构游戏或假分数。'
+            }
+          }
+        }
+      };
+
+      let lang = 'ja';
+      let toastTimer = null;
+
+      function showToast(text) {
+        const el = document.getElementById('toast');
+        el.textContent = text;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+      }
+
+      function applyLang(next) {
+        if (!I18N[next]) return;
+        lang = next;
+        const t = I18N[lang];
+        document.documentElement.lang = lang;
+        document.getElementById('btn-back').textContent = t.back;
+        document.getElementById('sheet-close').textContent = t.close;
+
+        ['reel', 'osaka', 'live', 'game'].forEach(key => {
+          const item = t.cards[key];
+          document.getElementById('t-' + key).textContent = item.title;
+          document.getElementById('s-' + key).textContent = item.sub;
+          document.getElementById('b-' + key).textContent = item.badge;
+        });
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+      }
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+      });
+
+      document.getElementById('btn-back').addEventListener('click', () => {
+        if (window.parent && window.parent !== window) {
+          try { window.parent.postMessage({ type: 'SUG_CLOSE_SPECIAL' }, '*'); } catch (e) {}
+        } else if (document.referrer && window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+        showToast(I18N[lang].backToast);
+      });
+
+      const sheet = document.getElementById('sheet');
+      document.querySelectorAll('.neon-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const route = card.dataset.route;
+          const item = I18N[lang].cards[route];
+          if (!item) return;
+          if (window.parent && window.parent !== window) {
+            try { window.parent.postMessage({ type: 'SUG_SPECIAL_ROUTE', route: route }, '*'); } catch (e) {}
+          }
+          document.getElementById('sheet-status').textContent = item.status;
+          document.getElementById('sheet-title').textContent = item.title;
+          document.getElementById('sheet-desc').textContent = item.desc;
+          sheet.classList.add('open');
+          sheet.setAttribute('aria-hidden', 'false');
+        });
+      });
+
+      function closeSheet() {
+        sheet.classList.remove('open');
+        sheet.setAttribute('aria-hidden', 'true');
+      }
+
+      document.getElementById('sheet-close').addEventListener('click', closeSheet);
+      sheet.addEventListener('click', e => {
+        if (e.target === sheet) closeSheet();
+      });
+
+      // Sync with existing R7 index.html language broadcast when integrated
+      window.addEventListener('message', ev => {
+        if (ev.data && ev.data.type === 'SUG_APPLY_LANG' && ev.data.lang) {
+          applyLang(ev.data.lang);
+        }
+      });
+
+      // 3D Trick-Art Pop-Out Parallax (Pointer, Touch, DeviceOrientation & gentle idle drift)
+      const stage = document.getElementById('trick-stage');
+      const heroImg = document.getElementById('hero-img');
+      const heroShadow = document.getElementById('hero-shadow');
+      let targetX = 0;
+      let targetY = 0;
+      let curX = 0;
+      let curY = 0;
+      let interacting = false;
+      let phase = 0;
+
+      function renderParallax() {
+        phase += 0.02;
+        const idleX = Math.sin(phase) * 0.22;
+        const idleY = Math.cos(phase * 0.8) * 0.18;
+        const goalX = interacting ? targetX : idleX;
+        const goalY = interacting ? targetY : idleY;
+
+        curX += (goalX - curX) * 0.12;
+        curY += (goalY - curY) * 0.12;
+
+        // Subtle cast shadow shift for natural pop-out depth on pure black
+        heroShadow.style.transform =
+          'translate3d(' + (-curX * 12).toFixed(2) + 'px, ' + (20 - curY * 8).toFixed(2) + 'px, -18px) ' +
+          'rotateX(' + (-curY * 5).toFixed(2) + 'deg) rotateY(' + (curX * 6).toFixed(2) + 'deg) scale(0.96)';
+
+        // Gentle non-distorting 3D tilt (<= 8 deg) keeping original aspect ratio intact
+        heroImg.style.transform =
+          'translate3d(' + (curX * 7).toFixed(2) + 'px, ' + (curY * 5).toFixed(2) + 'px, 28px) ' +
+          'rotateX(' + (-curY * 7).toFixed(2) + 'deg) rotateY(' + (curX * 8).toFixed(2) + 'deg)';
+
+        requestAnimationFrame(renderParallax);
+      }
+
+      function updateFromClient(clientX, clientY) {
+        const rect = stage.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        targetX = Math.max(-1, Math.min(1, ((clientX - rect.left) / rect.width - 0.5) * 2));
+        targetY = Math.max(-1, Math.min(1, ((clientY - rect.top) / rect.height - 0.5) * 2));
+      }
+
+      stage.addEventListener('pointermove', e => {
+        interacting = true;
+        updateFromClient(e.clientX, e.clientY);
+      });
+      stage.addEventListener('pointerleave', () => { interacting = false; });
+      stage.addEventListener('pointerup', () => { interacting = false; });
+
+      window.addEventListener('deviceorientation', e => {
+        if (interacting || typeof e.gamma !== 'number' || typeof e.beta !== 'number') return;
+        targetX = Math.max(-1, Math.min(1, e.gamma / 28));
+        targetY = Math.max(-1, Math.min(1, (e.beta - 45) / 28));
+      });
+
+      requestAnimationFrame(renderParallax);
+      applyLang('ja');
+    })();
+  </script>
+
+<script src="special-asset-01.js"></script>
+<script src="special-asset-02.js"></script>
+<script src="special-asset-03.js"></script>
+<script src="special-asset-04.js"></script>
+<script src="special-asset-05.js"></script>
+<script src="special-asset-06.js"></script>
+<script src="special-asset-07.js"></script>
+<script src="special-asset-08.js"></script>
+<script>(function(){'use strict';if(!Array.isArray(window.__SUG_ASSET_PARTS)||window.__SUG_ASSET_PARTS.length!==8)return;var src='data:image/png;base64,'+window.__SUG_ASSET_PARTS.join('');document.getElementById('hero-img').src=src;document.getElementById('hero-shadow').src=src;window.__SUG_ASSET_PARTS=null;})();</script>
+</body>
+</html>

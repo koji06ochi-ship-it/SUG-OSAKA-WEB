@@ -450,7 +450,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       const mx=111320*cosLat,my=111320;
       const dx=(b[0]-a[0])*mx,dy=(b[1]-a[1])*my;
       const length=Math.hypot(dx,dy);
-      if(length<2||length>120)return null;
+      if(length<0.6||length>120)return null; // Short facade window ribbons are ~1.24m wide.
       const offsetX=(-dy/length)*width/(2*mx);
       const offsetY=(dx/length)*width/(2*my);
       const p=[[a[0]+offsetX,a[1]+offsetY],[b[0]+offsetX,b[1]+offsetY],

@@ -4,9 +4,9 @@
 const maxChars=500;
 const languageNames={ja:'日本語',en:'English',zh:'中文'};
 const labels={
- ja:{title:'AI観光案内・通訳',task:'機能',guide:'観光案内',translate:'自由文の翻訳',source:'入力言語',target:'翻訳先',input:'質問または翻訳する文章',send:'送信',off:'AIの自由文応答は停止中です。上の観光案内と定型文通訳を利用できます。',auth:'AIを利用するにはログインしてください。',invalid:'500文字以内で入力してください。',failed:'AIの応答を受け取れませんでした。'},
- en:{title:'AI guide and interpreter',task:'Task',guide:'Sightseeing',translate:'Translate text',source:'Input language',target:'Translate into',input:'Question or text to translate',send:'Send',off:'AI text responses are off. You can use the guide and phrasebook above.',auth:'Sign in to use AI.',invalid:'Enter up to 500 characters.',failed:'No AI response was received.'},
- zh:{title:'AI导览与翻译',task:'功能',guide:'观光导览',translate:'翻译文本',source:'输入语言',target:'目标语言',input:'请输入问题或待翻译文本',send:'发送',off:'AI文本功能已暂停。仍可使用上方的导览和常用短句。',auth:'请登录后使用AI。',invalid:'请输入500字以内的内容。',failed:'未收到AI回复。'}
+ ja:{title:'Gemini AI観光案内・通訳',task:'機能',guide:'観光案内',translate:'自由文の翻訳',source:'入力言語',target:'翻訳先',input:'質問または翻訳する文章',send:'送信',off:'AIの自由文応答は停止中です。上の観光案内と定型文通訳を利用できます。',auth:'AIを利用するにはログインしてください。',invalid:'500文字以内で入力してください。',failed:'AIの応答を受け取れませんでした。'},
+ en:{title:'Gemini AI guide and interpreter',task:'Task',guide:'Sightseeing',translate:'Translate text',source:'Input language',target:'Translate into',input:'Question or text to translate',send:'Send',off:'AI text responses are off. You can use the guide and phrasebook above.',auth:'Sign in to use AI.',invalid:'Enter up to 500 characters.',failed:'No AI response was received.'},
+ zh:{title:'Gemini AI导览与翻译',task:'功能',guide:'观光导览',translate:'翻译文本',source:'输入语言',target:'目标语言',input:'请输入问题或待翻译文本',send:'发送',off:'AI文本功能已暂停。仍可使用上方的导览和常用短句。',auth:'请登录后使用AI。',invalid:'请输入500字以内的内容。',failed:'未收到AI回复。'}
 };
 const controlStyle='box-sizing:border-box;width:100%;padding:10px;margin-top:8px;color:white;background:#151326;border:1px solid #ff007f;border-radius:9px;font-size:16px';
 function select(label,choices){

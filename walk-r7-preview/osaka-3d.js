@@ -488,8 +488,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       candidates.sort((a,b)=>a.d-b.d);
       const result=[],chosen=candidates.slice(0,20);
       let windowCount=0;
-      const MAX_WINDOWS=360;
-      const WINDOWS_PER_BUILDING=18;
+      const MAX_WINDOWS=400;
+      const WINDOWS_PER_BUILDING=28;
       for(const building of chosen){
         // Sample max 8 real corners, omit ring closure and near-duplicates.
         let corners=[];
@@ -497,12 +497,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
           if(corners.every(p=>dist(p,corner)>2))corners.push(corner);
           if(corners.length>=8)break;
         }
-        for(const corner of corners){
-          for(const [kind,width] of [['halo',1.8],['core',0.65]]){
-            result.push({type:'Feature',properties:{kind,base:building.base,height:building.height},
-              geometry:square(corner,width)});
-          }
-        }
+        // Gold full-height corner pillars obscured windows in the iPhone screenshot.
+        // Keep original geometries on other venue layers, but omit these decorative columns.
+        container.dataset.cornerColumns='disabled-for-readable-windows';
         // Continuous low bands on the actual building footprint, capped at 12 edges
         // per building to avoid excessive geometry on iPhone.
         const fullRing=building.ring;
@@ -521,23 +518,24 @@ window.createOsaka3D = function createOsaka3D(ui) {
         const floorCount=Math.min(7,Math.floor((building.height-building.base-2)/3.25));
         for(let floor=1;floor<=floorCount&&windowCount<MAX_WINDOWS&&windowCount-buildingWindowStart<WINDOWS_PER_BUILDING;floor++){
           const floorBase=building.base+floor*3.25+0.65;
-          if(floorBase+1.15>=building.height)break;
+          if(floorBase+1.4>=building.height)break;
           for(let edge=0;edge<Math.min(fullRing.length-1,8)&&windowCount<MAX_WINDOWS&&windowCount-buildingWindowStart<WINDOWS_PER_BUILDING;edge++){
             const a=fullRing[edge],b=fullRing[edge+1];
             const length=dist(a,b);
             if(length<4||length>100)continue;
-            const count=Math.min(5,Math.floor(length/4.5));
+            const count=Math.min(4,Math.floor(length/5.5));
+            if((floor+edge)%3===0)continue; // distribute light across floors and facade edges
             for(let j=0;j<count&&windowCount<MAX_WINDOWS&&windowCount-buildingWindowStart<WINDOWS_PER_BUILDING;j++){
               // An unlit pane is deliberately skipped for a natural night skyline.
               const pattern=(floor*17+edge*13+j*7+Math.round(building.height));
-              if(pattern%5===0)continue;
-              const t=(j+0.5)/count,half=0.62/length;
+              if(pattern%4===0)continue;
+              const t=(j+0.5)/count,half=0.75/length;
               const p=[a[0]+(b[0]-a[0])*(t-half),a[1]+(b[1]-a[1])*(t-half)];
               const q=[a[0]+(b[0]-a[0])*(t+half),a[1]+(b[1]-a[1])*(t+half)];
-              const geometry=baseStrip(p,q,0.42);
+              const geometry=baseStrip(p,q,0.65);
               if(!geometry)continue;
               const kind=pattern%10<7?'window-white':pattern%10<9?'window-warm':'window-blue';
-              result.push({type:'Feature',properties:{kind,base:floorBase,height:floorBase+1.15},geometry});
+              result.push({type:'Feature',properties:{kind,base:floorBase,height:floorBase+1.4},geometry});
               windowCount++;
             }
           }
@@ -553,7 +551,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
       container.dataset.windowAccuracy='decorative-not-surveyed';
       container.dataset.baseNeonStatus=chosen.length?'geometry-ready':'no-eligible-buildings';
       container.dataset.baseNeonBands=String(result.filter(f=>f.properties.kind.startsWith('base-')).length);
-      container.dataset.verticalNeonStatus=chosen.length?'pilot-geometry-ready':'no-eligible-buildings';
+      container.dataset.verticalNeonStatus='full-height-pillars-disabled';
       container.dataset.verticalNeonBuildings=String(chosen.length);
       container.dataset.verticalNeonStrips=String(result.length);
     }

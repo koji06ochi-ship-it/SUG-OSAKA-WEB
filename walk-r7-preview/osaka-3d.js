@@ -9,6 +9,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const HUB = ui.hub || { lat: 34.690616, lng: 135.514183 };
   // iPhone inspection route: map.html?focus=mint-museum (no effect on regular map).
   const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
+  // Landmark camera-only inspection, never used for real GPS or encounter eligibility.
+  const R7_LANDMARK_FOCUS = {
+    hep: { center: [135.50009, 34.704], zoom: 18.0, pitch: 66, bearing: -30 },
+    grand: { center: [135.492535, 34.703659], zoom: 17.6, pitch: 65, bearing: -45 },
+    castle: { center: [135.526, 34.68734], zoom: 18.0, pitch: 65, bearing: -45 }
+  }[new URLSearchParams(window.location.search).get('landmark')] || null;
+
   // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
   const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
   const BUILDING_LIGHTING_TEST = STANDARD_3D_INSPECTION && new URLSearchParams(window.location.search).get('facade') === '1';
@@ -1556,10 +1563,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
         style: 'mapbox://styles/mapbox/standard',
         config: { basemap: ACTIVE_BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
-        center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
-        zoom: MINT_MUSEUM_INSPECTION ? 18 : (cameraMode === 'eye' ? 18.15 : 17.3),
-        pitch: MINT_MUSEUM_INSPECTION ? 68 : (cameraMode === 'eye' ? 78 : 65),
-        bearing: -68,
+        center: R7_LANDMARK_FOCUS ? R7_LANDMARK_FOCUS.center : (MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat]),
+        zoom: R7_LANDMARK_FOCUS ? R7_LANDMARK_FOCUS.zoom : (MINT_MUSEUM_INSPECTION ? 18 : (cameraMode === 'eye' ? 18.15 : 17.3)),
+        pitch: R7_LANDMARK_FOCUS ? R7_LANDMARK_FOCUS.pitch : (MINT_MUSEUM_INSPECTION ? 68 : (cameraMode === 'eye' ? 78 : 65)),
+        bearing: R7_LANDMARK_FOCUS ? R7_LANDMARK_FOCUS.bearing : -68,
         maxPitch: 85,
         antialias: true
       });
@@ -1659,7 +1666,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
           container.dataset.state = 'style-ready';
           container.dataset.basemap = STANDARD_3D_INSPECTION ? (NATIVE_NIGHT_TEST ? 'native-night-facades-ab' : (BUILDING_LIGHTING_TEST ? 'native-building-lighting-ab' : 'mapbox-standard-native-dusk-neon')) : 'mapbox-standard-night-neon';
-          container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
+          container.dataset.camera = R7_LANDMARK_FOCUS ? 'landmark-inspection-only' : (MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level');
           container.dataset.renderedBuildings = STANDARD_3D_INSPECTION ? 'native-3d-enabled-device-unverified' : 'unverified';
           toggle.textContent = '2D';
           toggle.setAttribute('aria-pressed', 'true');

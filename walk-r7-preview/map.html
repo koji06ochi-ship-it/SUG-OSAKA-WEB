@@ -1578,7 +1578,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="today-osaka.js?v=20261124"></script><script src="shop-metrics.js?v=20261124a"></script><script src="osaka-3d.js?v=r7-pedestrian-camera-20261124"></script><script src="tour-guide.js?v=r7-auth-20261123b"></script><script src="auth-client.js?v=r7-auth-20261123b"></script><script src="ai-chat.js?v=r7-auth-20261123b"></script></head>
+</script><script src="walk-rewards.js?v=20261124"></script><script src="today-osaka.js?v=20261124"></script><script src="shop-metrics.js?v=20261124a"></script><script src="osaka-3d.js?v=r7-pedestrian-camera-20261124"></script><script src="tour-guide.js?v=r7-auth-20261123b"></script><script src="auth-client.js?v=r7-auth-20261123b"></script><script src="ai-chat.js?v=r7-auth-20261123b"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -2596,7 +2596,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           const m = L.marker([ch.lat, ch.lng], {
             icon: L.divIcon({ className: 'sug-r7-2d-char', html: iconHtml, iconSize: [52, 60], iconAnchor: [26, 56] })
           }).addTo(charactersLayer);
-          m.on('click', () => showToast(ch.character + ' が ' + ch.spotName + ' に出現中！'));
+          m.on('click', () => {
+            if(!fresh()||!state.gpsConsent||fix.accuracy>50||distance(ch)+fix.accuracy>100){showToast(ch.character+' が出現中！近くで出会いを記録できます');return;}
+            const result=window.SUGR7Rewards?.discover(ch.character,ch.spotName);
+            showToast(result==='saved'?ch.character+' との出会いを記録しました':result==='duplicate'?'今日の出会いは記録済みです':'出会い記録を保存できません');
+          });
         }
         if (osaka3D && typeof osaka3D.setActiveCharacters === 'function') {
           osaka3D.setActiveCharacters(activeCharacters);

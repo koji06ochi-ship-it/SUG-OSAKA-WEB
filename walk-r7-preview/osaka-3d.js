@@ -24,7 +24,64 @@ window.createOsaka3D = function createOsaka3D(ui) {
     {name:'大阪城',lat:34.68734,lng:135.526,color:'#ffce65',officialAddress:'大阪市中央区大阪城1-1',officialUrl:'https://www.osakacastle.net/access/'},
     {name:'大阪市中央公会堂',lat:34.69361,lng:135.50389,color:'#b17cff',officialAddress:'大阪市北区中之島1-1-27',officialUrl:'https://osaka-chuokokaido.com/ja/access'},
     {name:'造幣博物館',lat:34.69592,lng:135.52167,color:'#b65a43',officialAddress:'大阪市北区天満1-1-79',officialUrl:'https://www.mint.go.jp/'},
-    {name:'大阪天満宮',lat:34.696025,lng:135.5126194,color:'#bf483c',officialAddress:'大阪市北区天神橋2-1-8',officialUrl:'https://osakatemmangu.or.jp/'}
+    {name:'大阪天満宮',lat:34.696025,lng:135.5126194,color:'#bf483c',officialAddress:'大阪市北区天神橋2-1-8',officialUrl:'https://osakatemmangu.or.jp/'},
+    // R7 Sightseeing Expansion: 13 Buildings & Facilities
+    {name:'堀川戎神社',lat:34.699738,lng:135.509077,color:'#e0462e',accentColor:'#ffd065',defaultHeight:10,r7Group:'building',officialUrl:'https://www.horikawa-ebisu.or.jp/'},
+    {name:'お初天神（露天神社）',lat:34.699229,lng:135.500751,color:'#ff4fa6',accentColor:'#e0462e',defaultHeight:10,r7Group:'building',officialUrl:'https://tuyutenjin.com/'},
+    {name:'少彦名神社',lat:34.688784,lng:135.506009,color:'#2ec47b',accentColor:'#ffd065',defaultHeight:10,r7Group:'building',officialUrl:'https://www.sinnosan.jp/access/'},
+    {name:'フェスティバルタワー',lat:34.693475,lng:135.496626,color:'#e53955',accentColor:'#9b4dff',defaultHeight:190,r7Group:'building',officialUrl:'https://www.festival-city.jp/'},
+    {name:'フェスティバルホール',lat:34.693574,lng:135.496615,color:'#e53955',accentColor:'#ffd065',defaultHeight:45,r7Group:'building',officialUrl:'https://www.festivalhall.jp/access/'},
+    {name:'天満市場（ぷららてんま）',lat:34.706683,lng:135.512842,color:'#ff8c2e',accentColor:'#ffb974',defaultHeight:14,r7Group:'building',officialUrl:'https://www.tenmaichiba.com/'},
+    {name:'梅田芸術劇場',lat:34.708461,lng:135.499113,color:'#9b4dff',accentColor:'#ffd065',defaultHeight:42,r7Group:'building',officialUrl:'https://www.umegei.com/guide/access.html'},
+    {name:'桜宮神社',lat:34.700874,lng:135.52352,color:'#e0462e',accentColor:'#e0462e',defaultHeight:9,r7Group:'building',officialUrl:'https://www.sakuranomiya.or.jp/'},
+    {name:'梅田スカイビル',lat:34.705294,lng:135.490106,color:'#cfd9e6',accentColor:'#5ce1ff',defaultHeight:173,r7Group:'building',officialUrl:'https://www.skybldg.co.jp/access/'},
+    {name:'天満天神繁昌亭',lat:34.696525,lng:135.512583,color:'#e0462e',accentColor:'#ffd065',defaultHeight:11,r7Group:'building',officialUrl:'https://www.hanjotei.jp/access/'},
+    {name:'大阪市役所',lat:34.693750,lng:135.502156,color:'#f4efe2',accentColor:'#f4efe2',defaultHeight:38,r7Group:'building',officialUrl:'https://www.city.osaka.lg.jp/somu/page/0000004215.html'},
+    {name:'適塾',lat:34.691269,lng:135.503251,color:'#f5f2eb',accentColor:'#4a3123',defaultHeight:9,r7Group:'building',officialUrl:'https://www.tekijuku.osaka-u.ac.jp/ja/access'},
+    {name:'藤田美術館',lat:34.694889,lng:135.525235,color:'#1e222e',accentColor:'#ffd065',defaultHeight:12,r7Group:'building',officialUrl:'https://fujita-museum.or.jp/access/'}
+  ];
+
+  // R7 Sightseeing Expansion: 15 Bridges (3 shared with Night View category without duplicate pins)
+  const BRIDGES_R7 = [
+    {name:'天神橋',lat:34.691402,lng:135.511728,color:'#ffd065',accentColor:'#fff0b3',nightSpot:true,category:'bridge'},
+    {name:'難波橋',lat:34.692644,lng:135.507071,color:'#f4efe2',accentColor:'#ffd065',nightSpot:true,category:'bridge'},
+    {name:'天満橋',lat:34.6901972,lng:135.5166306,color:'#3fa9ff',accentColor:'#7fd4ff',category:'bridge'},
+    {name:'淀屋橋',lat:34.692972,lng:135.500994,color:'#fff3dc',accentColor:'#ffe3b3',category:'bridge'},
+    {name:'桜宮橋',lat:34.697559,lng:135.522622,color:'#cfd9e6',accentColor:'#eef4fb',category:'bridge'},
+    {name:'長柄橋',lat:34.721278,lng:135.509942,color:'#3fa9ff',accentColor:'#cfd9e6',category:'bridge'},
+    {name:'源八橋',lat:34.703224,lng:135.519419,color:'#ffd065',accentColor:'#f5f7fa',category:'bridge'},
+    {name:'川崎橋',lat:34.692079,lng:135.521082,color:'#f5f7fa',accentColor:'#3fa9ff',category:'bridge'},
+    {name:'都島橋',lat:34.708521,lng:135.518532,color:'#ff8c2e',accentColor:'#ffc288',category:'bridge'},
+    {name:'飛翔橋',lat:34.710812,lng:135.520985,color:'#cfd9e6',accentColor:'#3fa9ff',category:'bridge'},
+    {name:'大江橋',lat:34.694763,lng:135.501147,color:'#ffd065',accentColor:'#fff0b3',category:'bridge'},
+    {name:'堂島大橋',lat:34.689686,lng:135.485503,color:'#9b4dff',accentColor:'#cfd9e6',category:'bridge'},
+    {name:'水晶橋',lat:34.694522,lng:135.503022,color:'#f5f7fa',accentColor:'#dbe8ff',category:'bridge'},
+    {name:'田蓑橋',lat:34.693382,lng:135.492477,color:'#ffd065',accentColor:'#fff0b3',category:'bridge'},
+    {name:'中之島ガーデンブリッジ',lat:34.694642,lng:135.499006,color:'#ff4fa6',accentColor:'#9b4dff',nightSpot:true,category:'bridge'}
+  ];
+
+  // R7 Sightseeing Expansion: 7 Sightseeing Areas (real geographic data, never a single extruded building)
+  const AREAS_R7 = [
+    {name:'中崎町',lat:34.707019,lng:135.505434,color:'#ff7eb9',radiusM:220,kind:'town'},
+    {name:'中之島バラ園',lat:34.692314,lng:135.508017,color:'#ff4fa6',radiusM:130,kind:'park'},
+    {name:'天神橋筋商店街',lat:34.7010,lng:135.5117,color:'#ffb84d',radiusM:180,kind:'arcade'},
+    {name:'桜ノ宮ビーチ',lat:34.7035825,lng:135.522556,color:'#64e8da',radiusM:110,kind:'beach'},
+    {name:'難波宮跡',lat:34.680183,lng:135.52367,color:'#65d896',radiusM:190,kind:'park'},
+    {name:'北新地',lat:34.698295,lng:135.496792,color:'#c084fc',radiusM:180,kind:'town'},
+    {name:'うめきた広場',lat:34.703364,lng:135.494211,color:'#5ce1ff',radiusM:120,kind:'plaza'}
+  ];
+
+  // R7 Sightseeing Expansion: 9 Night View Spots (purple x gold dedicated marker)
+  const NIGHT_SPOTS_R7 = [
+    {name:'中之島公園・剣先',lat:34.691303,lng:135.512611,category:'nightview'},
+    {name:'ドリカムツリー八軒家浜',lat:34.690616,lng:135.514183,category:'nightview'},
+    {name:'ドリカムツリー西天満若松浜',lat:34.694799,lng:135.504319,category:'nightview'},
+    {name:'北浜テラス',lat:34.691339,lng:135.508573,category:'nightview'},
+    {name:'京阪シティモール屋上庭園',lat:34.69022,lng:135.516441,category:'nightview'},
+    {name:'大阪駅前第3ビル展望室',lat:34.698441,lng:135.499373,category:'nightview'},
+    {name:'大阪ステーションシティ・風の広場',lat:34.702778,lng:135.495000,category:'nightview'},
+    {name:'WowUs（堂島浜）',lat:34.695522,lng:135.50057,category:'nightview'},
+    {name:'淀川河川敷',lat:34.721502,lng:135.494795,category:'nightview'}
   ];
   let landmarkGeometryHashes = '';
   let cachedKanteleLandmark = null; // Keep only a previously verified actual Streets polygon across tile transitions.
@@ -146,12 +203,23 @@ window.createOsaka3D = function createOsaka3D(ui) {
       '.sug-r7-selected-shop{padding:7px 12px;border:1.5px solid var(--sug-store-color);border-radius:999px;background:rgba(5,5,13,.94);color:var(--sug-store-color);font:700 12px -apple-system,sans-serif;white-space:nowrap;box-shadow:0 0 12px var(--sug-store-color);}',
       '.sug-r7-spot:focus-visible .sug-r7-spot-pill{outline:2px solid #fff;outline-offset:2px;}',
       '.sug-r7-gps-pulse{position:relative;width:22px;height:22px;border:2.5px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0%,#ff80c2 55%,#ff2a8d 100%);box-shadow:0 0 16px #ff3b9a,0 0 28px rgba(255,59,154,.85);animation:sug-r7-gps-pulse 1.9s ease-in-out infinite;}',
-      '@keyframes sug-r7-gps-pulse{0%,100%{box-shadow:0 0 10px 3px rgba(255,59,154,.55)}50%{box-shadow:0 0 24px 14px rgba(255,59,154,.82)}}'
+      '@keyframes sug-r7-gps-pulse{0%,100%{box-shadow:0 0 10px 3px rgba(255,59,154,.55)}50%{box-shadow:0 0 24px 14px rgba(255,59,154,.82)}}',
+      '.sug-r7-spot-night .sug-r7-spot-pill{border:1.6px solid #ffd065;background:linear-gradient(135deg,rgba(78,24,132,.94),rgba(18,10,34,.95));color:#ffe9a8;box-shadow:0 0 14px rgba(155,77,255,.78),0 0 6px rgba(255,208,101,.55);}',
+      '.sug-r7-spot-night .sug-r7-spot-drop{color:#9b4dff;filter:drop-shadow(0 0 7px #ffd065);}',
+      '.sug-r7-spot-bridge .sug-r7-spot-pill{border-width:1.5px;background:rgba(8,14,26,.9);}',
+      '.sug-r7-spot-area .sug-r7-spot-pill{border-style:dashed;background:rgba(10,18,22,.82);}',
+      '.sug-r7-char-marker{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;cursor:pointer;padding:0;z-index:9;}',
+      '.sug-r7-char-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #ff4fa6;background:#fff;box-shadow:0 0 14px rgba(255,79,166,.75);}',
+      '.sug-r7-char-badge{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;border:1.5px solid #ff4fa6;background:rgba(16,8,28,.94);color:#fff;font:800 11px -apple-system,sans-serif;box-shadow:0 0 14px rgba(255,79,166,.65);white-space:nowrap;}',
+      '#osaka-3d.sug-zoom-far .sug-r7-spot-pill{font-size:10px;padding:3px 7px;}',
+      '#osaka-3d.sug-zoom-far .sug-r7-spot-drop{width:12px;height:15px;}',
+      '.sug-r7-marker-decluttered{opacity:0!important;pointer-events:none!important;}'
     ].join('');
     document.head.appendChild(css);
   }
 
   function clearMarkers() {
+    clearExpansionMarkers();
     for (const m of highlightedStoreMarkers) m.remove();
     highlightedStoreMarkers = [];
     for (const m of spotMarkers) m.remove();
@@ -164,9 +232,15 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   function addSpotMarkers(gl) {
     styleMarkers();
+    const dedicatedNames = new Set([
+      ...BRIDGES_R7.map(b => b.name),
+      ...AREAS_R7.map(a => a.name),
+      ...NIGHT_SPOTS_R7.map(n => n.name)
+    ]);
     for (const place of spots) {
       // Official venues get exactly one label, only after their OSM way matches.
       if (venueRecords.some(v => v.name === place.name)) continue;
+      if (dedicatedNames.has(place.name)) continue;
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'sug-r7-spot';
@@ -1020,6 +1094,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
         const hits=candidates.filter(f=>f.geometry&&landmarkGeometryMatch(f.geometry,point));
         const distinct=new Map(hits.map(f=>[JSON.stringify(f.geometry),f]));
         if(distinct.size===1) { chosen=[...distinct.values()][0];break; }
+        if(distinct.size>1 && landmark.r7Group==='building') {
+          const sorted=[...distinct.values()].sort((a,b)=>(Number(b.properties?.height)||0)-(Number(a.properties?.height)||0));
+          chosen=sorted[0];
+          break;
+        }
       }
       // On iPhone the currently loaded vector tiles can change while panning.
       // Do not drop a previously matched Kantele polygon just because its tile
@@ -1030,15 +1109,21 @@ window.createOsaka3D = function createOsaka3D(ui) {
         if(landmark.name==='大阪天満宮')container.dataset.osakaTenmanguStatus='unique-streets-footprint-found';
         const measured=Number(chosen.properties?.height);
         const isMint=landmark.name==='造幣博物館';
-        // Mint Museum: 1911 red-brick former power station, per Mint Bureau / MOF.
-        // Only use a single building polygon containing the mapped museum point.
-        // If the vector tile lacks height, use an explicitly flagged visual estimate.
+        const fallbackH=Number.isFinite(landmark.defaultHeight)?landmark.defaultHeight:(isMint?9:NaN);
         const heightSource=Number.isFinite(measured)&&measured>0&&measured<=300?'mapbox-height':
-          (isMint?'visual-estimate-not-measured':'missing');
-        const height=heightSource==='mapbox-height'?measured:(isMint?9:NaN);
+          (Number.isFinite(fallbackH)?'visual-estimate-not-measured':'missing');
+        const height=heightSource==='mapbox-height'?measured:fallbackH;
         if(Number.isFinite(height)){
           verifiedFeature={type:'Feature',
-            properties:{name:landmark.name,color:landmark.color,height:height+3},
+            properties:{
+              name:landmark.name,
+              color:landmark.color,
+              accentColor:landmark.accentColor||landmark.color,
+              height:height+3,
+              accentBase:Math.max(0,height+0.6),
+              accentHeight:height+3.8,
+              r7Group:landmark.r7Group||'legacy'
+            },
             geometry:chosen.geometry};
           if(isMint){
             container.dataset.mintMuseumStatus='unique-streets-footprint-matched';
@@ -1062,6 +1147,11 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.mintMuseumStatus=matched.includes('造幣博物館') ? 'unique-streets-footprint-match' : 'not-verified';
     container.dataset.landmarkBuildingCount=String(features.length);
     container.dataset.landmarkSourceCandidates=String(candidates.length);
+    const r7BuildingMatched=features.filter(f=>f.properties.r7Group==='building').map(f=>f.properties.name);
+    container.dataset.renderedBuildings44=String(r7BuildingMatched.length);
+    container.dataset.renderedBuildings44Names=r7BuildingMatched.join(' / ')||'none';
+    const accentSource=active.getSource('sug-r7-landmark-building-accents-src');
+    if(accentSource)accentSource.setData({type:'FeatureCollection',features:features.filter(f=>f.properties.accentColor&&f.properties.accentColor!==f.properties.color)});
   }
   // Kantele only: candidate OSM way from external mapping records.
   // Never replace the existing landmark coloring unless this is verified as
@@ -1307,6 +1397,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   function addLandmarkBuildingLayers(active) {
     active.addSource('sug-r7-landmark-building-overlays',{
       type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    active.addSource('sug-r7-landmark-building-accents-src',{
+      type:'geojson',data:{type:'FeatureCollection',features:[]}});
     active.addLayer({id:'sug-r7-landmark-building-extrusions',type:'fill-extrusion',
       slot:'top',source:'sug-r7-landmark-building-overlays',
       paint:{'fill-extrusion-color':['get','color'],
@@ -1315,8 +1407,261 @@ window.createOsaka3D = function createOsaka3D(ui) {
         'fill-extrusion-opacity':1,
         'fill-extrusion-emissive-strength':0.8,
         'fill-extrusion-vertical-gradient':false}});
+    active.addLayer({id:'sug-r7-landmark-building-accents',type:'fill-extrusion',
+      slot:'top',source:'sug-r7-landmark-building-accents-src',
+      paint:{'fill-extrusion-color':['get','accentColor'],
+        'fill-extrusion-height':['get','accentHeight'],
+        'fill-extrusion-base':['get','accentBase'],
+        'fill-extrusion-opacity':0.95,
+        'fill-extrusion-emissive-strength':0.9,
+        'fill-extrusion-vertical-gradient':false}});
     active.on('idle',()=>updateLandmarkBuildingColors(active));
     active.on('moveend',()=>updateLandmarkBuildingColors(active));
+  }
+
+  // R7 Expansion: Color bridges along actual Mapbox Streets v8 road bridge geometry
+  let bridgeGeometryHash = '';
+  let bridgeMarkers = [];
+  let nightMarkers = [];
+  let areaMarkers = [];
+  let characterMarkers = [];
+
+  function clearExpansionMarkers() {
+    for (const m of bridgeMarkers) m.remove(); bridgeMarkers = [];
+    for (const m of nightMarkers) m.remove(); nightMarkers = [];
+    for (const m of areaMarkers) m.remove(); areaMarkers = [];
+    for (const m of characterMarkers) m.remove(); characterMarkers = [];
+  }
+
+  function pointToSegmentDistM(lat, lng, a, b) {
+    const cosLat = Math.cos(lat * Math.PI / 180);
+    const sx = 111320 * cosLat, sy = 111320;
+    const px = (lng - a[0]) * sx, py = (lat - a[1]) * sy;
+    const vx = (b[0] - a[0]) * sx, vy = (b[1] - a[1]) * sy;
+    const len2 = vx * vx + vy * vy;
+    if (len2 <= 0) return Math.hypot(px, py);
+    const t = Math.max(0, Math.min(1, (px * vx + py * vy) / len2));
+    return Math.hypot(px - t * vx, py - t * vy);
+  }
+
+  function lineDistanceM(lat, lng, geom) {
+    const lines = geom.type === 'LineString' ? [geom.coordinates]
+      : geom.type === 'MultiLineString' ? geom.coordinates : [];
+    let best = Infinity;
+    for (const line of lines) {
+      for (let i = 1; i < line.length; i++) {
+        const d = pointToSegmentDistM(lat, lng, line[i - 1], line[i]);
+        if (d < best) best = d;
+      }
+    }
+    return best;
+  }
+
+  function updateBridgeColors(active) {
+    if (view !== active || !active.getSource('sug-r7-bridges-src')) return;
+    let roads = [];
+    try {
+      roads = active.querySourceFeatures('sug-r7-neon-streets-buildings', { sourceLayer: 'road' });
+    } catch (err) {
+      return;
+    }
+    const bridgeRoads = roads.filter(f => f.geometry && f.properties && (f.properties.structure === 'bridge' || f.properties.type === 'bridge'));
+    const pool = bridgeRoads.length ? bridgeRoads : roads.filter(f => f.geometry && (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString'));
+    const features = [];
+    const matchedNames = new Set();
+    for (const br of BRIDGES_R7) {
+      const hits = pool.filter(f => lineDistanceM(br.lat, br.lng, f.geometry) <= 55);
+      if (hits.length) matchedNames.add(br.name);
+      const seenGeom = new Set();
+      for (const h of hits) {
+        const gKey = JSON.stringify(h.geometry);
+        if (seenGeom.has(gKey)) continue;
+        seenGeom.add(gKey);
+        features.push({
+          type: 'Feature',
+          properties: { name: br.name, color: br.color, accentColor: br.accentColor || br.color },
+          geometry: h.geometry
+        });
+      }
+    }
+    const hash = features.length + ':' + [...matchedNames].join(',');
+    if (hash === bridgeGeometryHash) return;
+    bridgeGeometryHash = hash;
+    active.getSource('sug-r7-bridges-src').setData({ type: 'FeatureCollection', features });
+    container.dataset.renderedBridges = String(matchedNames.size);
+    container.dataset.renderedBridgeNames = [...matchedNames].join(' / ') || 'none';
+  }
+
+  function addBridgeAndExpansionLayers(active, gl) {
+    active.addSource('sug-r7-bridges-src', { type: 'geojson', data: EMPTY });
+    active.addLayer({
+      id: 'sug-r7-bridges-casing',
+      type: 'line',
+      slot: 'middle',
+      source: 'sug-r7-bridges-src',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': ['get', 'accentColor'],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 5, 16, 12, 19, 18],
+        'line-opacity': 0.55,
+        'line-blur': 2.2,
+        'line-emissive-strength': 0.9
+      }
+    });
+    active.addLayer({
+      id: 'sug-r7-bridges-core',
+      type: 'line',
+      slot: 'middle',
+      source: 'sug-r7-bridges-src',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.2, 16, 5.2, 19, 8.5],
+        'line-opacity': 0.96,
+        'line-emissive-strength': 1
+      }
+    });
+
+    // Subtle geographic zone outlines for the 7 sightseeing areas (never extruded as a single building)
+    const areaFeatures = AREAS_R7.map(a => {
+      const poly = radiusPolygon({ lat: a.lat, lng: a.lng }, a.radiusM).features[0];
+      poly.properties = { name: a.name, color: a.color };
+      return poly;
+    });
+    active.addSource('sug-r7-areas-src', { type: 'geojson', data: { type: 'FeatureCollection', features: areaFeatures } });
+    active.addLayer({
+      id: 'sug-r7-areas-outline',
+      type: 'line',
+      slot: 'bottom',
+      source: 'sug-r7-areas-src',
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': 1.6,
+        'line-dasharray': [3, 3],
+        'line-opacity': 0.72,
+        'line-emissive-strength': 0.7
+      }
+    });
+
+    function declutterMarkers3D() {
+      if (!active || !ready) return;
+      const z = active.getZoom();
+      container.classList.toggle('sug-zoom-far', z < 14.6);
+      const placed = [];
+      const groups = [
+        { list: characterMarkers, w: 72, h: 56 },
+        { list: nightMarkers, w: 96, h: 28 },
+        { list: bridgeMarkers, w: 84, h: 24 },
+        { list: spotMarkers, w: 88, h: 26 },
+        { list: areaMarkers, w: 84, h: 24 }
+      ];
+      for (const g of groups) {
+        for (const m of g.list) {
+          const el = m.getElement();
+          if (!el) continue;
+          const pt = active.project(m.getLngLat());
+          const hit = placed.some(b => Math.abs(pt.x - b.x) < (g.w + b.w) * 0.42 && Math.abs(pt.y - b.y) < (g.h + b.h) * 0.48);
+          el.classList.toggle('sug-r7-marker-decluttered', hit);
+          if (!hit) placed.push({ x: pt.x, y: pt.y, w: g.w, h: g.h });
+        }
+      }
+    }
+    active.on('idle', () => { updateBridgeColors(active); declutterMarkers3D(); });
+    active.on('moveend', () => { updateBridgeColors(active); declutterMarkers3D(); });
+    active.on('zoomend', declutterMarkers3D);
+    container._sugDeclutter3D = declutterMarkers3D;
+
+    styleMarkers();
+    clearExpansionMarkers();
+
+    // 15 Bridge Markers (3 night-view bridges show combined badge, zero duplicate pin)
+    for (const br of BRIDGES_R7) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'sug-r7-spot sug-r7-spot-bridge' + (br.nightSpot ? ' sug-r7-spot-night' : '');
+      el.style.setProperty('--sug-spot-color', br.color);
+      el.style.color = br.color;
+      el.style.zIndex = '5';
+      const pill = document.createElement('span');
+      pill.className = 'sug-r7-spot-pill';
+      pill.style.borderColor = br.color;
+      pill.textContent = (br.nightSpot ? '🌉🌙 ' : '🌉 ') + br.name;
+      el.appendChild(pill);
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (typeof ui.select === 'function') ui.select(Object.assign({ category: 'bridge' }, br));
+      });
+      bridgeMarkers.push(new gl.Marker({ element: el, anchor: 'bottom' }).setLngLat([br.lng, br.lat]).addTo(active));
+    }
+
+    // 7 Sightseeing Area Markers
+    for (const ar of AREAS_R7) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'sug-r7-spot sug-r7-spot-area';
+      el.style.setProperty('--sug-spot-color', ar.color);
+      el.style.color = ar.color;
+      el.style.zIndex = '4';
+      const pill = document.createElement('span');
+      pill.className = 'sug-r7-spot-pill';
+      pill.style.borderColor = ar.color;
+      pill.textContent = '📍 ' + ar.name;
+      el.appendChild(pill);
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (typeof ui.select === 'function') ui.select(Object.assign({ category: 'area' }, ar));
+      });
+      areaMarkers.push(new gl.Marker({ element: el, anchor: 'bottom' }).setLngLat([ar.lng, ar.lat]).addTo(active));
+    }
+
+    // 9 Night View Markers (purple x gold dedicated marker)
+    for (const nv of NIGHT_SPOTS_R7) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'sug-r7-spot sug-r7-spot-night';
+      el.style.setProperty('--sug-spot-color', '#9b4dff');
+      el.style.color = '#ffd065';
+      el.style.zIndex = '7';
+      const pill = document.createElement('span');
+      pill.className = 'sug-r7-spot-pill';
+      pill.textContent = '🌙 ' + nv.name;
+      el.appendChild(pill);
+      el.insertAdjacentHTML(
+        'beforeend',
+        '<svg class="sug-r7-spot-drop" viewBox="0 0 24 30" fill="none" aria-hidden="true">' +
+          '<path d="M12 2C6.48 2 2 6.48 2 12c0 6.8 10 16 10 16s10-9.2 10-16c0-5.52-4.48-10-10-10z" fill="#2a1047" stroke="#ffd065" stroke-width="2"/>' +
+          '<circle cx="12" cy="11.5" r="3.5" fill="#ffd065"/>' +
+        '</svg>'
+      );
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (typeof ui.select === 'function') ui.select(nv);
+      });
+      nightMarkers.push(new gl.Marker({ element: el, anchor: 'bottom' }).setLngLat([nv.lng, nv.lat]).addTo(active));
+    }
+    container.dataset.renderedNightSpots = String(NIGHT_SPOTS_R7.length);
+    container.dataset.renderedAreas = String(AREAS_R7.length);
+  }
+
+  function setActiveCharacters3D(activeChars, gl) {
+    for (const m of characterMarkers) m.remove();
+    characterMarkers = [];
+    const list = Array.isArray(activeChars) ? activeChars : [];
+    container.dataset.renderedCharacters = String(list.length);
+    container.dataset.renderedCharacterNames = list.map(c => c.character + '@' + c.spotName).join(' / ') || 'none';
+    if (!view || !ready || !gl) return;
+    styleMarkers();
+    for (const ch of list) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'sug-r7-char-marker';
+      el.innerHTML = (ch.img ? '<img class="sug-r7-char-avatar" src="' + ch.img + '" alt="' + ch.character + '">' : '') + '<span class="sug-r7-char-badge">' + (ch.icon || '✨') + ' ' + ch.character + '</span>';
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (typeof ui.onCharacterSelect === 'function') ui.onCharacterSelect(ch);
+      });
+      characterMarkers.push(new gl.Marker({ element: el, anchor: 'bottom' }).setLngLat([ch.lng, ch.lat]).addTo(view));
+    }
   }
 
   function addGeoLayers(active) {
@@ -1646,6 +1991,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
             addVerifiedOsakaCastleTower(active);
             addVerifiedCentralPublicHall(active);
             tryVerifiedKanteleFootprint(active);
+            addBridgeAndExpansionLayers(active, gl);
             addSpotMarkers(gl);
             addJRTemmaStationMarker(gl);
             addOsakaTenmanguFocus(gl);
@@ -1680,6 +2026,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.viewMode = mode;
     // Switching camera mode must work even without GPS consent or movement.
     if (view && ready) {
+      if (typeof container._sugDeclutter3D === 'function') {
+        setTimeout(() => container._sugDeclutter3D(), 300);
+      }
       view.easeTo({
         zoom: mode === 'eye' ? 18.15 : 17.3,
         pitch: mode === 'eye' ? 78 : 65,
@@ -1726,6 +2075,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
       return true;
     },
     isActive,
-    setHighlightedStores
+    setHighlightedStores,
+    setActiveCharacters(chars) {
+      if (window.mapboxgl) setActiveCharacters3D(chars, window.mapboxgl);
+    }
   };
 };

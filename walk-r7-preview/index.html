@@ -27,12 +27,14 @@
     .preview-tab { border: 0; border-radius: 8px; background: transparent; color: #aaa2bc; font: 600 11px -apple-system, sans-serif; min-width:0; min-height: 42px; }
     .preview-tab[aria-current="page"] { color: #ff479f; background: #361129; box-shadow: inset 0 2px #ff479f; }
 
-  </style>
+  
+    .sug-wallet{position:absolute;top:0;left:0;right:0;height:48px;z-index:25;display:flex;align-items:center;justify-content:space-around;background:#10091e;border-bottom:1px solid #ff479f;color:white;font:600 12px -apple-system,sans-serif;padding:4px 8px}.sug-wallet button{background:none;border:0;color:inherit;font:inherit;padding:6px}.sug-wallet b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;color:#08050e;margin-right:5px}.sug-wallet .s{background:#ff479f}.sug-wallet .u{background:#5ae8ff}.sug-wallet .g{background:#e8be63}.screen-frame{top:48px;height:calc(100% - 122px)}.sug-wallet-info{position:absolute;top:48px;left:8px;right:8px;z-index:26;padding:16px;border:1px solid #ff479f;border-radius:12px;background:#10091e;color:white;font:14px -apple-system,sans-serif}.sug-wallet-info[hidden]{display:none}
+</style>
 </head>
 <body>
   <div class="unified-root">
     <div class="phone-frame" aria-label="S.u.G WALK R7 正式5画面統合アプリ">
-      <iframe id="frame-home" class="screen-frame active" title="① ホーム"></iframe>
+      <div class="sug-wallet" aria-label="S.u.G コイン"><button type="button" data-coin="S"><b class="s">S</b><span>—</span></button><button type="button" data-coin="u"><b class="u">u</b><span>—</span></button><button type="button" data-coin="G"><b class="g">G</b><span>—</span></button></div><section class="sug-wallet-info" hidden aria-live="polite"><strong></strong><p>残高未接続（検証版）。実際のコインはまだ付与・消費されません。</p><button type="button">閉じる</button></section><iframe id="frame-home" class="screen-frame active" title="① ホーム"></iframe>
       <iframe id="frame-map" class="screen-frame" title="② マップ" allow="geolocation; accelerometer; gyroscope"></iframe>
       <iframe id="frame-meet" class="screen-frame" title="③ 出会う"></iframe>
       <iframe id="frame-log" class="screen-frame" title="④ 記録"></iframe>
@@ -45,6 +47,11 @@
     (function () {
       'use strict';
       
+      
+      var walletInfo=document.querySelector('.sug-wallet-info');
+      var coinLabels={S:'S｜応援・LIVE視聴',u:'u｜散歩・店舗・観光',G:'G｜ゲーム'};
+      document.querySelectorAll('.sug-wallet [data-coin]').forEach(function(button){button.addEventListener('click',function(){walletInfo.querySelector('strong').textContent=coinLabels[button.dataset.coin];walletInfo.hidden=false;});});
+      walletInfo.querySelector('button').addEventListener('click',function(){walletInfo.hidden=true;});
       var TAB_KEYS = ['home', 'map', 'meet', 'log', 'settings'];
       var currentTab = 'home';
       var encounter = document.getElementById('home-character-encounter');

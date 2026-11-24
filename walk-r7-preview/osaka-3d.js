@@ -9,6 +9,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const HUB = ui.hub || { lat: 34.690616, lng: 135.514183 };
   // iPhone inspection route: map.html?focus=mint-museum (no effect on regular map).
   const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
+  // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
+  const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -67,6 +69,17 @@ window.createOsaka3D = function createOsaka3D(ui) {
     colorTrunks: '#FF4AA5',
     colorRoads: '#BE718D'
   };
+
+  const ACTIVE_BASEMAP_CONFIG = STANDARD_3D_INSPECTION ? {
+    ...BASEMAP_CONFIG,
+    lightPreset: 'dusk',
+    show3dObjects: true,
+    show3dBuildings: true,
+    show3dFacades: true,
+    show3dLandmarks: true,
+    show3dTrees: true,
+    colorBuildings: '#657085'
+  } : BASEMAP_CONFIG;
 
   container.dataset.state = 'closed';
   container.dataset.renderedBuildings = 'unverified';
@@ -1536,7 +1549,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
         container,
         accessToken: token,
         style: 'mapbox://styles/mapbox/standard',
-        config: { basemap: BASEMAP_CONFIG },
+        config: { basemap: ACTIVE_BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
         center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
         zoom: MINT_MUSEUM_INSPECTION ? 18 : (cameraMode === 'eye' ? 18.15 : 17.3),
@@ -1572,32 +1585,43 @@ window.createOsaka3D = function createOsaka3D(ui) {
       active.once('style.load', () => {
         if (active !== view) return;
         try {
-          for (const [key, val] of Object.entries(BASEMAP_CONFIG)) {
+          for (const [key, val] of Object.entries(ACTIVE_BASEMAP_CONFIG)) {
             try {
               active.setConfigProperty('basemap', key, val);
             } catch (e) {
               /* Ignore unsupported config tokens in older style revisions */
             }
           }
-          // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
-          active.setConfigProperty('basemap','show3dObjects',false);
-          container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
-          applyNightAtmosphere(active);
-          addNeonCityBuildings(active);
-          addPilotVerticalNeonEdges(active);
-          addOsakaLandscapeLayers(active);
-          addVerifiedOgimachiPark(active);
-          addVerifiedNakanoshimaPark(active);
-          addVerifiedOsakaCastlePark(active);
-          addGeoLayers(active);
-          addExactVenueLayers(active);
-          addLandmarkBuildingLayers(active);
-          addVerifiedOsakaCastleTower(active);
-          addVerifiedCentralPublicHall(active);
-          tryVerifiedKanteleFootprint(active);
-          addSpotMarkers(gl);
-          addJRTemmaStationMarker(gl);
-          addOsakaTenmanguFocus(gl);
+          if (STANDARD_3D_INSPECTION) {
+            // Render the original official Mapbox Standard 3D scene without
+            // old extrusions or synthetic windows. No Streets v8 source is needed.
+            // Keep GPS/route sources independently; never call landscape layers
+            // which depend on the disabled building source.
+            container.dataset.buildingColorRequested = 'mapbox-standard-native';
+            container.dataset.cityWindowStatus = 'native-facades-coverage-unverified';
+            container.dataset.customBuildingExtrusions = 'not-created';
+            addGeoLayers(active);
+          } else {
+            // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
+            active.setConfigProperty('basemap','show3dObjects',false);
+            container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
+            applyNightAtmosphere(active);
+            addNeonCityBuildings(active);
+            addPilotVerticalNeonEdges(active);
+            addOsakaLandscapeLayers(active);
+            addVerifiedOgimachiPark(active);
+            addVerifiedNakanoshimaPark(active);
+            addVerifiedOsakaCastlePark(active);
+            addGeoLayers(active);
+            addExactVenueLayers(active);
+            addLandmarkBuildingLayers(active);
+            addVerifiedOsakaCastleTower(active);
+            addVerifiedCentralPublicHall(active);
+            tryVerifiedKanteleFootprint(active);
+            addSpotMarkers(gl);
+            addJRTemmaStationMarker(gl);
+            addOsakaTenmanguFocus(gl);
+          }
           ready = true;
           drawHighlightedStores(gl);
           if (lastFix) position(lastFix, null, false);
@@ -1606,9 +1630,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
           timeout = null;
 
           container.dataset.state = 'style-ready';
-          container.dataset.basemap = 'mapbox-standard-night-neon';
+          container.dataset.basemap = STANDARD_3D_INSPECTION ? 'mapbox-standard-native-dusk-neon' : 'mapbox-standard-night-neon';
           container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
-          container.dataset.renderedBuildings = 'unverified';
+          container.dataset.renderedBuildings = STANDARD_3D_INSPECTION ? 'native-3d-enabled-device-unverified' : 'unverified';
           toggle.textContent = '2D';
           toggle.setAttribute('aria-pressed', 'true');
           resize();

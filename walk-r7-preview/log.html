@@ -1287,7 +1287,7 @@
         },
         updateCoin: function (data) {
           if (!data) return;
-          if (typeof data.balance === 'number') state.coin.balance = data.balance;
+          if (Number.isSafeInteger(data.balance) && data.balance >= 0) state.coin.balance = data.balance;
           if (Array.isArray(data.earnedHistory)) state.coin.earnedHistory = data.earnedHistory;
           if (Array.isArray(data.spentHistory)) state.coin.spentHistory = data.spentHistory;
           renderTodayMetrics();
@@ -1340,6 +1340,7 @@
           html:
             '<p style="font-size:12.5px;color:#d8d1e8;line-height:1.6;">歩数・紹介・応援・体験など正式承認済みの条件で管理されます。未実装の自動付与や架空残高は表示しません。</p>' +
             '<div class="spec-box">現在残高: ' + (state.coin.balance !== null ? state.coin.balance + ' COIN' : '未取得') + '\n獲得履歴: ' + state.coin.earnedHistory.length + '件\n使用履歴: ' + state.coin.spentHistory.length + '件\nQUEST連携: R7接続待ち</div>' +
+            '<div class="spec-box">歩いたご褒美<br>歩数・紹介・応援・体験 → COIN → QUEST・店舗特典<br>店舗特典は店舗承認後に提供。現在利用可能な特典は未取得です。</div>' +
             '<button type="button" class="cta-pink" style="margin-top:12px;padding:10px;font-size:12.5px;" id="btn-coin-quest">QUEST連携を確認</button>'
         });
         document.getElementById('btn-coin-quest').addEventListener('click', function () {

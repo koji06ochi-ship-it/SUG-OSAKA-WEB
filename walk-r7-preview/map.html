@@ -1857,7 +1857,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         spots:places,
         hub:{lat:34.690498,lng:135.514475},
         selectedVenues: designatedPlaces.slice(0,4),
-        onReady:()=>{osaka3D.destination(destination);if(fix)osaka3D.position(fix,fix.heading,follow);}
+        onReady:()=>{if(new URLSearchParams(location.search).has('landmark'))return;osaka3D.destination(destination);if(fix)osaka3D.position(fix,fix.heading,follow);}
       });
       const eyeViewButton=document.getElementById('btn-eye-view');
       eyeViewButton.addEventListener('click',()=>{

@@ -1578,7 +1578,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  for(const event of ['sug:public-info','sug:walk-position','sug:walk-position-unavailable'])scope.addEventListener(event,()=>mounted?.refresh());
  scope.SUGWalkMapFeed={mount,unmount,snapshot:read,diagnostics:()=>({mounted:!!mounted,rap:mounted?.rap?.state()||null})};
 })(typeof window==='object'?window:globalThis);
-</script><script src="osaka-3d.js?v=r7-pedestrian-camera-20261124"></script><script src="tour-guide.js?v=r7-auth-20261123b"></script><script src="auth-client.js?v=r7-auth-20261123b"></script><script src="ai-chat.js?v=r7-auth-20261123b"></script></head>
+</script><script src="shop-metrics.js?v=20261124a"></script><script src="osaka-3d.js?v=r7-pedestrian-camera-20261124"></script><script src="tour-guide.js?v=r7-auth-20261123b"></script><script src="auth-client.js?v=r7-auth-20261123b"></script><script src="ai-chat.js?v=r7-auth-20261123b"></script></head>
 <body>
 <div id="sug-r7-token-modal" role="dialog" aria-modal="true" aria-labelledby="sug-r7-token-title" hidden>
   <div id="sug-r7-token-panel">
@@ -2314,6 +2314,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       });
       let selectedPin=null;
       function selectPlace(place) {
+        window.SUGR7ShopMetrics?.record(place,'detail');
         if(selectedPin) selectedPin.remove();
         selectedPin=L.circleMarker([place.lat,place.lng],{radius:12,color:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#bd005e',weight:3,fill:false,interactive:false}).addTo(map);
         destination=place; destinationReached=false; follow=false;
@@ -2352,10 +2353,12 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           const instagram=document.createElement('a');
           instagram.href=place.instagram;instagram.target='_blank';instagram.rel='noopener noreferrer';
           instagram.className='drawer-btn';instagram.textContent=cafeText.instagram;
+          instagram.addEventListener('click',()=>window.SUGR7ShopMetrics?.record(place,'instagram'));
           modalBody.append(instagram);
           const website=document.createElement('a');
           website.href=place.officialWebsite;website.target='_blank';website.rel='noopener noreferrer';
           website.className='drawer-btn';website.textContent=cafeText.website;
+          website.addEventListener('click',()=>window.SUGR7ShopMetrics?.record(place,'website'));
           modalBody.append(website);
           const specialThanks=document.createElement('section');
           specialThanks.setAttribute('aria-label','SPECIAL THANKS');
@@ -2413,7 +2416,8 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         const link=document.createElement('a');
         link.target='_blank';link.rel='noopener noreferrer';
         link.className='drawer-btn';link.href=routeURL(place);link.textContent=place.featured?cafeText.route:'Appleマップで徒歩経路を開く';
-        modalBody.append(link);
+        link.addEventListener('click',()=>window.SUGR7ShopMetrics?.record(place,'route'));
+         modalBody.append(link);
       }
 
       // Night View Dedicated Experience Modal (紹介 + 周辺店舗 + 音楽 + 「君に。」導線)
@@ -2933,7 +2937,8 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         const ranked = items.slice().sort((a,b)=>fresh() ? (point(a)?distance(a):Infinity)-(point(b)?distance(b):Infinity) : 0);
         openModal({title:shops?'おすすめ店舗':'おすすめイベント',badge:ranked.length+'件',html:''}); activeList=kind;
         const body=document.getElementById('modal-body');
-        if (!ranked.length) body.append(textNode('p',shops?'掲載する確認済み店舗はありません。':'掲載中のイベントはありません。'));
+         if(shops) window.SUGR7ShopMetrics?.renderReportLink(body);
+         if (!ranked.length) body.append(textNode('p',shops?'掲載する確認済み店舗はありません。':'掲載中のイベントはありません。'));
         for (const item of ranked) {
           const card=document.createElement('article');
           card.append(textNode('strong',item.name || item.title));

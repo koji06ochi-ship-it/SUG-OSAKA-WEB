@@ -4643,21 +4643,29 @@ window.createOsaka3D = function createOsaka3D(ui) {
         { spotName:'北新地', character:'ピンクマン', icon:'🌙', img:CHAR_SPRITES['ピンクマン'], lat:34.698295, lng:135.496792, timeWindow:'night', prob:0.7 }
       ];
       let activeCharacters = [];
+      let spawnRollWindow = -1;
+      const spawnRolls = new Map();
       function evaluateCharacterSpawns(forceRoll) {
         const hour = new Date().getHours();
         const isDay = hour >= 6 && hour < 17;
         const isNight = hour >= 17 || hour < 6;
-        const ref = fix ? { lat: fix.lat, lng: fix.lng } : (destination || { lat: map.getCenter().lat, lng: map.getCenter().lng });
+        const gps = fix && Date.now()-fix.t <= 60000;
+        const ref = gps ? { lat: fix.lat, lng: fix.lng } : (destination || { lat: map.getCenter().lat, lng: map.getCenter().lng });
+        const bucket = Math.floor(Date.now()/120000);
+        if (forceRoll || bucket !== spawnRollWindow) { spawnRolls.clear(); spawnRollWindow=bucket; }
         const candidates = [];
         for (const sp of CHARACTER_SPAWNS) {
           const distM = map.distance([ref.lat, ref.lng], [sp.lat, sp.lng]);
-          const inRange = distM <= 1400; // nearby exploration or GPS zone
           const timeOk = sp.timeWindow === 'all' || (sp.timeWindow === 'day' && isDay) || (sp.timeWindow === 'night' && isNight);
-          const rollOk = forceRoll ? Math.random() < sp.prob : (Math.random() < sp.prob);
-          if (inRange && timeOk && rollOk) candidates.push(sp);
+          if (distM > 1400 || !timeOk) continue;
+          if (!spawnRolls.has(sp.spotName)) spawnRolls.set(sp.spotName, Math.random() < sp.prob);
+          if (spawnRolls.get(sp.spotName)) candidates.push({sp,distM});
         }
-        // Cap at max 3 active characters so all 12 are never shown simultaneously
-        activeCharacters = candidates.slice(0, 3);
+        const seen = new Set();
+        activeCharacters = candidates.sort((a,b)=>a.distM-b.distM).filter(({sp})=>{
+          if(seen.has(sp.character)) return false;
+          seen.add(sp.character); return true;
+        }).slice(0,3).map(({sp})=>sp);
         charactersLayer.clearLayers();
         for (const ch of activeCharacters) {
           const iconHtml = '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:auto;">' +
@@ -4671,10 +4679,13 @@ window.createOsaka3D = function createOsaka3D(ui) {
         if (osaka3D && typeof osaka3D.setActiveCharacters === 'function') {
           osaka3D.setActiveCharacters(activeCharacters);
         }
+        if (window.parent !== window) {
+          window.parent.postMessage({type:'SUG_CHARACTER_SPAWNS',mode:gps?'gps':'explore',characters:activeCharacters.map(({character,spotName,icon,img})=>({character,spotName,icon,img}))},location.origin);
+        }
         return activeCharacters;
       }
-      map.on('moveend', () => evaluateCharacterSpawns(false));
-      evaluateCharacterSpawns(false);
+      // fix and the remaining MAP state initialize later in this script.
+      setTimeout(() => { map.on('moveend', () => evaluateCharacterSpawns(false)); evaluateCharacterSpawns(false); },0);
       // Featured Osaka Chakai: direct access without relying on search or a 3D layer load.
       document.getElementById('btn-osaka-chakai').addEventListener('click',()=>{
         const place=designatedPlaces.find(p=>p.name==='大阪茶会'&&p.approved===true);

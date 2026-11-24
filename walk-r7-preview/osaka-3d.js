@@ -11,6 +11,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
   // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
   const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
+  // Compare facade material palettes only. Geometry, camera, roads and GPS are identical.
+  const BUILDING_PALETTE = new URLSearchParams(window.location.search).get('facade') === 'warm' ? 'warm' : 'original';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -78,7 +80,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dFacades: true,
     show3dLandmarks: true,
     show3dTrees: true,
-    colorBuildings: '#657085'
+    // Neutral warm stone improves visible wall contrast under the same dusk lighting.
+    // The original blue-grey is retained as an instant A/B fallback.
+    colorBuildings: BUILDING_PALETTE === 'warm' ? '#AFA39B' : '#657085'
   } : BASEMAP_CONFIG;
 
   container.dataset.state = 'closed';
@@ -1597,7 +1601,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
             // old extrusions or synthetic windows. No Streets v8 source is needed.
             // Keep GPS/route sources independently; never call landscape layers
             // which depend on the disabled building source.
-            container.dataset.buildingColorRequested = 'mapbox-standard-native';
+            container.dataset.buildingColorRequested = BUILDING_PALETTE === 'warm' ? 'standard-warm-stone-facades' : 'standard-original-facades';
             container.dataset.cityWindowStatus = 'native-facades-coverage-unverified';
             container.dataset.customBuildingExtrusions = 'not-created';
             addGeoLayers(active);

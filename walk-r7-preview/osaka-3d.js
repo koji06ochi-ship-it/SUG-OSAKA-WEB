@@ -11,6 +11,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
   // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
   const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
+  const BUILDING_LIGHTING_TEST = STANDARD_3D_INSPECTION && new URLSearchParams(window.location.search).get('facade') === '1';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -78,7 +79,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dFacades: true,
     show3dLandmarks: true,
     show3dTrees: true,
-    colorBuildings: '#657085'
+    // Preserve Standard facades/landmarks; adjust only building tint for lighting test.
+    colorBuildings: BUILDING_LIGHTING_TEST ? '#8A98AA' : '#657085'
   } : BASEMAP_CONFIG;
 
   container.dataset.state = 'closed';
@@ -1600,6 +1602,29 @@ window.createOsaka3D = function createOsaka3D(ui) {
             container.dataset.buildingColorRequested = 'mapbox-standard-native';
             container.dataset.cityWindowStatus = 'native-facades-coverage-unverified';
             container.dataset.customBuildingExtrusions = 'not-created';
+            if (BUILDING_LIGHTING_TEST) {
+              // Mapbox 3D lighting API. Ambient reveals dark facade surfaces;
+              // angled directional light adds depth without fabricated windows.
+              // A failure must never disable the native 3D map.
+              try {
+                if (typeof active.setLights === 'function') {
+                  active.setLights([
+                    {id:'sug-building-ambient',type:'ambient',
+                      properties:{color:'#BBCDE7',intensity:0.55}},
+                    {id:'sug-building-directional',type:'directional',
+                      properties:{color:'#FFDFBE',intensity:0.62,
+                        direction:[215,55], 'cast-shadows':true,
+                        'shadow-intensity':0.65}}
+                  ]);
+                  container.dataset.nativeBuildingLighting = 'ambient-and-directional-requested';
+                } else {
+                  container.dataset.nativeBuildingLighting = 'unsupported-fallback-to-standard-preset';
+                }
+              } catch (lightError) {
+                container.dataset.nativeBuildingLighting = 'fallback-to-standard-preset';
+                container.dataset.nativeBuildingLightError = String(lightError && lightError.message || lightError);
+              }
+            }
             addGeoLayers(active);
           } else {
             // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
@@ -1630,7 +1655,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           timeout = null;
 
           container.dataset.state = 'style-ready';
-          container.dataset.basemap = STANDARD_3D_INSPECTION ? 'mapbox-standard-native-dusk-neon' : 'mapbox-standard-night-neon';
+          container.dataset.basemap = STANDARD_3D_INSPECTION ? (BUILDING_LIGHTING_TEST ? 'native-building-lighting-ab' : 'mapbox-standard-native-dusk-neon') : 'mapbox-standard-night-neon';
           container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
           container.dataset.renderedBuildings = STANDARD_3D_INSPECTION ? 'native-3d-enabled-device-unverified' : 'unverified';
           toggle.textContent = '2D';

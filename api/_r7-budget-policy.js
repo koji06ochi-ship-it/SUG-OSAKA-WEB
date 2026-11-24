@@ -8,10 +8,13 @@ export const LIMITS=Object.freeze({
  maxLiveParticipants:10, maxLiveMinutes:30, maxLiveParticipantMinutes:300
 });
 export function validQuestion(body){
- return !!body && typeof body.question==='string' &&
-   body.question.trim().length>=1 && body.question.trim().length<=LIMITS.maxQuestionChars &&
-   ['ja','en','zh'].includes(body.language) &&
-   Object.keys(body).every(k=>['question','language'].includes(k));
+ if(!body || typeof body.question!=='string' || body.question.trim().length<1 ||
+    body.question.trim().length>LIMITS.maxQuestionChars || !['ja','en','zh'].includes(body.language))return false;
+ const task=body.task??'sightseeing';
+ if(!['sightseeing','translation'].includes(task))return false;
+ if(!Object.keys(body).every(k=>['question','language','task','targetLanguage'].includes(k)))return false;
+ return task==='translation' ? ['ja','en','zh'].includes(body.targetLanguage)&&body.targetLanguage!==body.language :
+    body.targetLanguage===undefined;
 }
 export function rejectDisabled(res, service){
  res.setHeader('Cache-Control','no-store');

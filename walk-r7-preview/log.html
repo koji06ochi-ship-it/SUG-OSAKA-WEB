@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
+<head><script src="walk-rewards.js?v=20261124"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>S.u.G WALK R7｜④ 記録</title>
@@ -754,6 +754,7 @@
           <p class="page-sub">歩いた分だけ、人生に新しい経験が増えていく。</p>
 
           <!-- Today's Walking Data (Real HealthKit Priority, Zero Fake Numbers) -->
+          <div id="walk-rewards-panel" class="today-card"></div>
           <div class="today-card" aria-label="今日の歩行データ">
             <div class="today-top-row">
               <div>
@@ -1044,6 +1045,7 @@
       }
 
       // Render Today's HealthKit Metrics (Never shows fake numbers)
+      let refreshRewards=null;
       function renderTodayMetrics() {
         var hk = state.healthKit;
         document.getElementById('val-steps').textContent = hk.steps !== null ? Number(hk.steps).toLocaleString('ja-JP') + ' 歩' : '未取得';
@@ -1054,6 +1056,7 @@
         document.getElementById('hk-dot').classList.toggle('ok', Boolean(hk.authorized));
         document.getElementById('hk-status-text').textContent = hk.authorized ? 'HealthKit: 連携済み' : 'HealthKit: 権限確認待ち';
         document.getElementById('coin-balance-text').textContent = state.coin.balance !== null ? '残高: ' + Number(state.coin.balance).toLocaleString('ja-JP') + ' COIN' : '残高: 未取得';
+        if(window.SUGR7Rewards){const panel=document.getElementById('walk-rewards-panel');if(!refreshRewards)refreshRewards=window.SUGR7Rewards.mount(panel,()=>state.healthKit.authorized?state.healthKit.steps:null);else refreshRewards();}
       }
 
       // Chart.js Walk History Graph

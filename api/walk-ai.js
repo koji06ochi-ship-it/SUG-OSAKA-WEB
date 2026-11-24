@@ -7,6 +7,14 @@ import {BUDGET_YEN,validQuestion,rejectDisabled} from './_r7-budget-policy.js';
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  res.setHeader('X-Content-Type-Options','nosniff');
+ if(req.method==='GET' && req.query?.clientConfig==='1'){
+   const url=process.env.SUPABASE_URL;
+   const key=process.env.SUPABASE_PUBLISHABLE_KEY;
+   if(typeof url!=='string'||url.replace(/\/$/,'')!=='https://nnqzxcgkqjnmtzcvorha.supabase.co'||
+      typeof key!=='string'||!/^sb_publishable_[A-Za-z0-9_-]+$/.test(key))
+     return res.status(503).json({error:'AUTH_UNCONFIGURED',aiEnabled:false});
+   return res.status(200).json({supabaseUrl:url.replace(/\/$/,''),publishableKey:key,aiEnabled:false});
+ }
  if(req.method==='GET')return res.status(200).json({
    service:'walk-ai',enabled:false,mode:'OFF',
    aiTextMonthlyLimitYen:BUDGET_YEN.aiText,

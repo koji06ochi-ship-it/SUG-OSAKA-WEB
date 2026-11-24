@@ -2101,7 +2101,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           badge: 'プライバシー同意確認',
           unconnected: false,
           html:
-            '<p style="font-size:12.5px;color:#d7d0e6;line-height:1.6;">MAPを開いている間、現在地・GPS歩行距離・到着を更新します。追従中は現在地周辺の地図をOpenStreetMapから読み込みます。GPS停止で終了できます。</p>' +
+            '<p style="font-size:12.5px;color:#d7d0e6;line-height:1.6;">ホームとMAPを開いている間、現在地・GPS歩行距離・キャラクター出現を更新します。追従中は現在地周辺の地図をOpenStreetMapから読み込みます。GPS停止で終了できます。</p>' +
             '<div class="spec-box">Hook: SUGR7MapBridge.dispatch("onRequestGPS", { consent: true })</div>' +
             '<button type="button" class="drawer-btn" id="confirm-gps-btn">同意して現在地を取得する</button>'
         });
@@ -2128,8 +2128,9 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         if (userMarker) {userMarker.remove();userMarker=null;}
         document.getElementById('gps-badge').textContent='GPS: 停止中';
       }
+      function gpsTabAllowed() { const tab=parent.SUGR7UnifiedBridge?.getActiveTab(); return tab==='map'||tab==='home'; }
       function acquireGPS() {
-        if (!state.gpsConsent || document.hidden || parent.SUGR7UnifiedBridge?.getActiveTab()!=='map' || watchID!==null) return;
+        if (!state.gpsConsent || document.hidden || !gpsTabAllowed() || watchID!==null) return;
         if (!navigator.geolocation) {showToast('この環境では位置情報を取得できません');return;}
         const generation=++gpsGeneration;
         watchID=navigator.geolocation.watchPosition(pos=>{
@@ -2153,8 +2154,8 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         }, {enableHighAccuracy:true, maximumAge:0, timeout:10000});
       }
       function syncWatch() {
-        if (document.hidden || parent.SUGR7UnifiedBridge?.getActiveTab()!=='map') stopGPS();
-        else { map.invalidateSize(); osaka3D.resize(); acquireGPS(); }
+        if (document.hidden || !gpsTabAllowed()) stopGPS();
+        else { if(parent.SUGR7UnifiedBridge?.getActiveTab()==='map'){map.invalidateSize(); osaka3D.resize();} acquireGPS(); }
       }
       window.addEventListener('sug:tabChanged',syncWatch);
       document.addEventListener('visibilitychange',syncWatch);
@@ -2954,7 +2955,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         arrived=ids;
       }
       function acceptGPS(lat,lng,accuracy,timestamp,heading) {
-        if (document.hidden || parent.SUGR7UnifiedBridge?.getActiveTab()!=='map' || !state.gpsConsent || !point({lat,lng}) || !Number.isFinite(accuracy) || accuracy<0 ||
+        if (document.hidden || !gpsTabAllowed() || !state.gpsConsent || !point({lat,lng}) || !Number.isFinite(accuracy) || accuracy<0 ||
             !Number.isFinite(timestamp) || timestamp>Date.now()+5000 || Date.now()-timestamp>60000) return false;
         if (fix && timestamp<=fix.t) return false;
         fix={lat,lng,accuracy,t:timestamp,heading:Number.isFinite(heading)&&heading>=0&&heading<360?heading:null};
@@ -2975,7 +2976,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
          osaka3D.position(fix,fix.heading,follow);
          const nearbyCount = locatedDesignated.filter(p => distance(p) <= 500).length;
          document.getElementById('banner-text').textContent = '周辺500m以内スポット ｜ ' + nearbyCount + '件検出中';
-         checkArrival(); return true;
+         if(parent.SUGR7UnifiedBridge?.getActiveTab()==='map') checkArrival(); else evaluateCharacterSpawns(false); return true;
       }
       function paintTicker() {
         const row=rows()[tickerIndex];

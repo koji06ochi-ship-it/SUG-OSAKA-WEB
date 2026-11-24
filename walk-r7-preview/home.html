@@ -861,7 +861,7 @@
         <section class="quick-strip" aria-label="連携・体験ショートカット">
           <button type="button" class="quick-chip pink" data-feature="official-live">公式/参加者LIVE（配信予定）</button>
           <button type="button" class="quick-chip" data-feature="creators">注目クリエイター</button>
-          <button type="button" class="quick-chip pink" data-feature="today-events">今日のイベント・体験</button>
+          <button type="button" class="quick-chip pink" id="btn-today-osaka">今日の大阪</button>
           <button type="button" class="quick-chip pink" id="btn-aquabus-media">大阪水上観光｜水上バス・八軒家浜</button>
           <button type="button" class="quick-chip" data-feature="hachikenyahama">八軒家浜 地域情報</button>
           <button type="button" class="quick-chip pink" data-feature="kimini-video">「君に。」体験動画</button>
@@ -1685,6 +1685,29 @@
       try { window.dispatchEvent(new CustomEvent('sug:eventsUpdated')); } catch(e){}
     }
   });
+})();
+</script><script src="today-osaka.js?v=20261124"></script><script>
+(function(){
+ const btn=document.getElementById('btn-today-osaka');
+ if(!btn||!window.SUGR7Today)return;
+ const section=document.createElement('section');section.hidden=true;section.style.cssText='margin:10px 0;padding:12px;border:1px solid #ff2e93;border-radius:12px;background:#160c20;color:#fff';
+ btn.closest('.quick-strip').after(section);
+ const el=(tag,text)=>Object.assign(document.createElement(tag),{textContent:text});
+ function render(){
+  const g=SUGR7Today.groups(SUGR7Today.local());
+  section.replaceChildren(el('h3','今日の大阪'),el('p','端末内CMSの検証情報です。全利用者への公開・最新の公式情報取得は未接続です。'));
+  for(const [key,label] of [['live','開催中'],['today','今日これから'],['soon','近日開催（7日）']]){
+   section.append(el('h4',label+'｜'+g[key].length+'件'));
+   if(!g[key].length)section.append(el('p','登録情報なし'));
+   for(const e of g[key]){const card=el('div',e.title+'｜'+(e.venue||'会場未確認')+'｜'+e.startAt+' ～ '+e.endAt+'（端末内登録）');card.style.cssText='padding:9px;border-bottom:1px solid #703152;font-size:12px';section.append(card);}
+  }
+  section.append(el('h4','掲載店舗・施設'),el('p','大阪茶会／焼肉ホルモン 暸／S.u.G大阪／川の駅はちけんや'));
+  const map=el('button','MAPで掲載店舗・イベントを見る');map.type='button';map.className='quick-chip pink';map.onclick=()=>{if(parent!==window)parent.postMessage({type:'SUG_SWITCH_TAB',tab:'map'},location.origin);else location.href='map.html';};section.append(map);
+ }
+ btn.onclick=()=>{section.hidden=!section.hidden;if(!section.hidden)render();};
+ window.addEventListener('sug:eventsUpdated',()=>{if(!section.hidden)render();});
+ window.addEventListener('storage',e=>{if(e.key==='sug_walk_r7_events_cms_v1'&&!section.hidden)render();});
+ setInterval(()=>{if(!section.hidden&&!document.hidden)render();},60000);
 })();
 </script></body>
 </html>

@@ -1694,9 +1694,10 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const BASEMAP_CONFIG = {
     lightPreset: 'dusk',
     theme: 'default',
-    show3dObjects: false,
+    show3dObjects: true,
+    show3dBuildings: false,
     show3dFacades: false,
-    show3dLandmarks: false,
+    show3dLandmarks: true,
     colorBuildings: '#3B465D',
     colorBuildingHighlight: '#ff3b9a',
     colorBuildingSelect: '#e8b955',
@@ -2664,6 +2665,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     }
     const features=[], matched=[];
     for(const landmark of LANDMARKS) {
+      if(landmark.name==='大阪城')continue; // Native model only; no gold box overlay.
       // The verified OSM footprint supersedes the approximate Streets landmark overlay.
       if(landmark.name==='大阪市中央公会堂' && container.dataset.centralPublicHallStatus?.startsWith('geometry-loaded'))continue;
       // For Kantele only, Osaka City confirms a shared Kids Plaza building.
@@ -3557,7 +3559,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
             addGeoLayers(active);
           } else {
             // Disable Standard's dark buildings so they cannot occlude custom neon extrusions.
-            active.setConfigProperty('basemap','show3dObjects',false);
+            active.setConfigProperty('basemap','show3dObjects',true);
+            active.setConfigProperty('basemap','show3dBuildings',false);
+            active.setConfigProperty('basemap','show3dLandmarks',true);
             container.dataset.buildingColorRequested = 'verified-four-venue-osm-ways';
             applyNightAtmosphere(active);
             addNeonCityBuildings(active);
@@ -3569,7 +3573,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
             addGeoLayers(active);
             addExactVenueLayers(active);
             addLandmarkBuildingLayers(active);
-            addVerifiedOsakaCastleTower(active);
+            container.dataset.osakajoTowerStatus='native-landmark-requested-device-unverified';
             addVerifiedCentralPublicHall(active);
             tryVerifiedKanteleFootprint(active);
             addBridgeAndExpansionLayers(active, gl);

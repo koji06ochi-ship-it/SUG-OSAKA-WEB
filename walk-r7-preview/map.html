@@ -2255,11 +2255,11 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         updateGPS: acceptGPS,
         updateHealthMetrics: function (data) {
           if (!data) return;
-          if (typeof data.steps === 'number') {
+          if (Number.isSafeInteger(data.steps) && data.steps >= 0) {
             state.metrics.steps = data.steps;
             document.getElementById('val-steps').textContent = Number(data.steps).toLocaleString('ja-JP') + ' 歩';
           }
-          if (typeof data.distanceKm === 'number') {
+          if (Number.isFinite(data.distanceKm) && data.distanceKm >= 0) {
             state.metrics.distanceKm = data.distanceKm;
             // The MAP counter is measured by this GPS session.
           }
@@ -3103,6 +3103,29 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
  // Display "未連携" until native BODY/Health data is explicitly delivered.
  const steps=document.getElementById('val-steps');
  if(steps && /^--\s*歩$/.test(steps.textContent||''))steps.textContent='未連携';
+ // Existing native WALK bridge stores validated HealthKit receipts on its local origin.
+ // Never read or transmit HealthKit receipts on the hosted Safari preview.
+ if(location.origin==='http://127.0.0.1:5413'){
+   function readNativeHealth(){
+     let p;
+     try{p=JSON.parse(localStorage.getItem('sug_native_health_v1')||'null');}catch(e){return;}
+     const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+     const synced=Date.parse(p?.syncedAt),periodStart=Date.parse(p?.periodStart||p?.syncedAt);
+     const valid=p?.source==='healthkit_native'&&Number.isSafeInteger(p.steps)&&p.steps>=0&&
+       Number.isFinite(synced)&&synced>=start&&synced<=Date.now()+300000&&periodStart>=start&&periodStart<=Date.now()&&
+       (!p.timeZoneID||p.timeZoneID===Intl.DateTimeFormat().resolvedOptions().timeZone);
+     if(!valid){if(steps)steps.textContent='未連携';return;}
+     const data={steps:p.steps};
+     if(Number.isFinite(p.distanceMeters)&&p.distanceMeters>=0)data.distanceKm=p.distanceMeters/1000;
+     window.SUGR7MapBridge?.updateHealthMetrics(data);
+     if(steps)steps.title='HealthKit同期: '+new Date(synced).toLocaleTimeString('ja-JP');
+   }
+   window.addEventListener('storage',e=>{if(e.key==='sug_native_health_v1'||e.key===null)readNativeHealth();});
+   window.addEventListener('sug:native-health',readNativeHealth);
+   window.addEventListener('sug:tabChanged',readNativeHealth);
+   readNativeHealth();
+   setInterval(readNativeHealth,60000);
+ }
 })();
 </script></body>
 </html>

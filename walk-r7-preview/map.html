@@ -2208,6 +2208,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
             unconnected: false,
             html:
               '<p style="font-size:12.5px;color:#d7d0e6;line-height:1.6;">今日の歩数: <strong>' + stepsStr + '</strong> ／ 歩行距離: <strong>' + distStr + '</strong> ／ S.u.G COIN: <strong>' + coinStr + '</strong></p>' +
+              '<p style="font-size:12px;color:#d7d0e6;">歩いたご褒美：COIN・キャラクターとの出会い・店舗特典。COINの自動付与と店舗特典の利用は未接続です。</p>' +
               '<button type="button" class="drawer-btn" id="btn-body-link">BODY連携への入口を開く</button>'
           });
           document.getElementById('btn-body-link').addEventListener('click', function () {
@@ -2265,7 +2266,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           }
         },
         updateWallet: function (data) {
-          if (data && typeof data.coinBalance === 'number') {
+          if (data && Number.isSafeInteger(data.coinBalance) && data.coinBalance >= 0) {
             state.coinBalance = data.coinBalance;
             document.getElementById('val-coin').textContent = Number(data.coinBalance).toLocaleString('ja-JP');
           }

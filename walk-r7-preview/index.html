@@ -37,6 +37,7 @@
       <iframe id="frame-meet" class="screen-frame" title="③ 出会う"></iframe>
       <iframe id="frame-log" class="screen-frame" title="④ 記録"></iframe>
       <iframe id="frame-settings" class="screen-frame" title="⑤ 設定"></iframe>
+      <button id="home-character-encounter" type="button" hidden aria-label="出現中のキャラクターをマップで確認" style="position:absolute;z-index:20;right:10px;bottom:88px;display:none;align-items:center;gap:7px;max-width:210px;padding:7px 10px;border:1px solid #ff479f;border-radius:12px;background:#10091eee;color:white;text-align:left;font:600 11px -apple-system,sans-serif;box-shadow:0 0 12px #ff479f55"><img alt="" style="width:42px;height:42px;object-fit:cover;border-radius:50%"><span></span></button>
       <nav class="preview-nav" aria-label="5画面切替"><button class="preview-tab" data-tab="home" aria-current="page">ホーム</button><button class="preview-tab" data-tab="map">マップ</button><button class="preview-tab" data-tab="meet">出会う</button><button class="preview-tab" data-tab="log">記録</button><button class="preview-tab" data-tab="settings">設定</button></nav>
     </div>
   </div>
@@ -46,6 +47,18 @@
       
       var TAB_KEYS = ['home', 'map', 'meet', 'log', 'settings'];
       var currentTab = 'home';
+      var encounter = document.getElementById('home-character-encounter');
+      var encounterData = null;
+      function paintEncounter(){
+        var ch=encounterData && encounterData.characters[0];
+        var visible=currentTab==='home' && !!ch;
+        encounter.hidden=!visible; encounter.style.display=visible?'flex':'none';
+        if(!visible)return;
+        encounter.querySelector('img').src=ch.img;
+        encounter.querySelector('span').textContent=(encounterData.mode==='gps'?'周辺で出現中':'MAP探索中')+'：'+ch.character+' / '+ch.spotName;
+      }
+      encounter.addEventListener('click',function(){switchTab('map');});
+
 
       TAB_KEYS.forEach(function (key) {
         var el = document.getElementById('frame-' + key);
@@ -61,13 +74,14 @@
               el.contentWindow.postMessage({ type: 'sug-r7-map-visible' }, '*');
             }
           });
-          el.src = key === 'map' ? 'map.html?v=r7-gps-ui-20261123a' : key + '.html';
+          el.src = key === 'map' ? 'map.html?v=r7-character-bridge-20261124' : key + '.html';
         }
       });
 
       function switchTab(tab) {
         if (TAB_KEYS.indexOf(tab) === -1) return;
         currentTab = tab;
+        paintEncounter();
         document.querySelectorAll('.preview-tab').forEach(function (button) {
           if (button.dataset.tab === tab) button.setAttribute('aria-current', 'page');
           else button.removeAttribute('aria-current');
@@ -93,7 +107,11 @@
 
       window.addEventListener('message', function (ev) {
         if (ev.origin !== location.origin || !TAB_KEYS.some(k => document.getElementById('frame-'+k).contentWindow === ev.source) || !ev.data) return;
-        if (ev.data.type === 'SUG_SWITCH_TAB' && ev.data.tab) {
+        if (ev.data.type === 'SUG_CHARACTER_SPAWNS' && ev.source===document.getElementById('frame-map').contentWindow) {
+          if (!Array.isArray(ev.data.characters)) return;
+          encounterData={mode:ev.data.mode,characters:ev.data.characters.filter(ch=>ch && typeof ch.character==='string' && typeof ch.spotName==='string' && typeof ch.img==='string' && /^data:image\/jpeg;base64,/.test(ch.img)).slice(0,3)};
+          paintEncounter();
+        } else if (ev.data.type === 'SUG_SWITCH_TAB' && ev.data.tab) {
           switchTab(ev.data.tab);
         } else if (ev.data.type === 'SUG_SYNC_LANG' && ev.data.lang) {
           TAB_KEYS.forEach(function (k) {

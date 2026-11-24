@@ -12,6 +12,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
   const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
   const BUILDING_LIGHTING_TEST = STANDARD_3D_INSPECTION && new URLSearchParams(window.location.search).get('facade') === '1';
+  // Compare native architectural facade details under the official night preset.
+  // This is an isolated visual test; the working dusk and custom-light versions remain unchanged.
+  const NATIVE_NIGHT_TEST = STANDARD_3D_INSPECTION && new URLSearchParams(window.location.search).get('night') === '1';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -73,14 +76,14 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   const ACTIVE_BASEMAP_CONFIG = STANDARD_3D_INSPECTION ? {
     ...BASEMAP_CONFIG,
-    lightPreset: 'dusk',
+    lightPreset: NATIVE_NIGHT_TEST ? 'night' : 'dusk',
     show3dObjects: true,
     show3dBuildings: true,
     show3dFacades: true,
     show3dLandmarks: true,
     show3dTrees: true,
     // Preserve Standard facades/landmarks; adjust only building tint for lighting test.
-    colorBuildings: BUILDING_LIGHTING_TEST ? '#8A98AA' : '#657085'
+    colorBuildings: NATIVE_NIGHT_TEST ? '#8494A8' : (BUILDING_LIGHTING_TEST ? '#8A98AA' : '#657085')
   } : BASEMAP_CONFIG;
 
   container.dataset.state = 'closed';
@@ -1602,7 +1605,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
             container.dataset.buildingColorRequested = 'mapbox-standard-native';
             container.dataset.cityWindowStatus = 'native-facades-coverage-unverified';
             container.dataset.customBuildingExtrusions = 'not-created';
-            if (BUILDING_LIGHTING_TEST) {
+            if (BUILDING_LIGHTING_TEST && !NATIVE_NIGHT_TEST) {
               // Mapbox 3D lighting API. Ambient reveals dark facade surfaces;
               // angled directional light adds depth without fabricated windows.
               // A failure must never disable the native 3D map.
@@ -1655,7 +1658,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           timeout = null;
 
           container.dataset.state = 'style-ready';
-          container.dataset.basemap = STANDARD_3D_INSPECTION ? (BUILDING_LIGHTING_TEST ? 'native-building-lighting-ab' : 'mapbox-standard-native-dusk-neon') : 'mapbox-standard-night-neon';
+          container.dataset.basemap = STANDARD_3D_INSPECTION ? (NATIVE_NIGHT_TEST ? 'native-night-facades-ab' : (BUILDING_LIGHTING_TEST ? 'native-building-lighting-ab' : 'mapbox-standard-native-dusk-neon')) : 'mapbox-standard-night-neon';
           container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
           container.dataset.renderedBuildings = STANDARD_3D_INSPECTION ? 'native-3d-enabled-device-unverified' : 'unverified';
           toggle.textContent = '2D';

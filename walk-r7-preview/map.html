@@ -1898,6 +1898,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       var spotsLayer = L.layerGroup().addTo(map);
       var expansionLayer = L.layerGroup().addTo(map);
       var charactersLayer = L.layerGroup().addTo(map);
+      var placesLayer = L.layerGroup().addTo(map);
 
       function renderExpansion2D() {
         expansionLayer.clearLayers();
@@ -1934,33 +1935,39 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         }
       }
       function declutter2DMarkers() {
-        const z = map.getZoom();
-        const placed = [];
-        const checkGroup = (grp, padX, padY) => {
-          grp.eachLayer(layer => {
-            if (typeof layer.getLatLng !== 'function') return;
-            const el = typeof layer.getElement === 'function' ? layer.getElement() : null;
-            if (!el) return;
-            const pt = map.latLngToContainerPoint(layer.getLatLng());
-            const hit = placed.some(b => Math.abs(pt.x - b.x) < padX && Math.abs(pt.y - b.y) < padY);
-            el.style.opacity = hit ? '0' : '1';
-            el.style.pointerEvents = hit ? 'none' : 'auto';
-            if (!hit) placed.push(pt);
-          });
-        };
-        checkGroup(charactersLayer, 48, 48);
-        if (z < 14) {
-          expansionLayer.eachLayer(l => {
-            if (typeof l.setRadius === 'function' && l.options && !l.options.dashArray) l.setRadius(5);
-          });
-        } else {
-          expansionLayer.eachLayer(l => {
-            if (typeof l.setRadius === 'function' && l.options && !l.options.dashArray) l.setRadius(7);
+        const z = map.getZoom(), size=map.getSize();
+        const placed=[];
+        const cap=z<14?9:z<16?16:z<17?26:Infinity;
+        const gap=z<14?56:z<16?42:z<17?32:22;
+        let visible=0;
+        function checkGroup(group,kind) {
+          if(!group)return;
+          group.eachLayer(layer=>{
+            if(typeof layer.getLatLng!=='function')return;
+            if(kind==='expansion' && layer.options?.dashArray)return;
+            const el=layer.getElement?.(); if(!el)return;
+            const pt=map.latLngToContainerPoint(layer.getLatLng());
+            const radius=kind==='character'?32:gap/2;
+            const outside=pt.x<0||pt.y<0||pt.x>size.x||pt.y>size.y;
+            const hit=placed.some(p=>Math.hypot(pt.x-p.x,pt.y-p.y)<radius+p.radius);
+            const hide=outside||hit||visible>=cap;
+            el.style.visibility=hide?'hidden':'';
+            el.style.pointerEvents=hide?'none':'';
+            if(hide)layer.closeTooltip?.();
+            else {placed.push({x:pt.x,y:pt.y,radius});visible++;}
           });
         }
+        // The actual GPS marker and selection marker are not hidden.
+        if(userMarker){const p=map.latLngToContainerPoint(userMarker.getLatLng());placed.push({x:p.x,y:p.y,radius:12});}
+        checkGroup(charactersLayer,'character');
+        checkGroup(spotsLayer,'shop');
+        checkGroup(cmsEventsLayer,'event');
+        checkGroup(placesLayer,'place');
+        checkGroup(expansionLayer,'expansion');
       }
+      function scheduleDeclutter2D(){requestAnimationFrame(declutter2DMarkers);}
       renderExpansion2D();
-      map.on('zoomend moveend', declutter2DMarkers);
+      map.on('zoomend moveend resize', scheduleDeclutter2D);
 
        /* 3D is optional. Leaflet, existing GPS and official assets remain intact. */
       const osaka3D=createOsaka3D({
@@ -2243,6 +2250,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
             });
             marker.addTo(spotsLayer);
           });
+          scheduleDeclutter2D();
         },
         updateGPS: acceptGPS,
         updateHealthMetrics: function (data) {
@@ -2592,6 +2600,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         if (window.parent !== window) {
           window.parent.postMessage({type:'SUG_CHARACTER_SPAWNS',mode:gps?'gps':'explore',characters:activeCharacters.map(({character,spotName,icon,img})=>({character,spotName,icon,img}))},location.origin);
         }
+        scheduleDeclutter2D();
         return activeCharacters;
       }
       // fix and the remaining MAP state initialize later in this script.
@@ -2658,7 +2667,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
       }
       for(const place of places){
         L.circleMarker([place.lat,place.lng],{radius:7,color:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#ae005b',fillColor:place.category==='port'?PIER_COLOR:place.category==='waterfront'?WATERFRONT_COLOR:'#ff479e',fillOpacity:1,weight:2,bubblingMouseEvents:false})
-          .addTo(map).bindTooltip(place.name).on('click',()=>selectPlace(place));
+          .addTo(placesLayer).bindTooltip(place.name).on('click',()=>selectPlace(place));
       }
       map.on('click',e=>selectPlace({name:'選んだ地点',lat:e.latlng.lat,lng:e.latlng.lng}));
       document.getElementById('btn-search-open').onclick=choosePlace;
@@ -3008,6 +3017,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           const marker=L.circleMarker([e.lat,e.lng],{radius:9,color:e.status==='published'?'#ff2e93':'#ffe59e'}).addTo(cmsEventsLayer);
           marker.on('click',()=>{openModal({title:e.title,badge:{published:'公開中',postponed:'延期',cancelled:'中止'}[e.status],html:''});document.getElementById('modal-body').append(textNode('p',[e.venue,e.startAt,e.endAt,e.descJa].filter(Boolean).join(' ｜ ')));});
         }
+        scheduleDeclutter2D();
         paintTicker();
         if(activeList && document.getElementById('modal-backdrop').classList.contains('open')) list(activeList);
       }

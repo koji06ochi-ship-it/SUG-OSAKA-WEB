@@ -350,7 +350,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // not recognizable lit windows on facades. Do not reuse that failed approach.
   // Bright navy walls + restrained wall flood lighting keep the city readable.
   // Actual lit windows require separate facade geometry and remain unimplemented.
-  const ORDINARY_BUILDING_COLOR='#596780';
+  const ORDINARY_BUILDING_COLOR='#354258';
   function addNeonCityBuildings(active) {
     const sourceId='sug-r7-neon-streets-buildings', layerId='sug-r7-neon-building-extrusions';
     active.addSource(sourceId,{type:'vector',url:'mapbox://mapbox.mapbox-streets-v8'});
@@ -359,8 +359,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
       'fill-extrusion-height':['max',8,['to-number',['get','height'],8]],
       'fill-extrusion-base':['to-number',['get','min_height'],0],
       'fill-extrusion-opacity':1,
-      'fill-extrusion-emissive-strength':0.78,
-      'fill-extrusion-vertical-gradient':false
+      'fill-extrusion-emissive-strength':0.35,
+      'fill-extrusion-vertical-gradient':true
     };
     active.addLayer({
       id:layerId,type:'fill-extrusion',slot:'top',source:sourceId,'source-layer':'building',
@@ -371,15 +371,15 @@ window.createOsaka3D = function createOsaka3D(ui) {
     container.dataset.cityOutline='roof-footprint-lines-disabled';
     // Mapbox v3 supports wall flood lights; optional, never fatal to the map.
     try{
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#BFCFFF');
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.68);
-      active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',16);
-      container.dataset.cityFacadeLighting='strong-cool-facade-flood';
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-color','#B2BDD5');
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-intensity',0.34);
+      active.setPaintProperty(layerId,'fill-extrusion-flood-light-wall-radius',10);
+      container.dataset.cityFacadeLighting='subtle-cool-facade-flood';
     }catch(err){
       container.dataset.cityFacadeLighting='emissive-only-fallback';
       container.dataset.cityFacadeLightingError=String(err.message||err);
     }
-    container.dataset.buildingPalette='bright-navy-no-roof-dots';
+    container.dataset.buildingPalette='deep-navy-depth-gradient';
     container.dataset.cityFacadeColor=ORDINARY_BUILDING_COLOR;
     container.dataset.cityWindowStatus='not-implemented-facade-geometry-required';
   }

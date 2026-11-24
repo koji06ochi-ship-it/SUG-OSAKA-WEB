@@ -11,6 +11,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
   const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
   // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
   const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
+  const FACADE_LIGHTING_TEST = STANDARD_3D_INSPECTION && new URLSearchParams(window.location.search).get('facade') === '1';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -78,7 +79,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
     show3dFacades: true,
     show3dLandmarks: true,
     show3dTrees: true,
-    colorBuildings: '#657085'
+    // Retain official building meshes, realistic facades and 3D landmark detail.
+    // Compare only the standard-style building tone; don't cover native buildings.
+    colorBuildings: FACADE_LIGHTING_TEST ? '#9AA8BB' : '#657085'
   } : BASEMAP_CONFIG;
 
   container.dataset.state = 'closed';
@@ -1599,6 +1602,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
             // which depend on the disabled building source.
             container.dataset.buildingColorRequested = 'mapbox-standard-native';
             container.dataset.cityWindowStatus = 'native-facades-coverage-unverified';
+            container.dataset.facadeLightingVariant = FACADE_LIGHTING_TEST ? 'brighter-native-building-tone' : 'original-standard-building-tone';
             container.dataset.customBuildingExtrusions = 'not-created';
             addGeoLayers(active);
           } else {

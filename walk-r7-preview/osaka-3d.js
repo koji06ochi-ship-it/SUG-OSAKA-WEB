@@ -15,6 +15,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // Compare native architectural facade details under the official night preset.
   // This is an isolated visual test; the working dusk and custom-light versions remain unchanged.
   const NATIVE_NIGHT_TEST = STANDARD_3D_INSPECTION && new URLSearchParams(window.location.search).get('night') === '1';
+  const requestedLandmarkLight = new URLSearchParams(window.location.search).get('landmarkLight');
+  const LANDMARK_LIGHT_PRESET = ['day','dusk','night'].includes(requestedLandmarkLight) ? requestedLandmarkLight : null;
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -111,7 +113,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   // Mapbox Standard v3 runtime basemap configuration (black x neon-pink x midnight-river)
   const BASEMAP_CONFIG = {
-    lightPreset: 'dusk',
+    lightPreset: LANDMARK_LIGHT_PRESET || 'dusk',
     theme: 'default',
     show3dObjects: true,
     show3dBuildings: false,
@@ -134,7 +136,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
 
   const ACTIVE_BASEMAP_CONFIG = STANDARD_3D_INSPECTION ? {
     ...BASEMAP_CONFIG,
-    lightPreset: NATIVE_NIGHT_TEST ? 'night' : 'dusk',
+    lightPreset: LANDMARK_LIGHT_PRESET || (NATIVE_NIGHT_TEST ? 'night' : 'dusk'),
     show3dObjects: true,
     show3dBuildings: true,
     show3dFacades: true,

@@ -912,7 +912,7 @@
         </select>
         <select id="filter-date" class="filter-select" aria-label="開催日時">
           <option value="all">すべての日時</option>
-          <option value="today">今日</option>
+          <option value="now">今から（60分以内）</option><option value="today">今日</option>
           <option value="week">今週</option>
           <option value="any">日程調整</option>
         </select>
@@ -1119,7 +1119,14 @@
         return state.posts.filter(function (p) {
           if (state.activeCat !== 'all' && p.category !== state.activeCat) return false;
           if (state.filterArea !== 'all' && p.area !== state.filterArea) return false;
-          if (state.filterDate !== 'all' && p.dateScope !== state.filterDate) return false;
+          if(p.isLocal && p.deadlineAt && Date.parse(p.deadlineAt)<=Date.now()) return false;
+           if(state.filterDate!=='all'){
+             var s=Date.parse(p.startAt),n=Date.now(),today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date(n)),end=Date.parse(today+'T00:00:00+09:00')+86400000;
+             if(state.filterDate==='now' && !(s>=n && s<=n+3600000))return false;
+             if(state.filterDate==='today' && !(s>=n && s<end))return false;
+             if(state.filterDate==='week' && !(s>=n && s<end+6*86400000))return false;
+             if(state.filterDate==='any' && p.dateScope!=='any')return false;
+           }
           if (state.filterLang !== 'all' && p.language !== state.filterLang) return false;
           return true;
         });
@@ -1180,7 +1187,7 @@
                 '</select></div>' +
               '</div>' +
               '<div class="form-row-2">' +
-                '<div class="form-group"><label class="form-label">日時 *</label><input class="form-input" id="f-datetime" required placeholder="例：今日 18:30〜" /></div>' +
+                '<div class="form-group"><label class="form-label">日時 *</label><input class="form-input" id="f-datetime" type="datetime-local" required /></div>' +
                 '<div class="form-group"><label class="form-label">参加人数</label><input class="form-input" id="f-cap" type="number" min="1" max="30" value="3" /></div>' +
               '</div>' +
               '<div class="form-row-2">' +
@@ -1207,14 +1214,21 @@
             showToast('有料決済は未承認のため、無料募集として保存するか承認後にご利用ください');
             return;
           }
-          var newPost = {
+          var dateInput=document.getElementById('f-datetime').value;
+           var start=Date.parse(dateInput+'+09:00');
+           if(!Number.isFinite(start)||start<=Date.now()){showToast('日本時間の未来の開催日時を指定してください');return;}
+           var cap=Number(document.getElementById('f-cap').value);
+           if(!Number.isInteger(cap)||cap<1||cap>30){showToast('定員は1〜30名で指定してください');return;}
+           var newPost = {
             id: 'local_' + Date.now(),
             title: document.getElementById('f-title').value.trim(),
             category: document.getElementById('f-cat').value,
             area: document.getElementById('f-area').value,
             datetime: document.getElementById('f-datetime').value.trim(),
-            dateScope: 'today',
-            capacity: document.getElementById('f-cap').value || '3',
+            dateScope: 'scheduled',
+             startAt: new Date(start).toISOString(),
+             deadlineAt: new Date(start).toISOString(),
+            capacity: cap,
             language: document.getElementById('f-lang').value,
             feeType: feeVal,
             scope: document.getElementById('f-scope').value,
@@ -1250,7 +1264,7 @@
             '<div class="spec-box">' +
               '開催エリア: ' + escapeHtml(p.area) + '（正確な現在地は非公開）\n' +
               '待ち合わせ: ' + escapeHtml(p.meetingSpot) + '\n' +
-              '日時: ' + escapeHtml(p.datetime) + ' ／ 定員: ' + escapeHtml(p.capacity) + '名\n' +
+              '日時（日本時間）: ' + escapeHtml(p.datetime) + ' ／ 定員: ' + escapeHtml(p.capacity) + '名\n' +
               '言語: ' + escapeHtml(p.language) + ' ／ 料金: ' + escapeHtml(p.feeType) + '\n' +
               '参加条件: ' + escapeHtml(p.condition) +
             '</div>' +
@@ -1262,6 +1276,8 @@
         });
 
         document.getElementById('btn-apply-post').addEventListener('click', function () {
+           if(p.isLocal){showToast('端末内下書きには参加申請できません');return;}
+           if(!p.deadlineAt||!Number.isFinite(Date.parse(p.deadlineAt))||Date.parse(p.deadlineAt)<=Date.now()){showToast('受付期限を確認できないか、受付終了しています');return;}
           dispatchBridge('onApplyMeetPost', { postId: p.id });
           showToast('参加申請フックを発火しました（実送信はバックエンド接続後）');
           closeModal();
@@ -1606,6 +1622,7 @@
 
       loadLocalDrafts();
       renderListings();
+      setInterval(function(){if(!document.hidden)renderListings();},60000);
     })();
   </script>
 <script>

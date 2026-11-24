@@ -10,7 +10,9 @@ window.createOsaka3D = function createOsaka3D(ui) {
   // iPhone inspection route: map.html?focus=mint-museum (no effect on regular map).
   const MINT_MUSEUM_INSPECTION = new URLSearchParams(window.location.search).get('focus') === 'mint-museum';
   // Isolated native Mapbox Standard rendering test; old 3D remains intact and selectable by removing ?standard=1.
-  const STANDARD_3D_INSPECTION = new URLSearchParams(window.location.search).get('standard') === '1';
+  const MAP_QUERY = new URLSearchParams(window.location.search);
+  const STANDARD_3D_INSPECTION = MAP_QUERY.get('standard') === '1' || MAP_QUERY.get('facade') === '1';
+  const NATIVE_FACADE_MATERIAL = MAP_QUERY.get('facade') === '1';
   const venueRecords = Array.isArray(ui.selectedVenues) ? ui.selectedVenues.filter(p => p && p.approved === true && p.highlight3D === true) : [];
   let verifiedVenueFeatures = [];
   let venueLabels = [];
@@ -70,15 +72,18 @@ window.createOsaka3D = function createOsaka3D(ui) {
     colorRoads: '#BE718D'
   };
 
+  // In the improved native test, do NOT force a uniform gray-blue tint over
+  // Mapbox's own building materials. Preserve the identical dusk/pink-road theme.
+  const { colorBuildings: unusedLegacyBuildingTint, ...nativeNoTint } = BASEMAP_CONFIG;
   const ACTIVE_BASEMAP_CONFIG = STANDARD_3D_INSPECTION ? {
-    ...BASEMAP_CONFIG,
+    ...(NATIVE_FACADE_MATERIAL ? nativeNoTint : BASEMAP_CONFIG),
     lightPreset: 'dusk',
     show3dObjects: true,
     show3dBuildings: true,
     show3dFacades: true,
     show3dLandmarks: true,
     show3dTrees: true,
-    colorBuildings: '#657085'
+    ...(!NATIVE_FACADE_MATERIAL ? { colorBuildings: '#657085' } : {})
   } : BASEMAP_CONFIG;
 
   container.dataset.state = 'closed';
@@ -1597,7 +1602,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
             // old extrusions or synthetic windows. No Streets v8 source is needed.
             // Keep GPS/route sources independently; never call landscape layers
             // which depend on the disabled building source.
-            container.dataset.buildingColorRequested = 'mapbox-standard-native';
+            container.dataset.buildingColorRequested = NATIVE_FACADE_MATERIAL ? 'mapbox-native-default-material-no-tint' : 'mapbox-standard-native';
             container.dataset.cityWindowStatus = 'native-facades-coverage-unverified';
             container.dataset.customBuildingExtrusions = 'not-created';
             addGeoLayers(active);
@@ -1630,7 +1635,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
           timeout = null;
 
           container.dataset.state = 'style-ready';
-          container.dataset.basemap = STANDARD_3D_INSPECTION ? 'mapbox-standard-native-dusk-neon' : 'mapbox-standard-night-neon';
+          container.dataset.basemap = NATIVE_FACADE_MATERIAL ? 'mapbox-native-material-dusk-neon' : STANDARD_3D_INSPECTION ? 'mapbox-standard-native-dusk-neon' : 'mapbox-standard-night-neon';
           container.dataset.camera = MINT_MUSEUM_INSPECTION ? 'mint-museum-inspection' : 'hachikenya-okawa-eye-level';
           container.dataset.renderedBuildings = STANDARD_3D_INSPECTION ? 'native-3d-enabled-device-unverified' : 'unverified';
           toggle.textContent = '2D';

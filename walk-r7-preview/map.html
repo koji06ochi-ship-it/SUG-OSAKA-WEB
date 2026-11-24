@@ -2309,7 +2309,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         return url.href;
       }
       const r7CafeTranslations=Object.freeze({
-        ja:{badge:'公式掲載店舗',intro:'大阪・天神橋で、日本茶と陶磁器を楽しめるカフェ。好きな器を選んでお茶を味わう体験ができます。',instagram:'公式Instagram @osakachakai を開く',website:'公式サイトを開く',route:'Appleマップで徒歩経路を開く',credit:'画像・ロゴ：CAFE 大阪茶会®'},
+        ja:{badge:'協力掲載店',intro:'大阪・天神橋で、日本茶と陶磁器を楽しめるカフェ。好きな器を選んでお茶を味わう体験ができます。',instagram:'公式Instagram @osakachakai を開く',website:'公式サイトを開く',route:'Appleマップで徒歩経路を開く',credit:'画像・ロゴ：CAFE 大阪茶会®'},
         en:{badge:'Featured local café',intro:'A Japanese tea and pottery café in Tenjinbashi, Osaka. Choose a cup and enjoy a Japanese tea experience.',instagram:'Official Instagram @osakachakai',website:'Official website',route:'Walking directions in Apple Maps',credit:'Images and logo: CAFE 大阪茶会®'},
         zh:{badge:'推荐本地茶馆',intro:'位于大阪天神桥的日本茶与陶瓷咖啡馆。可以选择自己喜欢的茶器，享受日本茶文化体验。',instagram:'官方 Instagram @osakachakai',website:'官方网站',route:'使用 Apple 地图查看步行路线',credit:'图片及标志：CAFE 大阪茶会®'}
       });
@@ -2620,9 +2620,9 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
         if(place)selectPlace(place);
       });
       function choosePlace(){
-        openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<div id="place-filter-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button type="button" class="drawer-tab active" data-cat="all">すべて</button><button type="button" class="drawer-tab" data-cat="building">建物・施設</button><button type="button" class="drawer-tab" data-cat="area">エリア</button><button type="button" class="drawer-tab" data-cat="bridge">橋</button><button type="button" class="drawer-tab" data-cat="nightview">夜景</button></div><input type="search" id="place-query" placeholder="店舗・観光・橋・夜景・駅を検索" aria-label="目的地名"><div id="place-choices"></div>'});
+        openModal({title:'S.u.G WALK｜指定スポット',badge:designatedPlaces.length+'か所',html:'<div id="place-filter-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button type="button" class="drawer-tab active" data-cat="all">すべて</button><button type="button" class="drawer-tab" data-cat="partner">協力店・施設</button><button type="button" class="drawer-tab" data-cat="building">建物・施設</button><button type="button" class="drawer-tab" data-cat="area">エリア</button><button type="button" class="drawer-tab" data-cat="bridge">橋</button><button type="button" class="drawer-tab" data-cat="nightview">夜景</button></div><input type="search" id="place-query" placeholder="店舗・観光・橋・夜景・駅を検索" aria-label="目的地名"><div id="place-choices"></div>'});
         const input=document.getElementById('place-query'),result=document.getElementById('place-choices');
-        const kind={shop:'掲載店舗',landmark:'ランドマーク',park:'公園',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺',bridge:'橋',nightview:'夜景スポット',area:'観光エリア'};
+        const kind={shop:'協力掲載店',landmark:'ランドマーク',park:'公園',sightseeing:'観光',station:'駅',port:'船着場・港',waterfront:'水辺',bridge:'橋',nightview:'夜景スポット',area:'観光エリア'};
         let activeCat='all';
         document.querySelectorAll('#place-filter-tabs button').forEach(btn=>{
           btn.onclick=()=>{
@@ -2637,6 +2637,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
           const listed=designatedPlaces.filter(p=>{
             if(!p.name.toLocaleLowerCase('ja').includes(q)) return false;
             if(activeCat==='all') return true;
+            if(activeCat==='partner') return p.category==='shop' && p.approved===true;
             if(activeCat==='nightview') return p.category==='nightview' || p.nightSpot===true;
             return p.r7Group===activeCat || p.category===activeCat;
           });
@@ -2652,7 +2653,7 @@ window.SUG_WALK_PUBLIC_SOURCES_DIAGNOSTICS=()=>({bound:true,weather:{...info.wea
               b.style.boxShadow='0 0 12px '+(place.category==='port'?'rgba(100,232,218,.23)':'rgba(180,120,255,.23)');
             }
             const located=directoryCoords(place);
-            b.textContent=(kind[place.category]||'スポット')+'｜'+place.name+(located?'':'　位置照合中');
+            b.textContent=(place.category==='shop' && place.approved===true && place.name==='川の駅はちけんや'?'協力施設':place.category==='shop' && place.approved!==true?'店舗':kind[place.category]||'スポット')+'｜'+place.name+(located?'':'　位置照合中');
             if(located){
               b.onclick=()=>selectPlace(place);
             } else {

@@ -1847,8 +1847,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
     cameraAnchor = current;
     const camera = {
       center: coords,
-      zoom: cameraMode === 'eye' ? 18.15 : 18.25,
-      pitch: cameraMode === 'eye' ? 78 : 72,
+      zoom: cameraMode === 'eye' ? 18.15 : 16.8,
+      pitch: cameraMode === 'eye' ? 78 : 55,
       offset: [0, Math.round(Math.max(0, container.clientHeight) * (cameraMode === 'eye' ? 0.14 : 0.20))],
       duration: 950,
       essential: true
@@ -1906,8 +1906,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
         config: { basemap: ACTIVE_BASEMAP_CONFIG },
         // Look along Okawa River from Hachikenyahama toward Nakanoshima skyline
         center: MINT_MUSEUM_INSPECTION ? [135.52167,34.69592] : [HUB.lng, HUB.lat],
-        zoom: MINT_MUSEUM_INSPECTION ? 18 : (cameraMode === 'eye' ? 18.15 : 17.3),
-        pitch: MINT_MUSEUM_INSPECTION ? 68 : (cameraMode === 'eye' ? 78 : 65),
+        zoom: MINT_MUSEUM_INSPECTION ? 18 : (cameraMode === 'eye' ? 18.15 : 16.8),
+        pitch: MINT_MUSEUM_INSPECTION ? 68 : (cameraMode === 'eye' ? 78 : 55),
         bearing: -68,
         maxPitch: 85,
         antialias: true
@@ -2036,8 +2036,8 @@ window.createOsaka3D = function createOsaka3D(ui) {
         setTimeout(() => container._sugDeclutter3D(), 300);
       }
       view.easeTo({
-        zoom: mode === 'eye' ? 18.15 : 17.3,
-        pitch: mode === 'eye' ? 78 : 65,
+        zoom: mode === 'eye' ? 18.15 : 16.8,
+        pitch: mode === 'eye' ? 78 : 55,
         offset: [0, mode === 'eye' ? Math.round(container.clientHeight * 0.14) : 0],
         duration: 850,
         essential: true
@@ -2072,7 +2072,7 @@ window.createOsaka3D = function createOsaka3D(ui) {
     },
     focus(center, zoom = 18.25) {
       if (!view) return false;
-      view.easeTo({ center, zoom: cameraMode === 'eye' ? 18.15 : zoom, pitch: cameraMode === 'eye' ? 78 : 72 });
+      view.easeTo({ center, zoom: cameraMode === 'eye' ? 18.15 : zoom, pitch: cameraMode === 'eye' ? 78 : 55 });
       return true;
     },
     zoom(delta) {

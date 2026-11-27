@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>PiPiのリズムステージ</title>
+</head>
+<body>
+<script src="../common/sug-common.js"></script>
+<script>
+/* ============================================================
+   ② PiPi｜リズムステージ
+   3つのレーンに流れてくるマークを、線に重なった瞬間にタップ。
+   曲はプログラムでその場で作っている（外部の音源を使っていないので権利の心配なし）。
+   ============================================================ */
+const SCORE_RATE = 0.8;       // 点数の大きさ（1.0 が基準。下げると全体の点数が小さくなる）
+const BPM = 120, BEAT = 60 / BPM, INTRO = 4, SONG_BEATS = 88;
+const LANE_COL = ["#ff5fa2", "#ffd23f", "#4fc3f7"];
+const config = {
+  gameId: "sug-02-rhythm",
+  title: "PiPiのリズムステージ",
+  charName: "PiPi",
+  color: "#9b4dff", colorDark: "#6a2bc2", colorSoft: "#f3ebff", bg: "#1b1030",
+  howHtml: `PiPiのステージを盛り上げよう！<br>
+    ・上から3つのレーンに<b>マーク</b>が流れてくる<br>
+    ・マークが下の<b>線に重なった瞬間</b>に、そのレーンをタップ<br>
+    ・ぴったりなら <b>PERFECT</b>、コンボをつなげて高得点！<br>
+    ・音をオンにして遊んでね🔊`,
+  rule: D => `曲の最後まで遊んで${D.clear}点以上ならクリア！`,
+  levels: {
+    easy:   { name: "かんたん",   note: "はじめての人", speed: 0.85, on: 0.5,  off: 0.0,  dbl: 0.0,  clear: 6000 },
+    normal: { name: "ふつう",     note: "ノーツ多め",   speed: 1.0,  on: 0.72, off: 0.22, dbl: 0.05, clear: 13500 },
+    hard:   { name: "むずかしい", note: "16ビート！",   speed: 1.2,  on: 0.85, off: 0.48, dbl: 0.12, clear: 21200 }
+  },
+  images: { pipi: "../img/pipi.png", pipiDance: "../img/pipi_dance.png", pipiSing: "../img/pipi_sing.png", pinkman: "../img/pinkman.png", pinkmanSad: "../img/pinkman_sad.png", pinkmanSurprised: "../img/pinkman_surprised.png", pinkmanCheer: "../img/pinkman_cheer.png" },   // 公式画像（img フォルダに置くだけ。無ければ仮の絵）
+  freeze: { min: 14, max: 34 },
+  lines: {
+    pinkIn:  ["オレのリズムについてこい！", "ノッてるか〜い！", "フゥ〜〜！"],
+    pinkOut: ["…ズレてた？", "今の、わざとやで", "じゃ、また来るわ"],
+    pipi:    ["いい感じ！", "その調子♪", "最高〜！", "ありがとう！"]
+  }
+};
+
+let vfxShake = 0, lastBeatI = -1;
+let notes, songStart, songT, combo, maxCombo, counts, flash, nextSched, pinkAt, speech, ended, pausedAt;
+const judgeY = () => H * 0.8;
+const topY = () => H * 0.33;
+const laneX = i => W * (i + 0.5) / 3;
+const approach = () => 1.5 / D.speed;
+
+/* 毎回同じ譜面になるように、決まった順番の乱数を使う */
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function makeChart() {
+  const r = rng({ easy: 11, normal: 22, hard: 33 }[SUG.lvKey]), out = [];
+  let prev = 1;
+  for (let b = INTRO; b < INTRO + SONG_BEATS - 2; b += 0.5) {
+    const onBeat = b % 1 === 0, bar = Math.floor((b - INTRO) / 4);
+    const rest = bar % 8 === 7 && (b - INTRO) % 4 >= 2;             // 8小節ごとにひと休み
+    if (rest) continue;
+    if (r() < (onBeat ? D.on : D.off)) {
+      let lane = Math.floor(r() * 3); if (lane === prev && r() < 0.5) lane = (lane + 1 + Math.floor(r() * 2)) % 3;
+      out.push({ t: b * BEAT, lane, hit: false, miss: false }); prev = lane;
+      if (r() < D.dbl) out.push({ t: b * BEAT, lane: (lane + 1 + Math.floor(r() * 2)) % 3, hit: false, miss: false });
+    }
+  }
+  return out;
+}
+
+/* ---------- 曲（その場で作る） ---------- */
+const ROOTS = [65.41, 55.0, 43.65, 49.0];                                   // C - Am - F - G
+const CHORDS = [[261.6, 329.6, 392.0], [220.0, 261.6, 329.6], [174.6, 220.0, 261.6], [196.0, 246.9, 293.7]];
+function scheduleMusic() {
+  const a = SUG.actx; if (!a || !SUG.soundOn) return;
+  const until = a.currentTime + 0.25;
+  while (songStart + nextSched * BEAT * 0.5 < until) {
+    const i = nextSched, b = i / 2, when = songStart + b * BEAT;
+    nextSched++;
+    if (when < a.currentTime - 0.02) continue;
+    if (b >= INTRO + SONG_BEATS + 1) continue;
+    if (b < INTRO) { if (i % 2 === 0) SUG.beep(b === INTRO - 1 ? 1320 : 880, 0.08, "sine", 0.18, 0, when); continue; }   // カウント
+    const sb = b - INTRO, bar = Math.floor(sb / 4), chord = Math.floor(bar % 8 / 2);
+    const end = b >= INTRO + SONG_BEATS;
+    if (end) { if (i % 2 === 0 && sb === SONG_BEATS) { for (const f of CHORDS[0]) SUG.beep(f, 1.2, "triangle", 0.08, 0, when); SUG.beep(ROOTS[0], 1.2, "sine", 0.3, 0, when); } continue; }
+    if (i % 2 === 0) SUG.beep(150, 0.14, "sine", 0.55, -110, when);                     // キック
+    if (i % 2 === 0 && sb % 2 === 1) SUG.noise(0.12, 0.22, when, 1500);                // スネア
+    SUG.noise(0.03, 0.06, when, 7000);                                                    // ハイハット
+    SUG.beep(ROOTS[chord] * (i % 2 ? 2 : 1), 0.22, "triangle", 0.22, 0, when);         // ベース
+    const arp = CHORDS[chord][(i + bar) % 3] * (bar % 4 >= 2 ? 2 : 1);
+    if (bar >= 2) SUG.beep(arp, 0.18, "square", 0.035, 0, when);                         // メロディ
+  }
+}
+
+const game = {
+  reset() {
+    notes = makeChart(); combo = 0; maxCombo = 0; counts = { PERFECT: 0, GOOD: 0, MISS: 0 }; flash = [0, 0, 0];
+    nextSched = 0; speech = null; ended = false; songT = -1; PARTS.length = 0; lastBeatI = -1; vfxShake = 0;
+    pinkAt = (INTRO + 32 + Math.floor(Math.random() * 6) * 4) * BEAT;   // 乱入する時間（小節の頭）
+  },
+  started() { songStart = (SUG.actx ? SUG.actx.currentTime : performance.now() / 1000) + 0.3; },
+  down(p) {
+    const lane = Math.max(0, Math.min(2, Math.floor(p.x / (W / 3))));
+    flash[lane] = 0.15;
+    tapSound(lane);                                                   // 押した音（レーンごとに音の高さがちがう）
+    let best = null, bd = 1;
+    for (const n of notes) { if (n.hit || n.miss || n.lane !== lane) continue; const d = Math.abs(n.t - songT); if (d < bd) { bd = d; best = n; } }
+    if (!best || bd > 0.16) return;
+    if (bd < 0.06) { judge(best, "PERFECT"); perfectSound(lane); } else if (bd < 0.13) judge(best, "GOOD"); else judge(best, "MISS");
+  },
+  key(k) { const m = { a: 0, s: 1, d: 2, ArrowLeft: 0, ArrowDown: 1, ArrowRight: 2 }; if (k in m) game.down({ x: laneX(m[k]) }); },
+  update(dt) {
+    songT = clock() - songStart;
+    scheduleMusic();
+    updateParts(dt); vfxShake = Math.max(0, vfxShake - dt);                       // 見た目：光のつぶを動かす
+    const bi = Math.floor(songT / BEAT);                                           // 見た目：1拍ごとに、音符がふわっと上がる
+    if (songT > INTRO * BEAT && bi !== lastBeatI) { lastBeatI = bi; noteFloat(W / 2 + rnd(-2.4, 2.4) * u, H * 0.27 - u * rnd(2, 3.8)); }
+    for (let i = 0; i < 3; i++) flash[i] = Math.max(0, flash[i] - dt);
+    if (speech && (speech.t -= dt) <= 0) speech = null;
+    for (const n of notes) if (!n.hit && !n.miss && songT - n.t > 0.16) judge(n, "MISS", true);
+    if (!ended && songT > (INTRO + SONG_BEATS) * BEAT + 1.2) {
+      ended = true;
+      const clear = SUG.score >= D.clear, full = counts.MISS === 0;
+      let mx = 0; for (let i = 1; i <= notes.length; i++) mx += Math.round((150 + Math.min(i, 50) * 4) * SCORE_RATE);     // 全部PERFECTのときの点数
+      const rate = SUG.score / mx, rank = rate >= 0.8 ? "S" : rate >= 0.6 ? "A" : rate >= 0.4 ? "B" : "C";
+      SUG.finish(clear, full ? "フルコンボ！" : (clear ? "ステージ大成功！" : "おしい！"), `ランク ${rank}　PERFECT ${counts.PERFECT}　GOOD ${counts.GOOD}　MISS ${counts.MISS}　最大コンボ ${maxCombo}`);
+    }
+  },
+  canFreeze() { const b = songT / BEAT; return b > INTRO + 8 && b < INTRO + SONG_BEATS - 8 && !pinkActive(); },
+  freezeStart() { pausedAt = clock(); if (SUG.actx) SUG.actx.suspend(); },
+  freezeEnd() { if (SUG.actx) SUG.actx.resume(); else songStart += clock() - pausedAt; },
+  soundChanged(on) { if (on) nextSched = Math.max(nextSched, Math.ceil((songT + 0.05) / (BEAT * 0.5))); },
+  draw() { drawScene(); },
+  hud() { const left = Math.max(0, (INTRO + SONG_BEATS) * BEAT - Math.max(0, songT)); return { time: "♪ " + Math.ceil(left), lives: combo >= 5 ? combo + " コンボ" : "" }; }
+};
+/* ---------- 押した音 ----------
+   そのときの曲のコード（C→Am→F→G）の音を鳴らすので、曲とぶつからない。
+   やわらかい音（sine）で、短くすっと消える。 */
+function chordNow() { const b = Math.max(0, songT / BEAT - INTRO), bar = Math.floor(b / 4); return CHORDS[Math.floor(bar % 8 / 2)]; }
+function tapSound(lane) { SUG.beep(chordNow()[lane] * 2, 0.13, "sine", 0.15); }                      // ぽん（レーンごとにコードの音がちがう）
+function perfectSound(lane) { SUG.beep(chordNow()[lane] * 4, 0.12, "sine", 0.06); }                  // PERFECTは、ほんのりきらっ
+function clock() { return SUG.actx ? SUG.actx.currentTime : performance.now() / 1000; }
+const pinkActive = () => songT >= pinkAt && songT < pinkAt + 8 * BEAT;
+
+function judge(n, kind, late) {
+  if (kind === "MISS") { n.miss = true; combo = 0; } else { n.hit = true; combo++; maxCombo = Math.max(maxCombo, combo); }
+  counts[kind]++;
+  const pts = kind === "PERFECT" ? 150 : kind === "GOOD" ? 80 : 0;
+  SUG.score += Math.round((pts + (pts ? Math.min(combo, 50) * 4 : 0)) * SCORE_RATE);
+  SUG.text(laneX(n.lane), judgeY() - u * 0.9, kind, kind === "PERFECT" ? "#ffd23f" : kind === "GOOD" ? "#4fc3f7" : "#aaa", 0.5, 0.5);
+  if (kind !== "MISS") {                                                         // 見た目：光のつぶと、ひろがる輪
+    const x = laneX(n.lane), y = judgeY(), c = LANE_COL[n.lane], per = kind === "PERFECT";
+    burst(x, y, c, per ? 18 : 9, per ? 6 : 3.6); ripple(x, y, c); if (per) { burst(x, y, "#ffffff", 7, 7.5); ripple(x, y, "#ffffff"); }
+    if (combo > 0 && combo % 10 === 0) { confetti(combo % 50 === 0 ? 100 : 44); vfxShake = 0.3; }
+  }
+  if (combo > 0 && combo % 25 === 0) speech = { txt: SUG.pick("pipi"), t: 1.2 };
+}
+
+/* ---------- 見た目の部品（ゲームのルールには関係しない） ---------- */
+const PARTS = [];                                                             // 光のつぶ・紙ふぶき・音符・輪
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+const mix = (hex, to, t) => { const n = parseInt(hex.slice(1), 16), a = [n >> 16 & 255, n >> 8 & 255, n & 255], b = to === "w" ? [255, 255, 255] : [24, 0, 48]; return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * t)).join(",")})`; };
+function burst(x, y, col, n, power) { for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = rnd(0.4, 1) * power * u; PARTS.push({ t: "dot", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - power * u * 0.2, g: 5 * u, life: rnd(0.35, 0.75), max: 0.75, col, size: rnd(0.1, 0.24) }); } }
+function confetti(n) { const cols = ["#ff5fa2", "#ffd23f", "#4fc3f7", "#b57cff", "#7ee08a"]; for (let i = 0; i < n; i++) PARTS.push({ t: "conf", x: rnd(0, W), y: rnd(-H * 0.12, H * 0.04), vx: rnd(-0.7, 0.7) * u, vy: rnd(1.6, 3.6) * u, g: 0.6 * u, life: rnd(1.5, 2.6), max: 2.6, col: cols[i % 5], size: rnd(0.14, 0.26), rot: rnd(0, 6), vr: rnd(-9, 9) }); }
+function noteFloat(x, y) { PARTS.push({ t: "note", x, y, vx: rnd(-0.5, 0.5) * u, vy: -rnd(1.1, 2.1) * u, g: 0, life: 1.5, max: 1.5, col: ["#ff8ccf", "#ffe27a", "#8fdcff"][Math.floor(Math.random() * 3)], size: rnd(0.5, 0.8), ch: Math.random() < 0.5 ? "♪" : "♫" }); }
+function ripple(x, y, col) { PARTS.push({ t: "ring", x, y, vx: 0, vy: 0, g: 0, life: 0.42, max: 0.42, col, size: 0.55 }); }
+function updateParts(dt) {
+  for (const p of PARTS) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; if (p.t === "conf") p.rot += p.vr * dt; }
+  for (let i = PARTS.length - 1; i >= 0; i--) if (PARTS[i].life <= 0) PARTS.splice(i, 1);
+  if (PARTS.length > 280) PARTS.splice(0, PARTS.length - 280);
+}
+function drawParts() {
+  ctx.save();
+  for (const p of PARTS) {
+    const k = Math.max(0, p.life / p.max);
+    if (p.t === "dot") {
+      ctx.globalCompositeOperation = "lighter"; const r = u * p.size * (0.6 + k);
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.2); g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(0.35, rgba(p.col, k * 0.8)); g.addColorStop(1, rgba(p.col, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 2.2, 0, 7); ctx.fill();
+    } else if (p.t === "conf") {
+      ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = Math.min(1, k * 2.2);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.abs(Math.cos(p.rot * 1.7)) * 0.8 + 0.2); ctx.fillStyle = p.col; ctx.fillRect(-u * p.size / 2, -u * p.size / 4, u * p.size, u * p.size / 2); ctx.restore(); ctx.globalAlpha = 1;
+    } else if (p.t === "note") {
+      ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = Math.min(1, k * 1.6); ctx.font = `900 ${u * p.size}px sans-serif`; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(60,10,90,.5)"; ctx.strokeText(p.ch, p.x, p.y); ctx.fillStyle = p.col; ctx.fillText(p.ch, p.x, p.y); ctx.globalAlpha = 1;
+    } else if (p.t === "ring") {
+      ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = rgba(p.col, k * 0.9); ctx.lineWidth = 3 + k * 3; ctx.beginPath(); ctx.arc(p.x, p.y, u * (p.size + (1 - k) * 1.5), 0, 7); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+const BOKEH = Array.from({ length: 18 }, (_, i) => ({ x: (i * 0.381 + 0.13) % 1, y: (i * 0.617 + 0.05) % 1, r: 0.9 + ((i * 7) % 5) * 0.45, c: ["#ff5fa2", "#4fc3f7", "#b57cff"][i % 3], ph: i * 1.7 }));
+function drawNote(x, y, col, alpha, pulse) {                                  // つやのある、ガラスの玉
+  const r = u * 0.52 * (1 + pulse * 0.06);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.globalCompositeOperation = "lighter";
+  const tg = ctx.createLinearGradient(x, y - u * 1.7, x, y); tg.addColorStop(0, rgba(col, 0)); tg.addColorStop(1, rgba(col, 0.4)); ctx.fillStyle = tg; ctx.fillRect(x - r * 0.55, y - u * 1.7, r * 1.1, u * 1.7);
+  const gg = ctx.createRadialGradient(x, y, r * 0.4, x, y, r * 2.3); gg.addColorStop(0, rgba(col, 0.55)); gg.addColorStop(1, rgba(col, 0)); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, r * 2.3, 0, 7); ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+  const sg = ctx.createRadialGradient(x - r * 0.32, y - r * 0.4, r * 0.08, x, y, r); sg.addColorStop(0, "#ffffff"); sg.addColorStop(0.3, mix(col, "w", 0.5)); sg.addColorStop(0.75, col); sg.addColorStop(1, mix(col, "b", 0.4));
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.beginPath(); ctx.ellipse(x - r * 0.3, y - r * 0.42, r * 0.34, r * 0.17, -0.6, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- 描画（キャラクターの絵に合わせて、つやのある立体的な見た目に） ---------- */
+function drawScene() {
+  const tt = songT > 0 ? songT : performance.now() / 1000;
+  const beatPh = songT > 0 ? (songT / BEAT) % 1 : (performance.now() / 500) % 1;
+  const pulse = Math.max(0, 1 - beatPh * 3), fever = combo >= 20, sy = H * 0.27;
+  ctx.save();
+  if (vfxShake > 0) { const k = Math.min(1, vfxShake * 4) * u * 0.18; ctx.translate((Math.random() - 0.5) * k * 2, (Math.random() - 0.5) * k * 2); }
+  const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#2d1260"); bg.addColorStop(0.3, "#52197f"); bg.addColorStop(0.62, "#2c1452"); bg.addColorStop(1, "#140a2c");
+  ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+  ctx.globalCompositeOperation = "lighter";
+  for (const b of BOKEH) {
+    const x = b.x * W + Math.sin(tt * 0.35 + b.ph) * u * 0.9, y = (b.y * H * 0.9 + tt * u * 0.25 * (0.3 + b.r * 0.2)) % (H * 0.95), r = u * b.r;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(b.c, 0.2 + pulse * 0.08)); g.addColorStop(0.7, rgba(b.c, 0.07)); g.addColorStop(1, rgba(b.c, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  }
+  for (let i = 0; i < 6; i++) {
+    const x = W * (i + 0.5) / 6, a = Math.sin(tt * 1.1 + i * 1.3) * 0.38, c = ["#ff5fa2", "#4fc3f7", "#b57cff"][i % 3], len = H * 0.55;
+    ctx.save(); ctx.translate(x, -u); ctx.rotate(a);
+    const g = ctx.createLinearGradient(0, 0, 0, len); g.addColorStop(0, rgba(c, 0.34 + pulse * 0.22 + (fever ? 0.2 : 0))); g.addColorStop(1, rgba(c, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-u * 0.12, 0); ctx.lineTo(u * 0.12, 0); ctx.lineTo(u * 1.5, len); ctx.lineTo(-u * 1.5, len); ctx.fill(); ctx.restore();
+  }
+  ctx.globalCompositeOperation = "source-over";
+  const px = W * 0.06, py = H * 0.03, pw = W * 0.88, phh = sy - py - u * 0.25;
+  ctx.save(); ctx.beginPath(); SUG.roundRect(px, py, pw, phh, u * 0.4); ctx.clip();
+  const pg = ctx.createLinearGradient(0, py, 0, py + phh); pg.addColorStop(0, "rgba(255,255,255,.11)"); pg.addColorStop(1, "rgba(255,120,220,.07)"); ctx.fillStyle = pg; ctx.fillRect(px, py, pw, phh);
+  for (let i = 0; i < 24; i++) { const bw = pw / 24, hgt = phh * (0.12 + 0.5 * Math.abs(Math.sin(tt * 2.3 + i * 0.72)) * (0.55 + pulse * 0.45 + (fever ? 0.25 : 0))); ctx.fillStyle = `hsla(${315 - 190 * i / 24},95%,68%,.5)`; ctx.fillRect(px + i * bw + 2, py + phh - hgt, bw - 4, hgt); }
+  ctx.restore(); SUG.roundRect(px, py, pw, phh, u * 0.4); ctx.strokeStyle = "rgba(255,255,255,.24)"; ctx.lineWidth = 2; ctx.stroke();
+  const fg = ctx.createLinearGradient(0, sy, 0, topY()); fg.addColorStop(0, "rgba(255,130,210,.4)"); fg.addColorStop(1, "rgba(80,30,140,0)"); ctx.fillStyle = fg; ctx.fillRect(0, sy, W, topY() - sy);
+  const eg = ctx.createLinearGradient(0, sy - u * 0.1, 0, sy + u * 0.25); eg.addColorStop(0, "#c46cff"); eg.addColorStop(1, "#5b21a8"); ctx.fillStyle = eg; ctx.fillRect(0, sy - u * 0.06, W, u * 0.3);
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(0, sy - u * 0.06, W, 2);
+  ctx.save(); ctx.translate(W / 2, sy + u * 0.02);
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(0, u * 0.2, u * 3.1, u * 0.5, 0, 0, 7); ctx.fill();
+  const tg = ctx.createLinearGradient(0, -u * 0.4, 0, u * 0.4); tg.addColorStop(0, "#ffb3e6"); tg.addColorStop(0.5, "#d56aff"); tg.addColorStop(1, "#7a2fc9");
+  ctx.fillStyle = tg; ctx.beginPath(); ctx.ellipse(0, 0, u * 3.0, u * 0.5, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = `rgba(255,255,255,${0.55 + pulse * 0.4})`; ctx.lineWidth = 3; ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,255,${0.25 + pulse * 0.4})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, u * 2.2, u * 0.34, 0, 0, 7); ctx.stroke();
+  ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  const ag = ctx.createRadialGradient(W / 2, sy - u * 2.1, u * 0.4, W / 2, sy - u * 2.1, u * 3.8); ag.addColorStop(0, `rgba(255,170,235,${0.38 + pulse * 0.2 + (fever ? 0.15 : 0)})`); ag.addColorStop(1, "rgba(255,120,220,0)");
+  ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(W / 2, sy - u * 2.1, u * 3.8, 0, 7); ctx.fill(); ctx.restore();
+  drawPiPi(W / 2, sy, beatPh);
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 8; i++) {
+    const a = tt * 0.8 + i * 0.8, rr = u * (2.5 + 0.4 * Math.sin(tt * 2 + i)), x = W / 2 + Math.cos(a) * rr * 1.15, y = sy - u * 2.2 + Math.sin(a) * rr * 0.7, sz = u * (0.1 + 0.16 * Math.abs(Math.sin(tt * 3 + i * 1.3)));
+    ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.beginPath(); ctx.moveTo(x, y - sz * 1.6); ctx.lineTo(x + sz * 0.35, y); ctx.lineTo(x, y + sz * 1.6); ctx.lineTo(x - sz * 0.35, y); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - sz * 1.6, y); ctx.lineTo(x, y + sz * 0.35); ctx.lineTo(x + sz * 1.6, y); ctx.lineTo(x, y - sz * 0.35); ctx.fill();
+  }
+  ctx.restore();
+  if (pinkActive()) drawPinkDance();
+  for (let i = 0; i < 3; i++) {
+    const x0 = W * i / 3, col = LANE_COL[i], lg = ctx.createLinearGradient(0, topY(), 0, H);
+    lg.addColorStop(0, rgba(col, 0)); lg.addColorStop(0.75, rgba(col, 0.1 + pulse * 0.04 + (fever ? 0.05 : 0))); lg.addColorStop(1, rgba(col, 0.22 + pulse * 0.06));
+    ctx.fillStyle = lg; ctx.fillRect(x0 + 2, topY(), W / 3 - 4, H - topY());
+    ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x0, topY()); ctx.lineTo(x0, H); ctx.stroke();
+    if (flash[i] > 0) { const a = flash[i] / 0.15; ctx.save(); ctx.globalCompositeOperation = "lighter"; const fg2 = ctx.createRadialGradient(laneX(i), judgeY(), 0, laneX(i), judgeY(), u * 3); fg2.addColorStop(0, rgba(col, 0.7 * a)); fg2.addColorStop(1, rgba(col, 0)); ctx.fillStyle = fg2; ctx.fillRect(x0, judgeY() - u * 3, W / 3, u * 6); ctx.restore(); }
+  }
+  ctx.strokeStyle = `rgba(255,255,255,${0.2 + pulse * 0.15})`; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(0, judgeY()); ctx.lineTo(W, judgeY()); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,255,${0.75 + pulse * 0.25})`; ctx.lineWidth = 2.5; ctx.stroke();
+  for (let i = 0; i < 3; i++) {
+    const x = laneX(i), rr = u * 0.62 * (1 + pulse * 0.06), col = LANE_COL[i];
+    const rg = ctx.createRadialGradient(x, judgeY(), rr * 0.3, x, judgeY(), rr); rg.addColorStop(0, rgba(col, 0)); rg.addColorStop(1, rgba(col, 0.4)); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(x, judgeY(), rr, 0, 7); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.stroke(); ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, judgeY(), rr - 3.5, 0, 7); ctx.stroke();
+  }
+  if (notes && songT > -2) {
+    for (const n of notes) {
+      if (n.hit) continue;
+      const k = (n.t - songT) / approach();
+      if (k > 1.05 || k < -0.25) continue;
+      drawNote(laneX(n.lane), judgeY() - k * (judgeY() - topY()), LANE_COL[n.lane], n.miss ? 0.3 : 1, pulse);
+    }
+  }
+  drawParts();
+  SUG.drawFx();
+  if (fever) { ctx.save(); ctx.globalCompositeOperation = "lighter"; const vg = ctx.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.3, W / 2, H * 0.55, Math.max(W, H) * 0.75); vg.addColorStop(0, "rgba(255,60,170,0)"); vg.addColorStop(1, `rgba(255,60,170,${0.22 + pulse * 0.12})`); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  if (combo >= 10) { const cy = H * 0.5, g = ctx.createLinearGradient(0, cy - u, 0, cy + u * 0.3); g.addColorStop(0, "#fff7b0"); g.addColorStop(1, "#ff9d2e"); ctx.globalAlpha = 0.92; SUG.bigText(combo + " COMBO", W / 2, cy, 0.8 + pulse * 0.1, g); if (fever) SUG.bigText("FEVER!", W / 2, cy + u * 1.1, 0.55 + pulse * 0.05, "#ff7ad0"); ctx.globalAlpha = 1; }
+  ctx.restore();
+  if (speech) SUG.bubble(W / 2 + u * 1.8, H * 0.08, speech.txt);
+  if (SUG.phase === "play" && songT < INTRO * BEAT && songT > -0.3) {
+    const c = Math.ceil(INTRO - Math.max(0, songT) / BEAT);
+    SUG.bigText(c > 0 ? String(c) : "", W / 2, H * 0.55, 1.6, "#fff");
+  }
+}
+
+/* PiPi（仮の絵：マイクを持ったツインテールの女の子。ビートに合わせて動く） */
+function drawPiPi(x, y, ph) {
+  const s = u * 0.85, bob = Math.sin(ph * Math.PI * 2) * s * 0.08, sway = Math.sin((songT > 0 ? songT : 0) / BEAT * Math.PI) * 0.12;
+  if (SUG.imgOK("pipi")) {                                                    // 公式画像：イントロは立ち姿、曲が始まったら 踊る↔歌う を4拍ごとに切りかえ
+    const started = songT > INTRO * BEAT, bar = Math.floor(Math.max(0, songT) / BEAT / 4);
+    const key = !started ? "pipi" : (bar % 2 === 0 ? (SUG.imgOK("pipiDance") ? "pipiDance" : "pipi") : (SUG.imgOK("pipiSing") ? "pipiSing" : "pipi"));
+    SUG.drawImg(key, x, y + bob * (started ? 3 : 1), s * 4.9, sway * 0.3); return;
+  }
+  ctx.save(); ctx.translate(x, y + bob); ctx.rotate(sway * 0.3);
+  ctx.strokeStyle = "#ffd9b8"; ctx.lineWidth = s * 0.2; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(-s * 0.18, -s * 0.8); ctx.lineTo(-s * 0.3, 0); ctx.moveTo(s * 0.18, -s * 0.8); ctx.lineTo(s * 0.3, 0); ctx.stroke();
+  ctx.fillStyle = "#9b4dff"; ctx.beginPath(); ctx.moveTo(-s * 0.4, -s * 1.7); ctx.lineTo(s * 0.4, -s * 1.7); ctx.lineTo(s * 0.65, -s * 0.7); ctx.lineTo(-s * 0.65, -s * 0.7); ctx.fill();   // ワンピース
+  ctx.strokeStyle = "#ffd9b8"; ctx.lineWidth = s * 0.18;
+  ctx.beginPath(); ctx.moveTo(-s * 0.35, -s * 1.55); ctx.lineTo(-s * 0.75, -s * (1.9 + sway)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(s * 0.35, -s * 1.55); ctx.lineTo(s * 0.35, -s * 2.0); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.fillRect(s * 0.28, -s * 2.3, s * 0.14, s * 0.32); ctx.beginPath(); ctx.arc(s * 0.35, -s * 2.35, s * 0.12, 0, 7); ctx.fill();   // マイク
+  ctx.fillStyle = "#ffd9b8"; ctx.beginPath(); ctx.arc(0, -s * 2.15, s * 0.48, 0, 7); ctx.fill();
+  ctx.fillStyle = "#ff5fa2";                                                         // かみ（ツインテール）
+  ctx.beginPath(); ctx.arc(0, -s * 2.3, s * 0.5, Math.PI, 0); ctx.fill();
+  for (const d of [-1, 1]) { ctx.beginPath(); ctx.ellipse(d * s * 0.6, -s * 2.0 + Math.sin(ph * Math.PI * 2 + d) * s * 0.06, s * 0.2, s * 0.42, d * 0.3, 0, 7); ctx.fill(); }
+  ctx.fillStyle = "#333"; ctx.beginPath(); ctx.arc(-s * 0.16, -s * 2.12, s * 0.06, 0, 7); ctx.arc(s * 0.16, -s * 2.12, s * 0.06, 0, 7); ctx.fill();
+  ctx.fillStyle = "#e8418f"; ctx.beginPath(); ctx.arc(0, -s * 1.96, s * 0.1, 0, Math.PI); ctx.fill();
+  ctx.restore();
+  if (SUG.phase === "play" && songT > INTRO * BEAT) { ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.font = `800 ${u * 0.4}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("♪", x - u * 1.2 - ph * u * 0.3, y - u * 2.2 - ph * u * 0.5); }
+}
+
+/* ピンクマン乱入：曲と全然ちがうリズムで踊る */
+let pinkPose = 0, pinkNext = 0, pinkLines = null, lastPoko = 0;
+function drawPinkDance() {
+  const t = songT - pinkAt, dur = 8 * BEAT;
+  if (!pinkLines) pinkLines = [SUG.pick("pinkIn"), SUG.pick("pinkOut")];
+  if (performance.now() > pinkNext) {                               // ビートとずれた、変なタイミングでポーズが変わる
+    pinkPose = Math.floor(Math.random() * 4); pinkNext = performance.now() + 230 + Math.random() * 380;
+    if (performance.now() - lastPoko > 150 && SUG.phase === "play") { SUG.beep(200 + Math.random() * 500, 0.09, "square", 0.06, Math.random() * 300 - 150); lastPoko = performance.now(); }
+  }
+  const inK = Math.min(1, t / 0.5), outK = Math.max(0, (t - dur + 0.6) / 0.6);
+  const x = W * 0.78 + (1 - inK) * W * 0.4 + outK * W * 0.4, y = H * 0.27;
+  const poses = [
+    [[-0.9, -2.6], [0.9, -2.6]], [[-1.0, -1.0], [0.6, -2.7]], [[0.2, -2.8], [1.0, -1.2]], [[-0.8, -1.6], [0.8, -1.6]]
+  ];
+  SUG.drawPinkman(x, y, [0.15, -0.2, 0.25, 0][pinkPose], { hands: poses[pinkPose], legs: pinkPose, face: "happy", scale: 0.85 });
+  SUG.bubble(x - u * 0.5, y - u * 2.9, t < dur * 0.7 ? pinkLines[0] : pinkLines[1], 0.36);
+  if (t > dur - 0.1) pinkLines = null;
+}
+
+SUG.setup(config, game);
+</script>
+</body>
+</html>

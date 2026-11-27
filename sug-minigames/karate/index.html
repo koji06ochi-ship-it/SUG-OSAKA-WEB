@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>空手チャレンジ</title>
+</head>
+<body>
+<script src="../common/sug-common.js"></script>
+<script>
+/* ============================================================
+   ③ AOTO｜空手チャレンジ
+   左右から来る鬼を、来た側をタップして正拳突き。最後は連打で瓦割り。
+   ============================================================ */
+const FIGHT_TIME = 40, MAX_LIFE = 3, KAWARA_TIME = 4;     // 瓦割りの連打は4秒
+
+const config = {
+  gameId: "sug-03-karate",
+  title: "空手チャレンジ",
+  charName: "AOTO",
+  color: "#2456c9", colorDark: "#173b8f", colorSoft: "#eef3ff", bg: "#f3e2c4",
+  images: { aoto: "../img/aoto.png", aotoPunch: "../img/aoto_punch.png", aotoHurt: "../img/aoto_hurt.png", pinkman: "../img/pinkman.png", pinkmanSad: "../img/pinkman_sad.png", pinkmanSurprised: "../img/pinkman_surprised.png", pinkmanCheer: "../img/pinkman_cheer.png" },   // 公式画像（img フォルダに置くだけ。無ければ仮の絵）
+  howHtml: `左右から<b>鬼</b>がせめてくる！<br>
+    ・鬼が近づいたら、<b>来た側の画面</b>をタップして正拳突き<br>
+    ・ギリギリまで引きつけると <b>PERFECT</b>！<br>
+    ・空振りすると少しのあいだ動けない<br>
+    ・<b>PERFECT</b>で気合ゲージがたまる。いっぱいになったら、真ん中の<b>気合砲ボタン</b>で鬼を一気にふっとばせ！<br>
+    ・たまに<b>ピンクマン</b>が散歩で通りかかる。<b>なぐっちゃダメ</b>（減点）。ぶつからずに見送るとボーナス<br>
+    ・最後は<b>連打で瓦割り</b>！制限時間内なら、何枚でも割れる。1枚200点！`,
+  rule: D => `${MAX_LIFE}回やられたら失敗。瓦割りまでたえて${D.clear}点以上でクリア！`,
+  levels: {
+    easy:   { name: "かんたん",   note: "はじめての人", speed: 1.0,  spawn: 1.0,  tough: 0.08, fast: 0.05, taps: 3, clear: 11000, max: 16500 },
+    normal: { name: "ふつう",     note: "鬼が多め",     speed: 1.25, spawn: 0.85, tough: 0.2,  fast: 0.15, taps: 3, clear: 12500, max: 19000 },
+    hard:   { name: "むずかしい", note: "鬼の大群！",   speed: 1.5,  spawn: 0.7,  tough: 0.3,  fast: 0.25, taps: 3, clear: 15000, max: 22000 }
+  },
+  freeze: { min: 8, max: 26 },
+  lines: {
+    shout:  ["セイッ！", "ハッ！", "オスッ！", "トォッ！"],
+    combo:  ["絶好調！", "止まらへん！", "まだまだ！", "かかってこい！"],
+    hurt:   ["イタッ！", "やられた〜", "くっ…！"],
+    pinkIn: ["オレもやらせて！", "瓦割り？楽勝やろ", "見とけよ〜"],
+    pinkOw: ["いったぁぁ！", "手ぇ折れた…", "瓦かたすぎやろ！", "今日は調子悪いわ…"],
+    cameo:  ["ええ天気やな〜", "ちょっと通るで〜", "散歩中やねん", "なんか騒がしいなぁ", "鬼ごっこ？"],
+    cameoHit: ["なんでやねん！", "オレ関係ないやん！", "味方やで！？", "えぇぇぇ！？"],
+    kiai:   ["気合砲ーッ！", "どりゃあああ！", "ぶっとべーッ！"]
+  }
+};
+
+const KIAI_MAX = 10;
+let kawaraN = 10;
+let shakeT = 0, stopT = 0, flashT = 0, kiai = 0, cameoT = 10;
+let st, fightT, combo, maxCombo, life, enemies, spawnT, punchT, punchSide, whiffT, hurtT, defeated, kT, taps, broken, chopT, pinkT, speech, pinkL1, pinkL2;
+const groundY = () => H * 0.72;
+const aotoX = () => (st === "kawara" || st === "chop" || st === "pink") ? W / 2 - u * 1.6 : W / 2;
+
+/* ---------- 音（BGM と 効果音）。ゲームのルールには関係しない。すべて、その場で作っている音 ---------- */
+const sfx = (() => {
+  const A = () => (SUG.soundOn && SUG.actx) ? SUG.actx : null;
+  const env = (g, t, peak, dur) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); };
+  const osc = (type, f0, f1, dur, vol, when = 0) => { const a = A(); if (!a) return; const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur); env(g, t, vol, dur); o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.03); };
+  const noise = (dur, vol, type, freq, when = 0, q = 1) => { const a = A(); if (!a) return; const t = a.currentTime + when, n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n) ** 2; const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); f.type = type; f.frequency.value = freq; f.Q.value = q; s.buffer = buf; env(g, t, vol, dur); s.connect(f).connect(g).connect(a.destination); s.start(t); };
+  const don = (vol = 0.5, when = 0, f = 150) => { osc("sine", f, f * 0.4, 0.2, vol, when); noise(0.05, vol * 0.4, "lowpass", 700, when); };      // たいこ（ドン）
+  const ka = (vol = 0.25, when = 0) => { noise(0.06, vol, "bandpass", 2600, when, 3); osc("triangle", 520, 300, 0.05, vol * 0.5, when); };                  // たいこのふち（カッ）
+  const gong = () => { osc("sine", 196, 190, 1.3, 0.34); osc("sine", 392, 388, 1.1, 0.16); osc("sine", 587, 580, 0.9, 0.09); noise(0.3, 0.18, "bandpass", 3500, 0, 3); };
+  const crack = (when = 0) => { noise(0.06, 0.34, "highpass", 1800, when); osc("square", 700 + Math.random() * 300, 200, 0.06, 0.16, when); };         // 木がわれる音
+  return {
+    don, ka, gong, crack,
+    hit(perfect) { osc("sine", 180, 45, 0.22, 0.7); noise(0.12, 0.45, "highpass", 900); osc("triangle", perfect ? 1200 : 900, 400, 0.08, 0.14); if (Math.random() < 0.6) this.shout(); },
+    shout() { osc("square", 420, 280, 0.1, 0.05); noise(0.09, 0.14, "bandpass", 1500, 0, 2); },                                                           // 気合の声のような音（ハッ）
+    clink() { osc("square", 1450, 1400, 0.07, 0.12); osc("square", 2100, 2000, 0.06, 0.08); noise(0.05, 0.2, "highpass", 3000); },                      // かたい鬼（ガキン）
+    whiff() { noise(0.13, 0.2, "bandpass", 1800, 0, 2); },
+    hurt() { osc("sawtooth", 200, 55, 0.3, 0.32); noise(0.2, 0.4, "lowpass", 900); osc("sine", 90, 40, 0.35, 0.6); },
+    chime() { [1046, 1318, 1568].forEach((f, i) => osc("sine", f, f, 0.25, 0.14, i * 0.08)); },
+    blast() { for (let i = 0; i < 7; i++) don(0.45, i * 0.05, 120 + i * 12); noise(0.6, 0.5, "lowpass", 1200); osc("sawtooth", 90, 30, 0.8, 0.3); gong(); },
+    bigCrack(n) { for (let i = 0; i < Math.min(n, 14); i++) crack(i * 0.035); osc("sine", 80, 35, 0.4, 0.6); },
+    boing() { osc("sine", 300, 900, 0.12, 0.3); osc("sine", 900, 200, 0.3, 0.3, 0.12); },
+    kazoo() { osc("sawtooth", 392, 392, 0.12, 0.1); osc("sawtooth", 523, 523, 0.2, 0.1, 0.14); },
+    ding() { osc("sine", 1318, 1318, 0.4, 0.25); osc("sine", 1568, 1568, 0.5, 0.2, 0.1); }
+  };
+})();
+const bgm = (() => {
+  const SC = { D4: 293.66, Eb4: 311.13, G4: 392, A4: 440, Bb4: 466.16, D5: 587.33 };       // 和風の音階
+  const DON = [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0], KA = [0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0];
+  const MEL = [SC.D5, 0, SC.Bb4, SC.A4, SC.G4, 0, SC.A4, SC.Bb4, SC.D5, 0, SC.Bb4, SC.A4, SC.G4, SC.Eb4, SC.D4, 0];
+  const BASS = [73.4, 0, 0, 0, 55, 0, 0, 0, 73.4, 0, 0, 0, 55, 0, 65.4, 0];
+  const o = { next: 0, step: 0, on: false };
+  o.start = () => { const a = SUG.actx; o.on = true; o.step = 0; o.next = a ? a.currentTime + 0.15 : 0; };
+  o.tick = () => {
+    const a = (SUG.soundOn && SUG.actx) ? SUG.actx : null; if (!a || !o.on) return;
+    const S = 60 / 132 / 2;                                                                // 8分音符
+    if (o.next < a.currentTime - 0.1) o.next = a.currentTime + 0.05;                      // おくれたら追いつく
+    while (o.next < a.currentTime + 0.25) { play(o.step++, o.next - a.currentTime, S); o.next += S; }
+  };
+  function play(step, when, S) {
+    const i = step % 16, hot = typeof fightT === "number" && fightT / FIGHT_TIME > 0.5;
+    if (st === "kawara") { sfx.don(0.3, when, 130 + (i % 4) * 14); sfx.don(0.22, when + S / 2, 150); if (i % 2 === 0) sfx.ka(0.2, when); return; }     // 瓦割りは、たいこのれんだ
+    if (DON[i]) sfx.don(0.34, when);
+    if (KA[i]) sfx.ka(hot ? 0.28 : 0.2, when);
+    if (MEL[i]) { const f = MEL[i]; sfxPluck(f, when, 0.1 + (hot ? 0.03 : 0)); if (hot && i % 4 === 2) sfxPluck(f * 2, when + S * 0.5, 0.05); }
+    if (BASS[i]) sfxOsc("triangle", BASS[i], 0.22, 0.2, when);
+    if (hot && i % 2 === 1) sfxNoise(0.05, 0.1, "highpass", 6500, when);
+  }
+  return o;
+})();
+function sfxOsc(type, f, dur, vol, when) { const a = SUG.actx; if (!a || !SUG.soundOn) return; const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.03); }
+function sfxPluck(f, when, vol) { sfxOsc("sawtooth", f, 0.22, vol * 0.6, when); sfxOsc("triangle", f * 2, 0.12, vol * 0.5, when); }                     // シャミセンのような、はじく音
+function sfxNoise(dur, vol, type, freq, when) { const a = SUG.actx; if (!a || !SUG.soundOn) return; const t = a.currentTime + when, n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); f.type = type; f.frequency.value = freq; s.buffer = buf; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f).connect(g).connect(a.destination); s.start(t); }
+
+const game = {
+  reset() {
+    st = "fight"; fightT = 0; combo = 0; maxCombo = 0; life = MAX_LIFE; enemies = []; spawnT = 0.8; punchT = 0; punchSide = 1; whiffT = 0; hurtT = 0;
+    kawaraN = 10; PARTS.length = 0; petalT = 0; shakeT = 0; stopT = 0; flashT = 0; kiai = 0; cameoT = 8 + Math.random() * 8;
+    defeated = 0; kT = 0; taps = 0; broken = 0; chopT = 0; pinkT = 0; speech = null; pinkL1 = SUG.pick("pinkIn"); pinkL2 = SUG.pick("pinkOw");
+  },
+  down(p) {
+    if (st === "fight" && kiai >= KIAI_MAX && p.y > H - u * 2.8 && Math.abs(p.x - W / 2) < u * 1.5) kiaiBlast();
+    else if (st === "fight") punch(p.side);
+    else if (st === "kawara") {
+      taps++; punchSide = 1; punchT = 0.08;
+      sfx.don(0.4, 0, 140 + Math.min(taps, 60) * 3);
+      if (taps % D.taps === 0) {                                          // 時間内に割れた1枚ごとに、その場で200点（枚数の上限なし）
+        SUG.score += 200; SUG.text(W / 2 + u * 1.2, groundY() - u * 4, (taps / D.taps) + "枚ぶん！ +200", "#e85d2a", 0.5, 0.6); SUG.beep(700 + Math.min(taps / D.taps, 30) * 40, 0.08, "square", 0.08); sfx.crack();
+      }
+    }
+  },
+  update(dt) {
+    punchT = Math.max(0, punchT - dt); whiffT = Math.max(0, whiffT - dt); hurtT = Math.max(0, hurtT - dt);
+    shakeT = Math.max(0, shakeT - dt); flashT = Math.max(0, flashT - dt);
+    updateParts(dt);                                                  // 見た目：光のつぶ・花びらを動かす
+    bgm.tick();                                                       // 音：BGMを進める
+    if (stopT > 0) { stopT -= dt; if (st === "fight") return; }      // ヒットストップ：ぶつかった一瞬だけ止まる
+    if (speech && (speech.t -= dt) <= 0) speech = null;
+    if (st === "fight") updateFight(dt);
+    else if (st === "kawara") { kT += dt; if (kT >= KAWARA_TIME) { st = "chop"; chopT = 0; broken = Math.floor(taps / D.taps); kawaraN = Math.max(10, broken); } }
+    else if (st === "chop") updateChop(dt);
+    else if (st === "pink") { pinkT += dt; if (pinkT > 1.45 && pinkT - dt <= 1.45) { SUG.noise(0.25, 0.35); SUG.beep(120, 0.3, "square", 0.15, -60); sfx.crack(); sfx.boing(); } if (pinkT > 3.6) end(); }
+    else if (st === "down") { chopT += dt; if (chopT > 1.4) end(); }
+    for (const en of enemies) if (en.dead) en.flyT += dt;
+    enemies = enemies.filter(en => !en.dead || en.flyT < 1.0);
+  },
+  started() { bgm.start(); },
+  idle() {},
+  canFreeze() { return st === "fight"; },
+  draw() { drawScene(); },
+  hud() { return { time: st === "fight" ? "⏱ " + Math.ceil(Math.max(0, FIGHT_TIME - fightT)) : "瓦割り", lives: "❤".repeat(Math.max(0, life)) + "♡".repeat(MAX_LIFE - Math.max(0, life)) }; }
+};
+
+function punch(side) {
+  if (whiffT > 0) return;
+  punchSide = side; punchT = 0.15;
+  const ax = aotoX(); let target = null, best = 1e9;
+  for (const en of enemies) { if (en.dead || en.side !== side) continue; const d = Math.abs(en.x - ax); if (d >= u * 1.8 && d <= u * 3.8 && d < best) { best = d; target = en; } }
+  if (!target) { whiffT = 0.35; combo = 0; SUG.text(ax + side * u * 1.6, groundY() - u * 2.2, "スカッ", "#999", 0.45, 0.5); SUG.beep(200, 0.08, "triangle", 0.06, -80); sfx.whiff(); return; }
+  if (target.pink) {                                              // 通りがかりのピンクマンを殴ってしまった
+    target.dead = true; target.flyT = 0; combo = 0; SUG.score = Math.max(0, SUG.score - 300);
+    SUG.noise(0.2, 0.3); SUG.beep(300, 0.2, "square", 0.1, -200); sfx.boing(); stopT = 0.08; shakeT = 0.2;
+    SUG.text(target.x, groundY() - u * 3.4, SUG.pick("cameoHit"), "#e8418f", 0.6, 1.1); SUG.text(target.x, groundY() - u * 2.7, "−300", "#d61f1f", 0.55, 1.0);
+    return;
+  }
+  const perfect = best < u * 2.6;
+  target.hp--; SUG.noise(0.12, 0.3); SUG.beep(perfect ? 880 : 660, 0.08, "square", 0.08);
+  if (target.hp > 0) sfx.clink(); else sfx.hit(perfect);
+  if (target.hp <= 0) {
+    target.dead = true; target.flyT = 0; defeated++; combo++; maxCombo = Math.max(maxCombo, combo);
+    const pts = (perfect ? 150 : 100) * (target.tough ? 2 : 1) + Math.min(combo, 20) * 10;
+    SUG.score += pts;
+    SUG.text(target.x, groundY() - u * 2.6, perfect ? "PERFECT!" : "GOOD", perfect ? "#e85d2a" : "#2456c9", 0.55, 0.6);
+    SUG.text(target.x, groundY() - u * 2.0, "+" + pts, "#2b2b3a", 0.4);
+    SUG.star(target.x, groundY() - u * 1.2); if (perfect) SUG.star(target.x + side * u * 0.5, groundY() - u * 1.8, "#fff", 0.25);
+    fxHit(target.x, groundY() - u * 1.7, perfect);
+    stopT = perfect ? 0.07 : 0.04; shakeT = perfect ? 0.22 : 0.12; if (perfect) flashT = 0.08;       // 手ごたえ（一瞬止まる・画面が揺れる）
+    const kBefore = kiai; kiai = Math.min(KIAI_MAX, kiai + (perfect ? 1 : 0.5));
+    if (kBefore < KIAI_MAX && kiai >= KIAI_MAX) { SUG.beep(1046, 0.15, "sine", 0.12, 300); sfx.chime(); SUG.text(W / 2, H - u * 3.4, "気合ゲージMAX！", "#e85d2a", 0.5, 1.0); }
+    if (combo > 0 && combo % 10 === 0) { speech = { txt: SUG.pick("combo"), t: 1.0 }; flashT = 0.2; shakeT = 0.3; SUG.text(W / 2, H * 0.32, combo + " COMBO！", "#e85d2a", 0.95, 1.1); sfx.gong(); SUG.beep(784, 0.1, "square", 0.08); SUG.beep(1046, 0.16, "square", 0.08, 0, SUG.actx ? SUG.actx.currentTime + 0.1 : 0); }
+    else if (Math.random() < 0.25) SUG.text(ax, groundY() - u * 3.6, SUG.pick("shout"), "#2b2b3a", 0.45, 0.5);
+  } else { target.x += side * u * 1.4; SUG.text(target.x, groundY() - u * 2.6, "かたい！", "#8a5a00", 0.45, 0.6); SUG.star(target.x, groundY() - u * 1.2, "#ffd23f", 0.3); fxHit(target.x, groundY() - u * 1.7, false); }
+}
+
+function kiaiBlast() {
+  kiai = 0; let n = 0, pts = 0;
+  for (const en of enemies) { if (en.dead) continue; en.dead = true; en.flyT = 0; if (!en.pink) { n++; pts += en.tough ? 200 : 100; defeated++; } }
+  SUG.score += pts; stopT = 0.14; shakeT = 0.5; flashT = 0.4; fxShock();
+  SUG.noise(0.5, 0.5); SUG.beep(110, 0.4, "sawtooth", 0.18, -60); SUG.beep(660, 0.25, "square", 0.08, 400); sfx.blast();
+  speech = { txt: SUG.pick("kiai"), t: 1.2 };
+  SUG.text(W / 2, H * 0.4, "気合砲！！", "#e85d2a", 1.1, 1.2); if (pts) SUG.text(W / 2, H * 0.4 + u * 1.0, `${n}体 +${pts}`, "#2b2b3a", 0.55, 1.2);
+  for (let i = 0; i < 6; i++) SUG.star(W * (0.1 + i * 0.16), groundY() - u * (1 + (i % 2)), i % 2 ? "#ffd23f" : "#fff", 0.45);
+}
+
+function updateFight(dt) {
+  fightT += dt; const prog = fightT / FIGHT_TIME;
+  spawnT -= dt;
+  if (spawnT <= 0) {
+    const side = Math.random() < 0.5 ? -1 : 1, r = Math.random(), tough = r < D.tough, fast = !tough && r < D.tough + D.fast;
+    enemies.push({ side, x: W / 2 + side * (W / 2 + u * 2), tough, fast, hp: tough ? 2 : 1, walk: Math.random() * 6, dead: false, color: fast ? "#4a7be0" : (tough ? "#8b3fb5" : "#e04a3f") });
+    spawnT = (Math.max(0.42, 1.0 - prog * 0.5) + Math.random() * 0.3) * D.spawn;
+  }
+  cameoT -= dt;
+  if (cameoT <= 0 && fightT > 4 && fightT < FIGHT_TIME - 6) {         // ピンクマンが散歩で通りかかる
+    const side = Math.random() < 0.5 ? -1 : 1;
+    enemies.push({ side, x: W / 2 + side * (W / 2 + u * 2), pink: true, hp: 1, walk: 0, dead: false, line: SUG.pick("cameo"), thanked: false }); sfx.kazoo();
+    cameoT = 12 + Math.random() * 8;
+  }
+  const ax = aotoX();
+  for (const en of enemies) {
+    if (en.dead) continue;
+    if (en.pink) {
+      en.walk += dt * 8; en.x -= en.side * u * 1.3 * D.speed * dt;
+      if (!en.thanked && Math.abs(en.x - ax) < u * 1.6) { en.thanked = true; SUG.score += 150; SUG.text(ax, groundY() - u * 4.2, "ナイス無視！ +150", "#e8418f", 0.5, 1.0); sfx.ding(); }
+      if (en.thanked && Math.abs(en.x - W / 2) > W / 2 + u * 2.4) { en.dead = true; en.flyT = 1; }
+      continue;
+    }
+    en.walk += dt * (en.fast ? 14 : 9);
+    en.x -= en.side * u * 2.4 * (1 + prog * 0.5) * D.speed * (en.fast ? 1.6 : 1) * (en.tough ? 0.8 : 1) * dt;
+    if (Math.abs(en.x - ax) < u * 1.6) {
+      en.dead = true; en.flyT = 0.5; en.x = ax + en.side * u * 1.6;
+      if (hurtT <= 0) {
+        life--; hurtT = 0.8; combo = 0; SUG.noise(0.2, 0.3); SUG.beep(160, 0.25, "sawtooth", 0.1, -60); sfx.hurt();
+        speech = { txt: SUG.pick("hurt"), t: 0.9 };
+        SUG.text(ax, groundY() - u * 3.3, "ドカッ！", "#d33", 0.6);
+        if (life <= 0) { st = "down"; chopT = 0; bgm.on = false; return; }
+      }
+    }
+  }
+  if (fightT >= FIGHT_TIME) {
+    st = "kawara"; kT = 0; taps = 0;
+    for (const en of enemies) if (!en.dead) { en.dead = true; en.flyT = 0; }
+    SUG.beep(523, 0.12); setTimeout(() => SUG.beep(659, 0.12), 120); setTimeout(() => SUG.beep(784, 0.2), 240);
+  }
+}
+function updateChop(dt) {
+  const before = chopT; chopT += dt;
+  if (before < 0.5 && chopT >= 0.5) {
+    if (broken > 0) { SUG.noise(0.35, 0.4); SUG.beep(90, 0.3, "square", 0.15, -40); sfx.bigCrack(broken); } else SUG.beep(150, 0.2, "square", 0.1);
+    SUG.text(W / 2 + u * 1.2, groundY() - u * 4.4, broken >= 10 ? broken + "枚！！すごい！" : broken + "枚！", "#e85d2a", 0.9, 1.3);        // 点数は、割れたときにもう入っている
+    if (broken) SUG.text(W / 2 + u * 1.2, groundY() - u * 3.4, "瓦 合計 +" + broken * 200, "#2b2b3a", 0.5, 1.3);
+  }
+  if (chopT > 2.0) { st = "pink"; pinkT = 0; }
+}
+function end() {
+  const clear = life > 0 && SUG.score >= D.clear;
+  SUG.finish(clear, clear ? "クリア！" : (life <= 0 ? "KO…" : "おしい！"), `ランク ${SUG.rank(SUG.score, D.max, [0.8, 0.6, 0.4])}　たおした鬼 ${defeated}　最大コンボ ${maxCombo}　瓦 ${broken}枚`);
+}
+
+/* ---------- 描画 ---------- */
+function drawScene() {
+  ctx.save();
+  if (shakeT > 0) { const k = Math.min(1, shakeT * 5) * u * 0.35; ctx.translate((Math.random() - 0.5) * k * 2, (Math.random() - 0.5) * k * 2); }
+  drawDojo(); drawShadows();
+  if (st === "kawara" || st === "chop" || st === "pink") drawKawara();
+  for (const en of enemies) drawOni(en);
+  if (st === "down") drawAoto({ down: Math.min(1, chopT / 0.5) }); else if (st === "chop") drawAoto({ chop: chopT }); else drawAoto({});
+  if (st === "pink") drawPinkGag();
+  SUG.drawFx();
+  if (speech) SUG.bubble(aotoX() + u * 1.4, groundY() - u * 3.9, speech.txt);
+  drawParts();
+  ctx.restore();
+  drawVignette();
+  if (flashT > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(0.7, flashT * 2.2)})`; ctx.fillRect(0, 0, W, H); }
+  if (st === "fight") { drawGuides(); drawKiai(); }
+  if (st === "kawara") drawKawaraUI();
+}
+function drawKiai() {
+  const cx = W / 2, cy = H - Math.max(u * 1.2, 40), ready = kiai >= KIAI_MAX;
+  if (ready) {
+    const pulse = 1 + Math.sin(performance.now() / 90) * 0.08;
+    ctx.fillStyle = "#e85d2a"; ctx.beginPath(); ctx.arc(cx, cy, u * 0.95 * pulse, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = `900 ${u * 0.34}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("気合砲", cx, cy - u * 0.12); ctx.fillText("タップ！", cx, cy + u * 0.26); ctx.textBaseline = "alphabetic";
+  } else {
+    const w = u * 3.6, x0 = cx - w / 2;
+    ctx.fillStyle = "rgba(255,255,255,.75)"; SUG.roundRect(x0 - 4, cy - 14, w + 8, 28, 14); ctx.fill();
+    ctx.fillStyle = "#e85d2a"; SUG.roundRect(x0, cy - 10, Math.max(12, w * kiai / KIAI_MAX), 20, 10); ctx.fill();
+    ctx.fillStyle = "#2b2b3a"; ctx.font = "800 11px sans-serif"; ctx.textAlign = "center"; ctx.fillText("気合", cx, cy + 4);
+  }
+}
+/* ---------- 見た目の部品（ゲームのルールには関係しない） ---------- */
+const PARTS = [];                                                             // 光のつぶ・輪・集中線・さくらの花びら
+let petalT = 0;
+const rnd = (a, b) => a + Math.random() * (b - a);
+function fxHit(x, y, strong) {                                                 // 突きがきまったときの、はじける光
+  PARTS.push({ t: "ring", x, y, vx: 0, vy: 0, g: 0, life: 0.38, max: 0.38, col: strong ? "255,255,255" : "255,220,140", size: 0.7 });
+  for (let i = 0; i < (strong ? 16 : 9); i++) { const a = rnd(0, 6.28), v = rnd(2.5, 6) * u; PARTS.push({ t: "dot", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - u, g: 7 * u, life: rnd(0.3, 0.65), max: 0.65, col: i % 3 ? "255,190,70" : "255,255,255", size: rnd(0.1, 0.22) }); }
+  for (let i = 0; i < (strong ? 12 : 7); i++) PARTS.push({ t: "ray", x, y, vx: 0, vy: 0, g: 0, life: 0.26, max: 0.26, a: rnd(0, 6.28), len: rnd(1.2, 2.4) * u, col: "255,244,190" });
+}
+function fxShock() {                                                           // 気合砲：画面いっぱいの衝撃
+  const cx = W / 2, cy = groundY() - u * 1.8;
+  for (let i = 0; i < 3; i++) PARTS.push({ t: "ring", x: cx, y: cy, vx: 0, vy: 0, g: 0, life: 0.5 + i * 0.15, max: 0.5 + i * 0.15, col: i % 2 ? "255,200,90" : "255,255,255", size: 0.8 + i * 0.5 });
+  for (let i = 0; i < 28; i++) PARTS.push({ t: "ray", x: cx, y: cy, vx: 0, vy: 0, g: 0, life: 0.4, max: 0.4, a: (i / 28) * 6.28 + rnd(-0.1, 0.1), len: rnd(3, 7) * u, col: "255,236,160" });
+  for (let i = 0; i < 46; i++) { const a = rnd(0, 6.28), v = rnd(3, 9) * u; PARTS.push({ t: "dot", x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2 * u, g: 6 * u, life: rnd(0.5, 1.1), max: 1.1, col: i % 2 ? "255,170,60" : "255,160,200", size: rnd(0.12, 0.28) }); }
+}
+function updateParts(dt) {
+  petalT -= dt;
+  if (petalT <= 0) { petalT = rnd(0.25, 0.6); PARTS.push({ t: "petal", x: rnd(-0.1, 1.1) * W, y: -u, vx: rnd(-1.4, -0.2) * u, vy: rnd(1, 2.2) * u, g: 0, life: 7, max: 7, rot: rnd(0, 6), vr: rnd(-2, 2), size: rnd(0.14, 0.26), ph: rnd(0, 6) }); }
+  for (const p of PARTS) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; if (p.t === "petal") { p.rot += p.vr * dt; p.x += Math.sin(p.life * 2 + p.ph) * u * 0.5 * dt; } }
+  for (let i = PARTS.length - 1; i >= 0; i--) if (PARTS[i].life <= 0 || PARTS[i].y > H + u * 2) PARTS.splice(i, 1);
+  if (PARTS.length > 260) PARTS.splice(0, PARTS.length - 260);
+}
+function drawParts() {
+  ctx.save();
+  for (const p of PARTS) {
+    const k = Math.max(0, p.life / p.max);
+    if (p.t === "petal") {
+      ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 0.85;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.abs(Math.cos(p.rot * 1.3)) * 0.7 + 0.3);
+      ctx.fillStyle = "#ffb3cf"; ctx.beginPath(); ctx.ellipse(0, 0, u * p.size, u * p.size * 0.6, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.beginPath(); ctx.ellipse(-u * p.size * 0.25, -u * p.size * 0.15, u * p.size * 0.4, u * p.size * 0.18, 0, 0, 7); ctx.fill(); ctx.restore(); ctx.globalAlpha = 1;
+    } else if (p.t === "dot") {
+      ctx.globalCompositeOperation = "lighter"; const r = u * p.size * (0.6 + k);
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.2); g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(0.35, `rgba(${p.col},${k * 0.85})`); g.addColorStop(1, `rgba(${p.col},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 2.2, 0, 7); ctx.fill();
+    } else if (p.t === "ring") {
+      ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = `rgba(${p.col},${k * 0.9})`; ctx.lineWidth = 3 + k * 5; ctx.beginPath(); ctx.arc(p.x, p.y, u * (p.size + (1 - k) * 2.6), 0, 7); ctx.stroke();
+    } else if (p.t === "ray") {
+      ctx.globalCompositeOperation = "lighter"; const r0 = (1 - k) * p.len * 0.5 + u * 0.3, r1 = r0 + p.len * (0.35 + (1 - k) * 0.5);
+      ctx.strokeStyle = `rgba(${p.col},${k})`; ctx.lineWidth = 2 + k * 4; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(p.x + Math.cos(p.a) * r0, p.y + Math.sin(p.a) * r0); ctx.lineTo(p.x + Math.cos(p.a) * r1, p.y + Math.sin(p.a) * r1); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function drawShadows() {                                                       // キャラクターの足もとの、やわらかいかげ
+  const gy = groundY(); ctx.save(); ctx.fillStyle = "rgba(60,25,5,.32)";
+  const sh = (x, w) => { ctx.beginPath(); ctx.ellipse(x, gy + u * 0.12, w, w * 0.2, 0, 0, 7); ctx.fill(); };
+  if (st !== "down") sh(aotoX(), u * 1.5);
+  for (const en of enemies) if (!en.dead) sh(en.x, u * (en.pink ? 1.2 : (en.tough ? 1.5 : 1.15)));
+  ctx.restore();
+}
+function drawVignette() {                                                      // 画面のふちを暗く（ダメージのときは赤く）
+  const g = ctx.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.45, W / 2, H * 0.5, Math.max(W, H) * 0.8);
+  g.addColorStop(0, "rgba(40,10,0,0)"); g.addColorStop(1, "rgba(40,10,0,.34)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (hurtT > 0) { const a = Math.min(1, hurtT / 0.8), r = ctx.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.3, W / 2, H * 0.5, Math.max(W, H) * 0.75); r.addColorStop(0, "rgba(255,30,30,0)"); r.addColorStop(1, `rgba(255,30,30,${0.45 * a})`); ctx.fillStyle = r; ctx.fillRect(0, 0, W, H); }
+}
+function drawLantern(x, y, sway) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(sway);
+  ctx.strokeStyle = "#5b3a1e"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -y - 10); ctx.lineTo(0, 0); ctx.stroke();
+  ctx.globalCompositeOperation = "lighter"; const gl = ctx.createRadialGradient(0, u * 0.7, u * 0.3, 0, u * 0.7, u * 2.6); gl.addColorStop(0, "rgba(255,150,70,.45)"); gl.addColorStop(1, "rgba(255,150,70,0)"); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, u * 0.7, u * 2.6, 0, 7); ctx.fill(); ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#3b2312"; SUG.roundRect(-u * 0.32, 0, u * 0.64, u * 0.18, u * 0.06); ctx.fill();
+  const bg = ctx.createRadialGradient(-u * 0.2, u * 0.55, u * 0.1, 0, u * 0.75, u * 0.85); bg.addColorStop(0, "#ffb08a"); bg.addColorStop(0.45, "#f0452f"); bg.addColorStop(1, "#a51a14");
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(0, u * 0.78, u * 0.62, u * 0.78, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = "rgba(90,10,5,.4)"; ctx.lineWidth = 2; for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.ellipse(0, u * 0.78, u * 0.62 * Math.abs(k) * 0.9 + 1, u * 0.78, 0, 0, 7); ctx.stroke(); }
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.ellipse(-u * 0.25, u * 0.5, u * 0.14, u * 0.3, -0.3, 0, 7); ctx.fill();
+  ctx.fillStyle = "#3b2312"; SUG.roundRect(-u * 0.32, u * 1.5, u * 0.64, u * 0.18, u * 0.06); ctx.fill();
+  ctx.strokeStyle = "#e0a93b"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, u * 1.68); ctx.lineTo(0, u * 2.1); ctx.stroke();
+  ctx.restore();
+}
+function drawDojo() {
+  const gy = groundY(), tt = performance.now() / 1000;
+  const wg = ctx.createLinearGradient(0, 0, 0, gy); wg.addColorStop(0, "#ffe9c6"); wg.addColorStop(0.55, "#ffd7a2"); wg.addColorStop(1, "#e8a46a");
+  ctx.fillStyle = wg; ctx.fillRect(-20, -20, W + 40, gy + 20);
+  // しょうじ（あかりがすけた、紙のとびら）
+  const dw = W / 3;
+  for (let i = 0; i < 3; i++) {
+    const x0 = i * dw + u * 0.25, w = dw - u * 0.5, y0 = H * 0.05, h = gy - y0 - u * 0.5;
+    const sg = ctx.createLinearGradient(0, y0, 0, y0 + h); sg.addColorStop(0, "#fff8e6"); sg.addColorStop(1, "#ffe3b0");
+    ctx.fillStyle = sg; SUG.roundRect(x0, y0, w, h, u * 0.14); ctx.fill();
+    ctx.strokeStyle = "rgba(150,90,40,.75)"; ctx.lineWidth = u * 0.05;
+    for (let k = 1; k < 3; k++) { ctx.beginPath(); ctx.moveTo(x0 + w * k / 3, y0); ctx.lineTo(x0 + w * k / 3, y0 + h); ctx.stroke(); }
+    for (let k = 1; k < 6; k++) { ctx.beginPath(); ctx.moveTo(x0, y0 + h * k / 6); ctx.lineTo(x0 + w, y0 + h * k / 6); ctx.stroke(); }
+    ctx.strokeStyle = "#8a5226"; ctx.lineWidth = u * 0.14; SUG.roundRect(x0, y0, w, h, u * 0.14); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,230,180,.7)"; ctx.lineWidth = 2; SUG.roundRect(x0 + u * 0.1, y0 + u * 0.1, w - u * 0.2, h - u * 0.2, u * 0.1); ctx.stroke();
+  }
+  // 窓からさしこむ光
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 3; i++) { const g = ctx.createLinearGradient(0, 0, W * 0.3, gy); g.addColorStop(0, "rgba(255,230,170,.2)"); g.addColorStop(1, "rgba(255,230,170,0)"); ctx.fillStyle = g; ctx.beginPath(); const bx = i * W * 0.36 - W * 0.05; ctx.moveTo(bx, 0); ctx.lineTo(bx + W * 0.18, 0); ctx.lineTo(bx + W * 0.42, gy); ctx.lineTo(bx + W * 0.14, gy); ctx.fill(); }
+  ctx.restore();
+  // 板の間のはしら（木のおび）
+  const bm = ctx.createLinearGradient(0, gy - u * 0.5, 0, gy); bm.addColorStop(0, "#b87638"); bm.addColorStop(1, "#7a4a22"); ctx.fillStyle = bm; ctx.fillRect(0, gy - u * 0.5, W, u * 0.5);
+  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(0, gy - u * 0.5, W, 2);
+  // ちょうちん
+  drawLantern(W * 0.1, H * 0.035, Math.sin(tt * 1.3) * 0.05); drawLantern(W * 0.9, H * 0.035, Math.sin(tt * 1.3 + 1.5) * 0.05);
+  // かけじく（金のふちどり、つやのある紙）
+  const kx = W / 2, ky = H * 0.1, kw = u * 2.1, kh = u * 3.5;
+  ctx.fillStyle = "rgba(60,25,5,.28)"; SUG.roundRect(kx - kw / 2 + u * 0.12, ky + u * 0.15, kw, kh, u * 0.1); ctx.fill();
+  const kg = ctx.createLinearGradient(kx - kw / 2, 0, kx + kw / 2, 0); kg.addColorStop(0, "#fff3d6"); kg.addColorStop(0.5, "#fffdf3"); kg.addColorStop(1, "#f6e2b4");
+  ctx.fillStyle = "#c79a2e"; SUG.roundRect(kx - kw / 2 - u * 0.12, ky - u * 0.05, kw + u * 0.24, kh + u * 0.1, u * 0.08); ctx.fill();
+  ctx.fillStyle = kg; SUG.roundRect(kx - kw / 2, ky, kw, kh, u * 0.05); ctx.fill();
+  ctx.fillStyle = "#5b3a1e"; SUG.roundRect(kx - kw / 2 - u * 0.2, ky - u * 0.22, kw + u * 0.4, u * 0.2, u * 0.1); ctx.fill(); SUG.roundRect(kx - kw / 2 - u * 0.2, ky + kh + u * 0.02, kw + u * 0.4, u * 0.2, u * 0.1); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(kx - kw / 2 + u * 0.1, ky + u * 0.05, u * 0.12, kh - u * 0.1);
+  ctx.fillStyle = "#1d1d1d"; ctx.font = `900 ${u * 1.1}px serif`; ctx.textAlign = "center"; ctx.fillText("空", kx, ky + u * 1.5); ctx.fillText("手", kx, ky + u * 2.8);
+  // 床：つやのある板
+  const fg = ctx.createLinearGradient(0, gy, 0, H); fg.addColorStop(0, "#e0a05e"); fg.addColorStop(0.5, "#b87838"); fg.addColorStop(1, "#7b4a22"); ctx.fillStyle = fg; ctx.fillRect(0, gy, W, H - gy);
+  ctx.strokeStyle = "rgba(70,36,12,.35)"; ctx.lineWidth = 2;
+  for (let k = -8; k <= 8; k++) { ctx.beginPath(); ctx.moveTo(W / 2 + k * u * 0.55, gy); ctx.lineTo(W / 2 + k * u * 2.8, H); ctx.stroke(); }
+  for (let r = 1; r <= 5; r++) { const y = gy + (H - gy) * Math.pow(r / 5, 1.7); ctx.strokeStyle = `rgba(70,36,12,${0.12 + r * 0.04})`; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  const rg = ctx.createRadialGradient(W / 2, gy + u * 1.4, 0, W / 2, gy + u * 1.4, W * 0.62); rg.addColorStop(0, "rgba(255,238,200,.4)"); rg.addColorStop(1, "rgba(255,238,200,0)");
+  ctx.fillStyle = rg; ctx.beginPath(); ctx.ellipse(W / 2, gy + u * 1.4, W * 0.62, u * 1.5, 0, 0, 7); ctx.fill(); ctx.restore();
+  ctx.fillStyle = "rgba(255,255,255,.4)"; ctx.fillRect(0, gy, W, 2);
+}
+
+function drawGuides() {
+  const gy = groundY(), ax = aotoX();
+  for (const s of [-1, 1]) {
+    ctx.fillStyle = "rgba(232,93,42,.18)"; ctx.fillRect(ax + s * u * 1.8 - (s < 0 ? u * 0.8 : 0), gy + u * 0.1, u * 0.8, u * 0.25);
+    ctx.fillStyle = "rgba(36,86,201,.15)"; ctx.fillRect(ax + s * u * 2.6 - (s < 0 ? u * 1.2 : 0), gy + u * 0.1, u * 1.2, u * 0.25);
+  }
+  const y = H - Math.max(u * 1.2, 40);
+  for (const [s, x] of [[-1, W * 0.18], [1, W * 0.82]]) {
+    ctx.globalAlpha = (punchT > 0 && punchSide === s) ? 0.9 : 0.4; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, u * 0.75, 0, 7); ctx.fill();
+    ctx.fillStyle = "#2456c9"; ctx.font = `900 ${u * 0.5}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(s < 0 ? "◀突き" : "突き▶", x, y); ctx.textBaseline = "alphabetic";
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* AOTO（仮の絵：空手着の男の子。公式画像があればそちらを使う） */
+function drawAoto(o) {
+  const x = aotoX(), y = groundY(), s = u;
+  // 公式画像：やられた→aotoHurt／突くとき→aotoPunch／ふだん→aoto（無ければ、突きのかまえ）
+  const ok = SUG.imgOK, key = (o.down || hurtT > 0) && ok("aotoHurt") ? "aotoHurt"
+    : (punchT > 0 || o.chop !== undefined) && ok("aotoPunch") ? "aotoPunch" : ok("aoto") ? "aoto" : ok("aotoPunch") ? "aotoPunch" : ok("aotoHurt") ? "aotoHurt" : null;
+  if (key) {
+    ctx.save(); if (hurtT > 0 && Math.floor(hurtT * 20) % 2) ctx.globalAlpha = 0.6;
+    const flip = key === "aotoHurt" ? 1 : (punchSide < 0 ? -1 : 1), lunge = punchT > 0 ? flip * s * 0.35 : 0, bob = Math.sin(performance.now() / 180) * s * 0.04;
+    SUG.drawImg(key, x + lunge, y + bob, s * (key === "aotoHurt" ? 3.7 : 4.0), o.down ? -o.down * 1.2 : 0, flip);
+    ctx.restore(); return;
+  }
+  ctx.save(); ctx.translate(x, y);
+  if (o.down) { ctx.rotate(-o.down * 1.4); ctx.translate(0, -o.down * s * 0.3); }
+  if (hurtT > 0 && Math.floor(hurtT * 20) % 2) ctx.globalAlpha = 0.4;
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = s * 0.36; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(-s * 0.15, -s * 1.0); ctx.lineTo(-s * 0.55, 0); ctx.moveTo(s * 0.15, -s * 1.0); ctx.lineTo(s * 0.55, 0); ctx.stroke();
+  ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-s * 0.15, -s * 1.0); ctx.lineTo(-s * 0.55, 0); ctx.moveTo(s * 0.15, -s * 1.0); ctx.lineTo(s * 0.55, 0); ctx.stroke();
+  ctx.fillStyle = "#ffd9b8"; ctx.beginPath(); ctx.ellipse(-s * 0.6, 0, s * 0.18, s * 0.08, 0, 0, 7); ctx.ellipse(s * 0.6, 0, s * 0.18, s * 0.08, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#fff"; SUG.roundRect(-s * 0.5, -s * 2.1, s * 1.0, s * 1.2, s * 0.25); ctx.fill(); ctx.strokeStyle = "#ccc"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-s * 0.3, -s * 2.05); ctx.lineTo(s * 0.05, -s * 1.4); ctx.moveTo(s * 0.3, -s * 2.05); ctx.lineTo(-s * 0.05, -s * 1.4); ctx.stroke();
+  ctx.fillStyle = "#1d1d1d"; ctx.fillRect(-s * 0.52, -s * 1.15, s * 1.04, s * 0.17); ctx.fillRect(s * 0.1, -s * 1.05, s * 0.12, s * 0.35); ctx.fillRect(-s * 0.05, -s * 1.05, s * 0.12, s * 0.3);
+  const arm = (side, punching, chopUp) => {
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = s * 0.28; ctx.beginPath(); ctx.moveTo(side * s * 0.4, -s * 1.9);
+    let hx, hy;
+    if (chopUp !== undefined) { hx = side * s * 0.6 + s * 0.9 * Math.cos(chopUp); hy = -s * 1.9 - s * 0.9 * Math.sin(chopUp); }
+    else if (punching) { hx = side * s * 1.5; hy = -s * 1.85; } else { hx = side * s * 0.55; hy = -s * 2.25; }
+    ctx.lineTo(hx, hy); ctx.stroke(); ctx.fillStyle = "#ffd9b8"; ctx.beginPath(); ctx.arc(hx, hy, s * 0.17, 0, 7); ctx.fill();
+  };
+  if (o.chop !== undefined) { const t = o.chop, a = t < 0.35 ? 1.4 : (t < 0.5 ? 1.4 - (t - 0.35) / 0.15 * 1.9 : -0.5); arm(-1, false); arm(1, false, a); }
+  else { arm(-1, punchT > 0 && punchSide === -1); arm(1, punchT > 0 && punchSide === 1); }
+  ctx.fillStyle = "#ffd9b8"; ctx.beginPath(); ctx.arc(0, -s * 2.55, s * 0.48, 0, 7); ctx.fill();
+  ctx.fillStyle = "#222"; ctx.beginPath();
+  for (let i = 0; i <= 10; i++) { const a = Math.PI + i / 10 * Math.PI, r = s * (i % 2 ? 0.66 : 0.5); ctx.lineTo(Math.cos(a) * r, -s * 2.6 + Math.sin(a) * r * 0.95); }
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#e33"; ctx.fillRect(-s * 0.5, -s * 2.78, s * 1.0, s * 0.11);
+  ctx.fillStyle = "#222";
+  if (o.down) { ctx.font = `900 ${s * 0.3}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("× ×", 0, -s * 2.45); }
+  else { ctx.beginPath(); ctx.arc(-s * 0.17, -s * 2.5, s * 0.06, 0, 7); ctx.arc(s * 0.17, -s * 2.5, s * 0.06, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#222"; ctx.lineWidth = s * 0.06; ctx.beginPath(); ctx.moveTo(-s * 0.3, -s * 2.66); ctx.lineTo(-s * 0.08, -s * 2.6); ctx.moveTo(s * 0.3, -s * 2.66); ctx.lineTo(s * 0.08, -s * 2.6); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* 鬼（オリジナルのちび鬼） */
+function drawOni(en) {
+  const gy = groundY(), s = u * 1.5 * (en.tough ? 1.25 : 1);
+  let x = en.x, y = gy, a = 0;
+  if (en.dead) { const t = en.flyT; x += en.side * u * 6 * t; y -= u * 5 * t - u * 4 * t * t; a = en.side * t * 12; ctx.globalAlpha = Math.max(0, 1 - t); }
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+  if (en.pink) {                                                   // 通りがかりのピンクマン（なぐらない）
+    SUG.drawPinkman(0, 0, 0, { scale: 1.5, legs: en.walk, face: en.dead ? "sad" : "happy", hands: [[-0.8, -1.0 + Math.sin(en.walk) * 0.15], [0.8, -1.0 - Math.sin(en.walk) * 0.15]] });
+    ctx.restore(); ctx.globalAlpha = 1;
+    if (!en.dead) SUG.bubble(en.x, gy - u * 4.6, en.line, 0.34);
+    return;
+  }
+  const step = Math.sin(en.walk) * s * 0.12;
+  ctx.fillStyle = "#3a2a1a"; ctx.fillRect(-s * 0.35, -s * 0.35 + Math.max(0, step), s * 0.22, s * 0.35); ctx.fillRect(s * 0.13, -s * 0.35 + Math.max(0, -step), s * 0.22, s * 0.35);
+  ctx.fillStyle = en.color; ctx.beginPath(); ctx.ellipse(0, -s * 0.9, s * 0.6, s * 0.65, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#f5d33a"; ctx.fillRect(-s * 0.55, -s * 0.55, s * 1.1, s * 0.22);
+  ctx.fillStyle = "#222"; for (let i = 0; i < 4; i++) ctx.fillRect(-s * 0.45 + i * s * 0.28, -s * 0.55, s * 0.08, s * 0.22);
+  ctx.fillStyle = "#fff6d8"; ctx.beginPath(); ctx.moveTo(-s * 0.35, -s * 1.45); ctx.lineTo(-s * 0.22, -s * 1.85); ctx.lineTo(-s * 0.1, -s * 1.45); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(s * 0.1, -s * 1.45); ctx.lineTo(s * 0.22, -s * 1.85); ctx.lineTo(s * 0.35, -s * 1.45); ctx.fill();
+  if (en.tough) { ctx.fillStyle = "#c9a227"; ctx.beginPath(); ctx.arc(0, -s * 1.2, s * 0.5, Math.PI, 0); ctx.fill(); }
+  const f = -en.side;
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(f * s * 0.12 - s * 0.15, -s * 1.0, s * 0.13, 0, 7); ctx.arc(f * s * 0.12 + s * 0.15, -s * 1.0, s * 0.13, 0, 7); ctx.fill();
+  ctx.fillStyle = "#222";
+  if (en.dead) { ctx.font = `900 ${s * 0.22}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("@ @", f * s * 0.12, -s * 0.94); }
+  else { ctx.beginPath(); ctx.arc(f * s * 0.17 - s * 0.15, -s * 1.0, s * 0.06, 0, 7); ctx.arc(f * s * 0.17 + s * 0.15, -s * 1.0, s * 0.06, 0, 7); ctx.fill();
+    ctx.lineWidth = s * 0.06; ctx.strokeStyle = "#222"; ctx.beginPath(); ctx.moveTo(f * s * 0.12 - s * 0.3, -s * 1.22); ctx.lineTo(f * s * 0.12 - s * 0.05, -s * 1.12); ctx.moveTo(f * s * 0.12 + s * 0.3, -s * 1.22); ctx.lineTo(f * s * 0.12 + s * 0.05, -s * 1.12); ctx.stroke(); }
+  ctx.strokeStyle = "#7a4a1e"; ctx.lineWidth = s * 0.16; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(f * s * 0.5, -s * 0.9); ctx.lineTo(f * s * 0.85, -s * 1.5 + step); ctx.stroke();
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+
+/* 瓦 */
+function drawKawara() {
+  const gy = groundY(), cx = W / 2 + u * 1.2, tw = u * 2.2, th = u * 0.2, gap = u * 0.06;
+  ctx.fillStyle = "#777"; ctx.fillRect(cx - tw / 2 - u * 0.1, gy - u * 1.0, u * 0.5, u * 1.0); ctx.fillRect(cx + tw / 2 - u * 0.4, gy - u * 1.0, u * 0.5, u * 1.0);
+  const showBroken = st === "chop" && chopT >= 0.5 ? broken : 0;      // ピンクマンの番では、新しい瓦がならぶ
+  const pinkHit = st === "pink" && pinkT > 1.45;
+  const N = st === "kawara" ? Math.max(10, Math.floor(taps / D.taps) + 1) : st === "chop" ? kawaraN : 10;     // 山の高さ（割った枚数に合わせて高くなる。割った枚数ぴったりなので、全部割れる）
+  for (let i = 0; i < N; i++) {
+    const y = gy - u * 1.0 - (i + 1) * (th + gap), idx = N - 1 - i;
+    ctx.fillStyle = "#6d6a63";
+    if (idx < showBroken) {
+      const k = st === "chop" ? Math.min(1, (chopT - 0.5) * 4) : 1;
+      ctx.save(); ctx.translate(cx - tw / 4 - k * u * 0.25, y + k * u * 0.1); ctx.rotate(-k * 0.25); SUG.roundRect(-tw / 4, 0, tw / 2 - 2, th, 3); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.translate(cx + tw / 4 + k * u * 0.25, y + k * u * 0.1); ctx.rotate(k * 0.25); SUG.roundRect(-tw / 4 + 2, 0, tw / 2 - 2, th, 3); ctx.fill(); ctx.restore();
+    } else {
+      const shake = pinkHit && pinkT < 1.8 ? Math.sin(pinkT * 80) * 2 : 0;
+      SUG.roundRect(cx - tw / 2 + shake, y, tw, th, 4); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(cx - tw / 2 + 4 + shake, y + 2, tw - 8, 2);
+    }
+  }
+}
+function drawKawaraUI() {
+  const left = Math.max(0, KAWARA_TIME - kT);
+  const pulse = 1 + Math.sin(performance.now() / 70) * 0.05;
+  ctx.save(); ctx.translate(W / 2, H * 0.38); ctx.scale(pulse, pulse); SUG.bigText("瓦割り！連打！", 0, 0, 0.9, "#e85d2a"); ctx.restore();
+  ctx.font = `800 ${u * 0.5}px sans-serif`; ctx.textAlign = "center"; ctx.lineWidth = 5; ctx.strokeStyle = "#fff"; ctx.fillStyle = "#2b2b3a";
+  ctx.strokeText(`あと ${left.toFixed(1)} 秒`, W / 2, H * 0.38 + u * 0.8); ctx.fillText(`あと ${left.toFixed(1)} 秒`, W / 2, H * 0.38 + u * 0.8);
+  const gw = Math.min(W * 0.8, 340), gx = (W - gw) / 2, gy = H - Math.max(u * 1.6, 60), p = (Math.floor(taps / D.taps) % 10 + (taps % D.taps) / D.taps) / 10;
+  ctx.fillStyle = "rgba(255,255,255,.9)"; SUG.roundRect(gx - 5, gy - 5, gw + 10, 34, 17); ctx.fill();
+  const g = ctx.createLinearGradient(gx, 0, gx + gw, 0); g.addColorStop(0, "#ffd23f"); g.addColorStop(1, "#e8412a");
+  ctx.fillStyle = g; SUG.roundRect(gx, gy, Math.max(24, gw * p), 24, 12); ctx.fill();
+  ctx.fillStyle = "#2b2b3a"; ctx.font = "800 14px sans-serif"; ctx.fillText(`いま ${Math.floor(taps / D.taps)}枚（1枚＝200点）`, W / 2, gy + 17); ctx.fillText("画面のどこでも連打！", W / 2, gy - 12);
+}
+
+/* ピンクマンの瓦割り（割れなくて痛がる） */
+function drawPinkGag() {
+  const t = pinkT, gy = groundY(), cx = W / 2 + u * 1.2;
+  const PS = 1.7, px = Math.min(cx + u * 2.5, W - u * 1.6);                      // ピンクマンの大きさ（1.7倍）と、立つ場所
+  let x = t < 0.8 ? W + u * 2 - (W + u * 2 - px) * (t / 0.8) : px, ang = 0, jump = 0, arm = null;
+  if (t >= 1.1 && t < 1.45) arm = 1.4 - (t - 1.1) / 0.35 * 1.9; else if (t >= 0.8 && t < 1.1) arm = 1.4;
+  const hit = t >= 1.45;
+  if (hit) { jump = Math.abs(Math.sin((t - 1.45) * 9)) * u * 0.6; ang = Math.sin((t - 1.45) * 9) * 0.15; }
+  const hands = hit ? [[-0.1, -1.9], [0, -1.95]] : arm !== null ? [[-0.4 - 0.9 * Math.cos(arm), -1.55 - 0.9 * Math.sin(arm)], [0.8, -1.0]] : [[-0.8, -1.0], [0.8, -1.0]];
+  SUG.drawPinkman(x, gy - jump, ang, { scale: PS, face: hit ? "sad" : "", hands, legs: t < 0.8 ? t * 14 : 0 });
+  if (t > 0.3 && t < 1.45) SUG.bubble(x, gy - u * 5.0, pinkL1);
+  if (hit) {
+    SUG.bubble(x, gy - u * 5.1 - jump, pinkL2);
+    ctx.textAlign = "center"; ctx.font = `900 ${u * 0.7}px sans-serif`; ctx.fillStyle = "#555"; if (t < 2.2) ctx.fillText("ゴンッ！", cx, gy - u * 4.4);
+    ctx.fillStyle = "#6bc5ff"; ctx.beginPath(); ctx.arc(x - u * 0.5, gy - u * 3.4 - jump + ((t * 2) % 1) * u * 0.7, u * 0.1, 0, 7); ctx.fill();
+    if (t < 2.5) { ctx.fillStyle = "#2b2b3a"; ctx.font = `800 ${u * 0.4}px sans-serif`; ctx.fillText("0枚…", cx, gy - u * 5.3); }
+  }
+}
+
+SUG.setup(config, game);
+</script>
+</body>
+</html>
